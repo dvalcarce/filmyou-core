@@ -1,0 +1,17 @@
+# Generated files
+/target
+/bin
+/gent
+
+# Eclipse
+.classpath
+.project
+.settings/
+.loadpath
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
