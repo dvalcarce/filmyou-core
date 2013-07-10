@@ -11,7 +11,11 @@
 			<groupId>org.apache.mahout</groupId>
 			<artifactId>mahout-core</artifactId>
 			<version>0.7</version>
-			<scope>main</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.cassandra</groupId>
+			<artifactId>cassandra-all</artifactId>
+			<version>1.2.6</version>
 		</dependency>
 	</dependencies>
 
@@ -22,7 +26,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>fully.qualified.MainClass</mainClass>
+							<mainClass>es.udc.fi.dc.irlab.baselinerecommender.BaselineRecommenderJob</mainClass>
 						</manifest>
 					</archive>
 					<descriptorRefs>
