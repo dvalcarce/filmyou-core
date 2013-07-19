@@ -18,7 +18,6 @@ import org.apache.mahout.cf.taste.hadoop.item.RecommenderJob;
 import org.apache.mahout.cf.taste.hadoop.item.ToUserVectorsReducer;
 import org.apache.mahout.cf.taste.hadoop.preparation.PreparePreferenceMatrixJob;
 import org.apache.mahout.cf.taste.hadoop.preparation.ToItemVectorsMapper;
-import org.apache.mahout.cf.taste.hadoop.preparation.ToItemVectorsReducer;
 import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.math.VarIntWritable;
 import org.apache.mahout.math.VarLongWritable;
@@ -34,6 +33,9 @@ public class BaselinePreparePreferenceMatrixJob extends
     String keyspace;
     String table;
 
+    /**
+     * Load default command line arguments.
+     */
     protected void loadDefaultSetup() {
 	// addInputOption();
 	addOutputOption();
@@ -179,9 +181,9 @@ public class BaselinePreparePreferenceMatrixJob extends
 	Job toItemVectors = prepareJob(getOutputPath(USER_VECTORS),
 		getOutputPath(RATING_MATRIX), ToItemVectorsMapper.class,
 		IntWritable.class, VectorWritable.class,
-		ToItemVectorsReducer.class, IntWritable.class,
+		BaselineToItemVectorsReducer.class, IntWritable.class,
 		VectorWritable.class);
-	toItemVectors.setCombinerClass(ToItemVectorsReducer.class);
+	toItemVectors.setCombinerClass(BaselineToItemVectorsReducer.class);
 
 	/* configure sampling regarding the uservectors */
 	if (hasOption("maxPrefsPerUser")) {
@@ -197,6 +199,9 @@ public class BaselinePreparePreferenceMatrixJob extends
 	return 0;
     }
 
+    /**
+     * Run all jobs related to preparing the preference matrix.
+     */
     @Override
     public int run(String[] args) throws Exception {
 
@@ -229,6 +234,5 @@ public class BaselinePreparePreferenceMatrixJob extends
 	    throw new RuntimeException(
 		    "BaselinePreparePreferenceMatrixJob failed!");
 	}
-	;
     }
 }
