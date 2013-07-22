@@ -1,3 +1,19 @@
+/**
+ * Copyright 2013 Daniel Valcarce Silva
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package es.udc.fi.dc.irlab.baselinerecommender;
 
 import java.io.IOException;
@@ -23,6 +39,10 @@ import org.apache.mahout.math.VarIntWritable;
 import org.apache.mahout.math.VarLongWritable;
 import org.apache.mahout.math.VectorWritable;
 
+/**
+ * Launches the first jobs of the baseline recommendation algorithm.
+ * 
+ */
 public class BaselinePreparePreferenceMatrixJob extends
 	PreparePreferenceMatrixJob {
 
@@ -37,7 +57,6 @@ public class BaselinePreparePreferenceMatrixJob extends
      * Load default command line arguments.
      */
     protected void loadDefaultSetup() {
-	// addInputOption();
 	addOutputOption();
 	addOption("maxPrefsPerUser", "mppu",
 		"max number of preferences to consider per user, "
@@ -136,19 +155,6 @@ public class BaselinePreparePreferenceMatrixJob extends
 	Configuration conf = toUserVectors.getConfiguration();
 	conf.set("mapred.output.dir", getOutputPath(USER_VECTORS).toString());
 
-	// Feed all columns for every row in batches of 1000 columns each time
-	// ConfigHelper.setRangeBatchSize(getConf(), 1000);
-
-	// SliceRange sliceRange = new SliceRange(ByteBuffer.wrap(new byte[0]),
-	// ByteBuffer.wrap(new byte[0]), false, 100);
-	// SlicePredicate slicePredicate = new SlicePredicate();
-	// slicePredicate.setSlice_range(sliceRange);
-	// List<ByteBuffer> names = new ArrayList<ByteBuffer>();
-	// names.add(ByteBuffer.wrap("user".getBytes()));
-	// names.add(ByteBuffer.wrap("movie".getBytes()));
-	// names.add(ByteBuffer.wrap("score".getBytes()));
-	// slice.setColumn_names(names);
-
 	// Cassandra settings
 	String port = "9160";
 	String host = "127.0.0.1";
@@ -157,8 +163,6 @@ public class BaselinePreparePreferenceMatrixJob extends
 	ConfigHelper.setInputPartitioner(conf,
 		"org.apache.cassandra.dht.Murmur3Partitioner");
 	ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
-	// ConfigHelper.setInputSlicePredicate(conf, slicePredicate);
-	// CqlConfigHelper.setInputCQLPageRowSize(conf, "3");
 
 	toUserVectors.getConfiguration().setBoolean(
 		RecommenderJob.BOOLEAN_DATA, booleanData);

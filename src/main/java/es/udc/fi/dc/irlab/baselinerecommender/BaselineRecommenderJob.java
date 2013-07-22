@@ -1,3 +1,19 @@
+/**
+ * Copyright 2013 Daniel Valcarce Silva
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package es.udc.fi.dc.irlab.baselinerecommender;
 
 import java.io.IOException;
@@ -17,13 +33,10 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.cf.taste.hadoop.EntityEntityWritable;
-import org.apache.mahout.cf.taste.hadoop.item.ItemFilterAsVectorAndPrefsReducer;
-import org.apache.mahout.cf.taste.hadoop.item.ItemFilterMapper;
 import org.apache.mahout.cf.taste.hadoop.item.PartialMultiplyMapper;
 import org.apache.mahout.cf.taste.hadoop.item.PrefAndSimilarityColumnWritable;
 import org.apache.mahout.cf.taste.hadoop.item.SimilarityMatrixRowWrapperMapper;
@@ -43,7 +56,8 @@ import org.apache.mahout.math.hadoop.similarity.cooccurrence.measures.Cooccurren
 
 /**
  * Basic Collaborative Filtering algorithm implementation. Based on Mahout's
- * item recommendation algorithm (org.apache.mahout.cv.taste.hadoop.item).
+ * item recommendation algorithm (org.apache.mahout.cv.taste.hadoop.item) with
+ * Cassandra integration.
  * 
  */
 public class BaselineRecommenderJob extends AbstractJob {
@@ -63,32 +77,23 @@ public class BaselineRecommenderJob extends AbstractJob {
     private int numRecommendations;
     private String usersFile;
     private String itemsFile;
-    private String filterFile;
     private boolean booleanData;
 
     /*
      * Cassandra params
      */
-    private static final String KEYSPACE = "recommender";
-    private static final String IN_TABLE = "ratings";
-    private static final String OUT_TABLE = "recommendations";
+    private static String keyspace;
+    private static String tableIn;
+    private static String tableOut;
 
     /**
      * Load default command line arguments.
      */
     protected void loadDefaultSetup() {
-	// addInputOption();
-	addOutputOption();
 	addOption("numRecommendations", "n",
 		"Number of recommendations per user",
 		String.valueOf(DEFAULT_NUM_RECOMMENDATIONS));
-	// addOption("usersFile", null, "File of users to recommend for", null);
-	// addOption("itemsFile", null, "File of items to recommend for", null);
-	// addOption(
-	// "filterFile",
-	// "f",
-	// "File containing comma-separated userID,itemID pairs. Used to exclude the item from "
-	// + "the recommendations for that user (optional)", null);
+
 	addOption("booleanData", "b", "Treat input as without pref values",
 		Boolean.FALSE.toString());
 	addOption(
@@ -118,10 +123,15 @@ public class BaselineRecommenderJob extends AbstractJob {
 	addOption("outputPathForSimilarityMatrix", "opfsm",
 		"write the item similarity matrix to this path (optional)",
 		false);
+	addOption("keyspace", "k", "Cassandra Keyspace", "recommender");
+	addOption("tableIn", "tin", "Cassandra input column family", "ratings");
+	addOption("tableOut", "tout", "Cassandra output column family",
+		"recommendations");
     }
 
     /**
      * Recommendation algorithm.
+     * 
      */
     public int run(String[] args) throws Exception {
 	loadDefaultSetup();
@@ -135,7 +145,9 @@ public class BaselineRecommenderJob extends AbstractJob {
 	numRecommendations = Integer.parseInt(getOption("numRecommendations"));
 	usersFile = getOption("usersFile");
 	itemsFile = getOption("itemsFile");
-	filterFile = getOption("filterFile");
+	keyspace = getOption("keyspace");
+	tableIn = getOption("tableIn");
+	tableOut = getOption("tableOut");
 	booleanData = Boolean.valueOf(getOption("booleanData"));
 	int maxPrefsPerUser = Integer.parseInt(getOption("maxPrefsPerUser"));
 	int minPrefsPerUser = Integer.parseInt(getOption("minPrefsPerUser"));
@@ -150,7 +162,6 @@ public class BaselineRecommenderJob extends AbstractJob {
 
 	Path prepPath = getTempPath("preparePreferenceMatrix");
 	Path similarityMatrixPath = getTempPath("similarityMatrix");
-	Path explicitFilterPath = getTempPath("explicitFilterPath");
 	Path partialMultiplyPath = getTempPath("partialMultiply");
 
 	AtomicInteger currentPhase = new AtomicInteger();
@@ -167,8 +178,8 @@ public class BaselineRecommenderJob extends AbstractJob {
 			    "--minPrefsPerUser",
 			    String.valueOf(minPrefsPerUser), "--booleanData",
 			    String.valueOf(booleanData), "--tempDir",
-			    getTempPath().toString(), "--keyspace", KEYSPACE,
-			    "--table", IN_TABLE });
+			    getTempPath().toString(), "--keyspace", keyspace,
+			    "--table", tableIn });
 
 	    numberOfUsers = HadoopUtil.readInt(new Path(prepPath,
 		    BaselinePreparePreferenceMatrixJob.NUM_USERS), getConf());
@@ -284,30 +295,9 @@ public class BaselineRecommenderJob extends AbstractJob {
 
 	if (shouldRunNextPhase(parsedArgs, currentPhase)) {
 	    /*
-	     * Filter out any users we don't care about.
-	     * 
-	     * Convert the user/item pairs to filter if a filterfile has been
-	     * specified.
-	     */
-	    if (filterFile != null) {
-		Job itemFiltering = prepareJob(new Path(filterFile),
-			explicitFilterPath, TextInputFormat.class,
-			ItemFilterMapper.class, VarLongWritable.class,
-			VarLongWritable.class,
-			ItemFilterAsVectorAndPrefsReducer.class,
-			VarIntWritable.class, VectorAndPrefsWritable.class,
-			SequenceFileOutputFormat.class);
-		boolean succeeded = itemFiltering.waitForCompletion(true);
-		if (!succeeded) {
-		    return -1;
-		}
-	    }
-
-	    /*
 	     * AggregateAndRecommend Job. Extract out the recommendations.
 	     */
-	    if (selectTopRecommendations(partialMultiplyPath,
-		    explicitFilterPath, prepPath) < 0) {
+	    if (selectTopRecommendations(partialMultiplyPath, prepPath) < 0) {
 		return -1;
 	    }
 
@@ -326,13 +316,10 @@ public class BaselineRecommenderJob extends AbstractJob {
      * @throws InterruptedException
      */
     protected int selectTopRecommendations(Path partialMultiplyPath,
-	    Path explicitFilterPath, Path prepPath) throws IOException,
-	    ClassNotFoundException, InterruptedException {
+	    Path prepPath) throws IOException, ClassNotFoundException,
+	    InterruptedException {
 
 	String aggregateAndRecommendInput = partialMultiplyPath.toString();
-	if (filterFile != null) {
-	    aggregateAndRecommendInput += "," + explicitFilterPath;
-	}
 
 	Job aggregateAndRecommend = new Job(new Configuration(getConf()),
 		"aggregateAndRecommend");
@@ -362,9 +349,9 @@ public class BaselineRecommenderJob extends AbstractJob {
 	ConfigHelper.setOutputInitialAddress(conf, host);
 	ConfigHelper.setOutputPartitioner(conf,
 		"org.apache.cassandra.dht.Murmur3Partitioner");
-	ConfigHelper.setOutputColumnFamily(conf, KEYSPACE, OUT_TABLE);
+	ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
 
-	String query = "UPDATE " + KEYSPACE + "." + OUT_TABLE
+	String query = "UPDATE " + keyspace + "." + tableOut
 		+ " SET score = ? ";
 	CqlConfigHelper.setOutputCql(conf, query);
 
