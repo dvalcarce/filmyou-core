@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ import org.slf4j.LoggerFactory;
 
 public class BaselineAggregateAndRecommendReducer
 	extends
-	Reducer<VarLongWritable, PrefAndSimilarityColumnWritable, Map<String, ByteBuffer>, ByteBuffer> {
+	Reducer<VarLongWritable, PrefAndSimilarityColumnWritable, Map<String, ByteBuffer>, List<ByteBuffer>> {
     private static final Logger log = LoggerFactory
 	    .getLogger(AggregateAndRecommendReducer.class);
 
@@ -208,8 +209,9 @@ public class BaselineAggregateAndRecommendReducer
 		Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
 		keys.put("user", ByteBufferUtil.bytes((int) userID.get()));
 		keys.put("movie", ByteBufferUtil.bytes((int) item.getItemID()));
-		context.write(keys,
-			ByteBufferUtil.bytes((int) Math.round(item.getValue())));
+		List<ByteBuffer> var = new LinkedList<ByteBuffer>();
+		var.add(ByteBufferUtil.bytes((int) Math.round(item.getValue())));
+		context.write(keys, var);
 	    }
 	}
     }

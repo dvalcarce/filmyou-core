@@ -1,7 +1,6 @@
 package es.udc.fi.dc.irlab.baselinerecommender;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -70,7 +69,7 @@ public class BaselineRecommenderJob extends AbstractJob {
     /*
      * Cassandra params
      */
-    private static final String KEYSPACE = "demo";
+    private static final String KEYSPACE = "recommender";
     private static final String IN_TABLE = "ratings";
     private static final String OUT_TABLE = "recommendations";
 
@@ -347,7 +346,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	aggregateAndRecommend
 		.setMapOutputValueClass(PrefAndSimilarityColumnWritable.class);
 	aggregateAndRecommend.setOutputKeyClass(Map.class);
-	aggregateAndRecommend.setOutputValueClass(ByteBuffer.class);
+	aggregateAndRecommend.setOutputValueClass(List.class);
 
 	aggregateAndRecommend
 		.setInputFormatClass(SequenceFileInputFormat.class);
@@ -365,8 +364,8 @@ public class BaselineRecommenderJob extends AbstractJob {
 		"org.apache.cassandra.dht.Murmur3Partitioner");
 	ConfigHelper.setOutputColumnFamily(conf, KEYSPACE, OUT_TABLE);
 
-	String query = "INSERT INTO " + KEYSPACE + "." + OUT_TABLE
-		+ " (user, movie, score) VALUES (?, ?, ?);";
+	String query = "UPDATE " + KEYSPACE + "." + OUT_TABLE
+		+ " SET score = ? ";
 	CqlConfigHelper.setOutputCql(conf, query);
 
 	if (itemsFile != null) {
