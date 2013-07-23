@@ -2,9 +2,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>es.udc.fi.dc.irlab</groupId>
-	<artifactId>movie-recommender-core</artifactId>
+	<artifactId>filmyou-core</artifactId>
 	<version>0.1</version>
-	<name>Movie Recommender</name>
+	<name>Film You - Movie Recommender</name>
 
 	<dependencies>
 		<dependency>
