@@ -47,82 +47,20 @@ public class BaselinePreparePreferenceMatrixJob extends
 	PreparePreferenceMatrixJob {
 
     private static final int DEFAULT_MIN_PREFS_PER_USER = 1;
+
+    public static void main(String[] args) throws Exception {
+	if (ToolRunner.run(new BaselinePreparePreferenceMatrixJob(), args) < 0) {
+	    throw new RuntimeException(
+		    "BaselinePreparePreferenceMatrixJob failed!");
+	}
+    }
+
     int minPrefsPerUser;
     boolean booleanData;
     float ratingShift;
     String keyspace;
+
     String table;
-
-    /**
-     * Load default command line arguments.
-     */
-    protected void loadDefaultSetup() {
-	addOutputOption();
-	addOption("maxPrefsPerUser", "mppu",
-		"max number of preferences to consider per user, "
-			+ "users with more preferences will be sampled down");
-	addOption("minPrefsPerUser", "mp",
-		"ignore users with less preferences than this " + "(default: "
-			+ DEFAULT_MIN_PREFS_PER_USER + ')',
-		String.valueOf(DEFAULT_MIN_PREFS_PER_USER));
-	addOption("ratingShift", "rs", "shift ratings by this value", "0.0");
-	addOption("booleanData", "b", "Treat input as without pref values",
-		Boolean.FALSE.toString());
-	addOption("keyspace", "k", "Cassandra Keyspace", true);
-	addOption("table", "t", "Cassandra column family", true);
-    }
-
-    /**
-     * ItemIDIndex job. Gets the minimum itemID using MapReduce.
-     * 
-     * @return int succeed
-     */
-    protected int getMinimumMR() throws ClassNotFoundException, IOException,
-	    InterruptedException {
-
-	Job itemIDIndex = new Job(new Configuration(getConf()), "itemIDIndex");
-
-	itemIDIndex.setMapperClass(BaselineItemIDIndexMapper.class);
-	itemIDIndex.setReducerClass(ItemIDIndexReducer.class);
-	itemIDIndex.setJarByClass(BaselinePreparePreferenceMatrixJob.class);
-
-	itemIDIndex.setMapOutputKeyClass(VarIntWritable.class);
-	itemIDIndex.setMapOutputValueClass(VarLongWritable.class);
-	itemIDIndex.setOutputKeyClass(VarIntWritable.class);
-	itemIDIndex.setOutputValueClass(VarLongWritable.class);
-
-	itemIDIndex.setInputFormatClass(CqlPagingInputFormat.class);
-	itemIDIndex.setOutputFormatClass(SequenceFileOutputFormat.class);
-
-	itemIDIndex.setCombinerClass(ItemIDIndexReducer.class);
-
-	Configuration conf = itemIDIndex.getConfiguration();
-	conf.set("mapred.output.dir", getOutputPath(ITEMID_INDEX).toString());
-
-	// Cassandra settings
-	String port = "9160";
-	String host = "127.0.0.1";
-	ConfigHelper.setInputRpcPort(conf, port);
-	ConfigHelper.setInputInitialAddress(conf, host);
-	ConfigHelper.setInputPartitioner(conf,
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-	ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
-
-	boolean succeeded = itemIDIndex.waitForCompletion(true);
-	if (!succeeded) {
-	    return -1;
-	}
-	return 0;
-    }
-
-    /**
-     * ItemIDIndex job. Gets the minimum itemID.
-     * 
-     * @return long minimum itemID
-     */
-    protected long getMinimum() {
-	return 1;
-    }
 
     /**
      * Convert user preferences into a vector per user.
@@ -151,6 +89,8 @@ public class BaselinePreparePreferenceMatrixJob extends
 
 	toUserVectors.setInputFormatClass(CqlPagingInputFormat.class);
 	toUserVectors.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+	toUserVectors.setNumReduceTasks(5);
 
 	Configuration conf = toUserVectors.getConfiguration();
 	conf.set("mapred.output.dir", getOutputPath(USER_VECTORS).toString());
@@ -204,6 +144,79 @@ public class BaselinePreparePreferenceMatrixJob extends
     }
 
     /**
+     * ItemIDIndex job. Gets the minimum itemID.
+     * 
+     * @return long minimum itemID
+     */
+    protected long getMinimum() {
+	return 1;
+    }
+
+    /**
+     * ItemIDIndex job. Gets the minimum itemID using MapReduce.
+     * 
+     * @return int succeed
+     */
+    protected int getMinimumMR() throws ClassNotFoundException, IOException,
+	    InterruptedException {
+
+	Job itemIDIndex = new Job(new Configuration(getConf()), "itemIDIndex");
+
+	itemIDIndex.setMapperClass(BaselineItemIDIndexMapper.class);
+	itemIDIndex.setReducerClass(ItemIDIndexReducer.class);
+	itemIDIndex.setJarByClass(BaselinePreparePreferenceMatrixJob.class);
+
+	itemIDIndex.setMapOutputKeyClass(VarIntWritable.class);
+	itemIDIndex.setMapOutputValueClass(VarLongWritable.class);
+	itemIDIndex.setOutputKeyClass(VarIntWritable.class);
+	itemIDIndex.setOutputValueClass(VarLongWritable.class);
+
+	itemIDIndex.setInputFormatClass(CqlPagingInputFormat.class);
+	itemIDIndex.setOutputFormatClass(SequenceFileOutputFormat.class);
+
+	itemIDIndex.setCombinerClass(ItemIDIndexReducer.class);
+
+	itemIDIndex.setNumReduceTasks(5);
+
+	Configuration conf = itemIDIndex.getConfiguration();
+	conf.set("mapred.output.dir", getOutputPath(ITEMID_INDEX).toString());
+
+	// Cassandra settings
+	String port = "9160";
+	String host = "127.0.0.1";
+	ConfigHelper.setInputRpcPort(conf, port);
+	ConfigHelper.setInputInitialAddress(conf, host);
+	ConfigHelper.setInputPartitioner(conf,
+		"org.apache.cassandra.dht.Murmur3Partitioner");
+	ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
+
+	boolean succeeded = itemIDIndex.waitForCompletion(true);
+	if (!succeeded) {
+	    return -1;
+	}
+	return 0;
+    }
+
+    /**
+     * Load default command line arguments.
+     */
+    protected void loadDefaultSetup() {
+	addOutputOption();
+	addOption("maxPrefsPerUser", "mppu",
+		"max number of preferences to consider per user, "
+			+ "users with more preferences will be sampled down");
+	addOption("minPrefsPerUser", "mp",
+		"ignore users with less preferences than this " + "(default: "
+			+ DEFAULT_MIN_PREFS_PER_USER + ')',
+		String.valueOf(DEFAULT_MIN_PREFS_PER_USER));
+	addOption("ratingShift", "rs", "shift ratings by this value", "0.0");
+	addOption("booleanData", "b", "Treat input as without pref values",
+		Boolean.FALSE.toString());
+	addOption("keyspace", "k", "Cassandra Keyspace", true);
+	addOption("table", "t", "Cassandra column family", true);
+    }
+
+    /**
      * Run all jobs related to preparing the preference matrix.
      */
     @Override
@@ -231,12 +244,5 @@ public class BaselinePreparePreferenceMatrixJob extends
 	}
 
 	return 0;
-    }
-
-    public static void main(String[] args) throws Exception {
-	if (ToolRunner.run(new BaselinePreparePreferenceMatrixJob(), args) < 0) {
-	    throw new RuntimeException(
-		    "BaselinePreparePreferenceMatrixJob failed!");
-	}
     }
 }

@@ -41,28 +41,27 @@ public class BaselineToItemPrefsMapper
     private float ratingShift;
 
     @Override
-    protected void setup(Context context) {
-	Configuration jobConf = context.getConfiguration();
-	booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
-	ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
-    }
-
-    @Override
     public void map(Map<String, ByteBuffer> keys,
 	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	long userID = (long) keys.get("user").getInt();
-	long itemID = (long) keys.get("movie").getInt();
+	long userID = keys.get("user").getInt();
+	long itemID = keys.get("movie").getInt();
 
 	if (booleanData) {
 	    context.write(new VarLongWritable(userID), new VarLongWritable(
 		    itemID));
 	} else {
-	    float prefValue = (float) columns.get("score").getInt()
-		    + ratingShift;
+	    float prefValue = columns.get("score").getInt() + ratingShift;
 	    context.write(new VarLongWritable(userID), new EntityPrefWritable(
 		    itemID, prefValue));
 	}
+    }
+
+    @Override
+    protected void setup(Context context) {
+	Configuration jobConf = context.getConfiguration();
+	booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
+	ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
     }
 }

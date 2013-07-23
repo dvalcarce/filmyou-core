@@ -70,29 +70,6 @@ public class BaselineAggregateAndRecommendReducer
     private static final float BOOLEAN_PREF_VALUE = 1.0f;
 
     @Override
-    protected void setup(Context context) throws IOException {
-	Configuration conf = context.getConfiguration();
-	recommendationsPerUser = conf.getInt(NUM_RECOMMENDATIONS,
-		DEFAULT_NUM_RECOMMENDATIONS);
-	booleanData = conf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
-	indexItemIDMap = TasteHadoopUtils.readIDIndexMap(
-		conf.get(ITEMID_INDEX_PATH), conf);
-
-	String itemFilePathString = conf.get(ITEMS_FILE);
-	if (itemFilePathString != null) {
-	    itemsToRecommendFor = new FastIDSet();
-	    for (String line : new FileLineIterable(HadoopUtil.openStream(
-		    new Path(itemFilePathString), conf))) {
-		try {
-		    itemsToRecommendFor.add(Long.parseLong(line));
-		} catch (NumberFormatException nfe) {
-		    log.warn("itemsFile line ignored: {}", line);
-		}
-	    }
-	}
-    }
-
-    @Override
     protected void reduce(VarLongWritable userID,
 	    Iterable<PrefAndSimilarityColumnWritable> values, Context context)
 	    throws IOException, InterruptedException {
@@ -186,6 +163,29 @@ public class BaselineAggregateAndRecommendReducer
 	writeRecommendedItems(userID, recommendationVector, context);
     }
 
+    @Override
+    protected void setup(Context context) throws IOException {
+	Configuration conf = context.getConfiguration();
+	recommendationsPerUser = conf.getInt(NUM_RECOMMENDATIONS,
+		DEFAULT_NUM_RECOMMENDATIONS);
+	booleanData = conf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
+	indexItemIDMap = TasteHadoopUtils.readIDIndexMap(
+		conf.get(ITEMID_INDEX_PATH), conf);
+
+	String itemFilePathString = conf.get(ITEMS_FILE);
+	if (itemFilePathString != null) {
+	    itemsToRecommendFor = new FastIDSet();
+	    for (String line : new FileLineIterable(HadoopUtil.openStream(
+		    new Path(itemFilePathString), conf))) {
+		try {
+		    itemsToRecommendFor.add(Long.parseLong(line));
+		} catch (NumberFormatException nfe) {
+		    log.warn("itemsFile line ignored: {}", line);
+		}
+	    }
+	}
+    }
+
     /**
      * Find the top entries in recommendationVector, map them to the real
      * itemIDs and write back the result.
@@ -230,7 +230,7 @@ public class BaselineAggregateAndRecommendReducer
 		keys.put("user", ByteBufferUtil.bytes((int) userID.get()));
 		keys.put("movie", ByteBufferUtil.bytes((int) item.getItemID()));
 		List<ByteBuffer> var = new LinkedList<ByteBuffer>();
-		var.add(ByteBufferUtil.bytes((int) Math.round(item.getValue())));
+		var.add(ByteBufferUtil.bytes(Math.round(item.getValue())));
 		context.write(keys, var);
 	    }
 	}

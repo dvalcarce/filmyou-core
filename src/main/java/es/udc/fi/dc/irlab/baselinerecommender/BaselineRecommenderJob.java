@@ -74,17 +74,66 @@ public class BaselineRecommenderJob extends AbstractJob {
     private static final String USERS_FILE = "usersFile";
     private static final String MAX_PREFS_PER_USER_CONSIDERED = "maxPrefsPerUserConsidered";
 
+    /**
+     * Main routine. Launch BaselineRecommenderJob job.
+     * 
+     * @param args
+     *            command line arguments
+     * @throws Exception
+     */
+    public static void main(String[] args) throws Exception {
+	ToolRunner.run(new Configuration(), new BaselineRecommenderJob(), args);
+    }
+
     private int numRecommendations;
     private String usersFile;
     private String itemsFile;
-    private boolean booleanData;
 
+    private boolean booleanData;
     /*
      * Cassandra params
      */
     private static String keyspace;
     private static String tableIn;
+
     private static String tableOut;
+
+    /**
+     * Set heap size to 1024 MB.
+     * 
+     * @param job
+     *            JobContext
+     */
+    private static void setIOSort(JobContext job) {
+	Configuration conf = job.getConfiguration();
+	conf.setInt("io.sort.factor", 100);
+	String javaOpts = conf.get("mapred.map.child.java.opts"); // new arg
+	// name
+	if (javaOpts == null) {
+	    javaOpts = conf.get("mapred.child.java.opts"); // old arg name
+	}
+	int assumedHeapSize = 512;
+	if (javaOpts != null) {
+	    Matcher m = Pattern.compile("-Xmx([0-9]+)([mMgG])").matcher(
+		    javaOpts);
+	    if (m.find()) {
+		assumedHeapSize = Integer.parseInt(m.group(1));
+		String megabyteOrGigabyte = m.group(2);
+		if ("g".equalsIgnoreCase(megabyteOrGigabyte)) {
+		    assumedHeapSize *= 1024;
+		}
+	    }
+	}
+
+	// Cap this at 1024MB now; see
+	// https://issues.apache.org/jira/browse/MAPREDUCE-2308
+	conf.setInt("io.sort.mb", Math.min(assumedHeapSize / 2, 1024));
+
+	// For some reason the Merger doesn't report status for a long time;
+	// increase
+	// timeout when running these jobs
+	conf.setInt("mapred.task.timeout", 60 * 60 * 1000);
+    }
 
     /**
      * Load default command line arguments.
@@ -133,6 +182,7 @@ public class BaselineRecommenderJob extends AbstractJob {
      * Recommendation algorithm.
      * 
      */
+    @Override
     public int run(String[] args) throws Exception {
 	loadDefaultSetup();
 
@@ -182,7 +232,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 			    "--table", tableIn });
 
 	    numberOfUsers = HadoopUtil.readInt(new Path(prepPath,
-		    BaselinePreparePreferenceMatrixJob.NUM_USERS), getConf());
+		    PreparePreferenceMatrixJob.NUM_USERS), getConf());
 	}
 
 	if (shouldRunNextPhase(parsedArgs, currentPhase)) {
@@ -200,26 +250,23 @@ public class BaselineRecommenderJob extends AbstractJob {
 	     * DistributedRowMatrix(...).rowSimilarity(...)
 	     */
 	    // calculate the co-occurrence matrix
-	    ToolRunner
-		    .run(getConf(),
-			    new RowSimilarityJob(),
-			    new String[] {
-				    "--input",
-				    new Path(
-					    prepPath,
-					    BaselinePreparePreferenceMatrixJob.RATING_MATRIX)
-					    .toString(), "--output",
-				    similarityMatrixPath.toString(),
-				    "--numberOfColumns",
-				    String.valueOf(numberOfUsers),
-				    "--similarityClassname",
-				    similarityClassname,
-				    "--maxSimilaritiesPerRow",
-				    String.valueOf(maxSimilaritiesPerItem),
-				    "--excludeSelfSimilarity",
-				    String.valueOf(Boolean.TRUE),
-				    "--threshold", String.valueOf(threshold),
-				    "--tempDir", getTempPath().toString(), });
+	    ToolRunner.run(
+		    getConf(),
+		    new RowSimilarityJob(),
+		    new String[] {
+			    "--input",
+			    new Path(prepPath,
+				    PreparePreferenceMatrixJob.RATING_MATRIX)
+				    .toString(), "--output",
+			    similarityMatrixPath.toString(),
+			    "--numberOfColumns", String.valueOf(numberOfUsers),
+			    "--similarityClassname", similarityClassname,
+			    "--maxSimilaritiesPerRow",
+			    String.valueOf(maxSimilaritiesPerItem),
+			    "--excludeSelfSimilarity",
+			    String.valueOf(Boolean.TRUE), "--threshold",
+			    String.valueOf(threshold), "--tempDir",
+			    getTempPath().toString(), });
 
 	    /*
 	     * OutputSimilarityMatrix Job. Write out the similarity matrix if
@@ -248,6 +295,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 		mostSimilarItemsConf.setInt(
 			ItemSimilarityJob.MAX_SIMILARITIES_PER_ITEM,
 			maxSimilaritiesPerItem);
+		outputSimilarityMatrix.setNumReduceTasks(5);
 		outputSimilarityMatrix.waitForCompletion(true);
 	    }
 	}
@@ -265,7 +313,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 		    SequenceFileInputFormat.class,
 		    SimilarityMatrixRowWrapperMapper.class);
 	    MultipleInputs.addInputPath(partialMultiply, new Path(prepPath,
-		    BaselinePreparePreferenceMatrixJob.USER_VECTORS),
+		    PreparePreferenceMatrixJob.USER_VECTORS),
 		    SequenceFileInputFormat.class,
 		    UserVectorSplitterMapper.class);
 	    partialMultiply.setJarByClass(ToVectorAndPrefReducer.class);
@@ -279,6 +327,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	    partialMultiplyConf.setBoolean("mapred.compress.map.output", true);
 	    partialMultiplyConf.set("mapred.output.dir",
 		    partialMultiplyPath.toString());
+	    partialMultiply.setNumReduceTasks(5);
 
 	    if (usersFile != null) {
 		partialMultiplyConf.set(USERS_FILE, usersFile);
@@ -339,6 +388,8 @@ public class BaselineRecommenderJob extends AbstractJob {
 		.setInputFormatClass(SequenceFileInputFormat.class);
 	aggregateAndRecommend.setOutputFormatClass(CqlOutputFormat.class);
 
+	aggregateAndRecommend.setNumReduceTasks(5);
+
 	Configuration conf = aggregateAndRecommend.getConfiguration();
 	conf.set("mapred.input.dir", aggregateAndRecommendInput);
 
@@ -370,54 +421,6 @@ public class BaselineRecommenderJob extends AbstractJob {
 	}
 
 	return 0;
-    }
-
-    /**
-     * Set heap size to 1024 MB.
-     * 
-     * @param job
-     *            JobContext
-     */
-    private static void setIOSort(JobContext job) {
-	Configuration conf = job.getConfiguration();
-	conf.setInt("io.sort.factor", 100);
-	String javaOpts = conf.get("mapred.map.child.java.opts"); // new arg
-	// name
-	if (javaOpts == null) {
-	    javaOpts = conf.get("mapred.child.java.opts"); // old arg name
-	}
-	int assumedHeapSize = 512;
-	if (javaOpts != null) {
-	    Matcher m = Pattern.compile("-Xmx([0-9]+)([mMgG])").matcher(
-		    javaOpts);
-	    if (m.find()) {
-		assumedHeapSize = Integer.parseInt(m.group(1));
-		String megabyteOrGigabyte = m.group(2);
-		if ("g".equalsIgnoreCase(megabyteOrGigabyte)) {
-		    assumedHeapSize *= 1024;
-		}
-	    }
-	}
-
-	// Cap this at 1024MB now; see
-	// https://issues.apache.org/jira/browse/MAPREDUCE-2308
-	conf.setInt("io.sort.mb", Math.min(assumedHeapSize / 2, 1024));
-
-	// For some reason the Merger doesn't report status for a long time;
-	// increase
-	// timeout when running these jobs
-	conf.setInt("mapred.task.timeout", 60 * 60 * 1000);
-    }
-
-    /**
-     * Main routine. Launch BaselineRecommenderJob job.
-     * 
-     * @param args
-     *            command line arguments
-     * @throws Exception
-     */
-    public static void main(String[] args) throws Exception {
-	ToolRunner.run(new Configuration(), new BaselineRecommenderJob(), args);
     }
 
 }

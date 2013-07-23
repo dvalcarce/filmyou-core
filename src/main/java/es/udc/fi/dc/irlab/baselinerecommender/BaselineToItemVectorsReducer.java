@@ -16,10 +16,11 @@
 
 package es.udc.fi.dc.irlab.baselinerecommender;
 
+import java.io.IOException;
+
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.mahout.math.VectorWritable;
-import java.io.IOException;
 
 /**
  * This class is a clone of
