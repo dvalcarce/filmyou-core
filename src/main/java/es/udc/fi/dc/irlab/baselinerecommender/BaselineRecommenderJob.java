@@ -88,15 +88,15 @@ public class BaselineRecommenderJob extends AbstractJob {
     private int numRecommendations;
     private String usersFile;
     private String itemsFile;
-
     private boolean booleanData;
+
     /*
      * Cassandra params
      */
-    private static String keyspace;
-    private static String tableIn;
-
-    private static String tableOut;
+    private String keyspace;
+    private String tableIn;
+    private String tableOut;
+    private String ttl;
 
     /**
      * Set heap size to 1024 MB.
@@ -176,6 +176,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	addOption("tableIn", "tin", "Cassandra input column family", "ratings");
 	addOption("tableOut", "tout", "Cassandra output column family",
 		"recommendations");
+	addOption("ttl", "ttl", "Cassandra data TTL", "604800");
     }
 
     /**
@@ -198,7 +199,9 @@ public class BaselineRecommenderJob extends AbstractJob {
 	keyspace = getOption("keyspace");
 	tableIn = getOption("tableIn");
 	tableOut = getOption("tableOut");
+	ttl = getOption("ttl");
 	booleanData = Boolean.valueOf(getOption("booleanData"));
+
 	int maxPrefsPerUser = Integer.parseInt(getOption("maxPrefsPerUser"));
 	int minPrefsPerUser = Integer.parseInt(getOption("minPrefsPerUser"));
 	int maxPrefsPerUserInItemSimilarity = Integer
@@ -388,7 +391,8 @@ public class BaselineRecommenderJob extends AbstractJob {
 		.setInputFormatClass(SequenceFileInputFormat.class);
 	aggregateAndRecommend.setOutputFormatClass(CqlOutputFormat.class);
 
-	aggregateAndRecommend.setNumReduceTasks(5);
+	// Only 1 reducer writes data to Cassandra
+	aggregateAndRecommend.setNumReduceTasks(1);
 
 	Configuration conf = aggregateAndRecommend.getConfiguration();
 	conf.set("mapred.input.dir", aggregateAndRecommendInput);
@@ -402,8 +406,8 @@ public class BaselineRecommenderJob extends AbstractJob {
 		"org.apache.cassandra.dht.Murmur3Partitioner");
 	ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
 
-	String query = "UPDATE " + keyspace + "." + tableOut
-		+ " SET score = ? ";
+	String query = "UPDATE " + keyspace + "." + tableOut + "USING TTL "
+		+ ttl + " SET score = ? ";
 	CqlConfigHelper.setOutputCql(conf, query);
 
 	if (itemsFile != null) {
