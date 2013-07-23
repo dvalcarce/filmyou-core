@@ -406,7 +406,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 		"org.apache.cassandra.dht.Murmur3Partitioner");
 	ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
 
-	String query = "UPDATE " + keyspace + "." + tableOut + "USING TTL "
+	String query = "UPDATE " + keyspace + "." + tableOut + " USING TTL "
 		+ ttl + " SET score = ? ";
 	CqlConfigHelper.setOutputCql(conf, query);
 
