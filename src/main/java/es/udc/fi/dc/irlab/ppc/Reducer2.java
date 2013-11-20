@@ -17,25 +17,25 @@
 package es.udc.fi.dc.irlab.ppc;
 
 import java.io.IOException;
+import java.util.Iterator;
 
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
-import org.apache.mahout.common.IntPairWritable;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-public class Map1b
-	extends
-	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> {
+public class Reducer2 extends
+	Reducer<LongWritable, VectorWritable, LongWritable, VectorWritable> {
 
     @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
-	    throws IOException, InterruptedException {
+    protected void reduce(LongWritable key, Iterable<VectorWritable> values,
+	    Context context) throws IOException, InterruptedException {
+	Iterator<VectorWritable> it = values.iterator();
+	Vector output = it.next().get();
 
-	int item = key.get() + 1;
-	Vector vector = value.get();
-	context.write(new IntPairWritable(item, 0), new VectorOrPrefWritable(
-		vector));
+	while (it.hasNext()) {
+	    output = it.next().get().plus(output);
+	}
+	context.write(key, new VectorWritable(output));
     }
 }

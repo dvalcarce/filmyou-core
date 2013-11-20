@@ -21,22 +21,22 @@ import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.clustering.spectral.common.IntDoublePairWritable;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 
 public class Map1a
 	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, IntDoublePairWritable> {
+	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
     protected void map(Map<String, ByteBuffer> keys,
 	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	int i = keys.get("movie").getInt();
-	int j = keys.get("user").getInt();
-	double value = columns.get("score").getFloat();
-	context.write(new IntPairWritable(i, 0), new IntDoublePairWritable(j,
-		value));
+	int item = keys.get("movie").getInt();
+	int user = keys.get("user").getInt();
+	float score = columns.get("score").getFloat();
+	context.write(new IntPairWritable(item, 1), new VectorOrPrefWritable(
+		user, score));
     }
 }

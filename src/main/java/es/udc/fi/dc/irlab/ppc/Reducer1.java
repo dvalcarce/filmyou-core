@@ -17,25 +17,39 @@
 package es.udc.fi.dc.irlab.ppc;
 
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.mahout.clustering.spectral.common.IntDoublePairWritable;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
+import org.apache.mahout.math.Vector;
+import org.apache.mahout.math.VectorWritable;
 
-public class Reducer1 extends
-	Reducer<IntPairWritable, IntDoublePairWritable, LongWritable, Text> {
+public class Reducer1
+	extends
+	Reducer<IntPairWritable, VectorOrPrefWritable, LongWritable, VectorWritable> {
 
     @Override
     protected void reduce(IntPairWritable key,
-	    Iterable<IntDoublePairWritable> values, Context ctx)
+	    Iterable<VectorOrPrefWritable> values, Context context)
 	    throws IOException, InterruptedException {
-	StringBuffer sb = new StringBuffer();
-	for (IntDoublePairWritable v : values) {
-	    sb.append(String.format("(%d, %f) ", v.getKey(), v.getValue()));
+	long user;
+	double score;
+	VectorWritable output;
+
+	Iterator<VectorOrPrefWritable> it = values.iterator();
+	Vector vector = it.next().getVector();
+
+	while (it.hasNext()) {
+	    VectorOrPrefWritable pref = it.next();
+	    user = pref.getUserID();
+	    score = pref.getValue();
+	    if (score > 0) {
+		output = new VectorWritable(vector.times(score));
+		context.write(new LongWritable(user), output);
+	    }
 	}
 
-	ctx.write(new LongWritable(key.getFirst()), new Text(sb.toString()));
     }
 }
