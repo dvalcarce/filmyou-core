@@ -45,7 +45,7 @@ import org.apache.mahout.math.VectorWritable;
  */
 public class BaselinePreparePreferenceMatrixJob extends
 	PreparePreferenceMatrixJob {
-
+    private static final int MINIMUM_ITEM_ID = 1;
     private static final int DEFAULT_MIN_PREFS_PER_USER = 1;
 
     public static void main(String[] args) throws Exception {
@@ -149,7 +149,7 @@ public class BaselinePreparePreferenceMatrixJob extends
      * @return long minimum itemID
      */
     protected long getMinimum() {
-	return 1;
+	return MINIMUM_ITEM_ID;
     }
 
     /**
