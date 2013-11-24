@@ -361,8 +361,9 @@ public class BaselineRecommenderJob extends AbstractJob {
     /**
      * Write top recommendations.
      * 
-     * @param aggregateAndRecommendInput
-     * @return
+     * @param partialMultiplyPath
+     * @param prepPath
+     * @return 0 if ok, -1 otherwise
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException

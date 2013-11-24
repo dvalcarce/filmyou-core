@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.ppc;
+package es.udc.fi.dc.irlab.ppc.hcomputation;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -24,7 +24,10 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 
-public class Map1a
+/**
+ * Emit <(i, 1), (j, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ */
+public class H1aMapper
 	extends
 	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
@@ -33,10 +36,10 @@ public class Map1a
 	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	int item = keys.get("movie").getInt();
+	int movie = keys.get("movie").getInt();
 	int user = keys.get("user").getInt();
 	float score = columns.get("score").getFloat();
-	context.write(new IntPairWritable(item, 1), new VectorOrPrefWritable(
+	context.write(new IntPairWritable(movie, 1), new VectorOrPrefWritable(
 		user, score));
     }
 }

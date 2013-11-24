@@ -14,42 +14,31 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.ppc;
+package es.udc.fi.dc.irlab.ppc.hcomputation;
 
 import java.io.IOException;
-import java.util.Iterator;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-public class Reducer1
+/**
+ * Emit <(i, 0), w_i> from H matrix ({w_i}).
+ */
+public class H1bMapper
 	extends
-	Reducer<IntPairWritable, VectorOrPrefWritable, LongWritable, VectorWritable> {
+	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
-    protected void reduce(IntPairWritable key,
-	    Iterable<VectorOrPrefWritable> values, Context context)
+    protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
-	long user;
-	double score;
-	VectorWritable output;
 
-	Iterator<VectorOrPrefWritable> it = values.iterator();
-	Vector vector = it.next().getVector();
-
-	while (it.hasNext()) {
-	    VectorOrPrefWritable pref = it.next();
-	    user = pref.getUserID();
-	    score = pref.getValue();
-	    if (score > 0) {
-		output = new VectorWritable(vector.times(score));
-		context.write(new LongWritable(user), output);
-	    }
-	}
-
+	int item = key.get() + 1;
+	Vector vector = value.get();
+	context.write(new IntPairWritable(item, 0), new VectorOrPrefWritable(
+		vector));
     }
 }

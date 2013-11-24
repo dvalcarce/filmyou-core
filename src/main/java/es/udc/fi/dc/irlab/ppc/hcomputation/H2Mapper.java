@@ -14,28 +14,24 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.ppc;
+package es.udc.fi.dc.irlab.ppc.hcomputation;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.mahout.math.Vector;
+import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.math.VectorWritable;
 
-public class Reducer2 extends
-	Reducer<LongWritable, VectorWritable, LongWritable, VectorWritable> {
+/**
+ * Emit <j, {A_{i,j}w_i^T}> from <j, A_{i,j}w_i^T>.
+ * 
+ */
+public class H2Mapper extends
+	Mapper<LongWritable, VectorWritable, LongWritable, VectorWritable> {
 
     @Override
-    protected void reduce(LongWritable key, Iterable<VectorWritable> values,
-	    Context context) throws IOException, InterruptedException {
-	Iterator<VectorWritable> it = values.iterator();
-	Vector output = it.next().get();
-
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
-	}
-	context.write(key, new VectorWritable(output));
+    protected void map(LongWritable key, VectorWritable value, Context context)
+	    throws IOException, InterruptedException {
+	context.write(key, value);
     }
 }
