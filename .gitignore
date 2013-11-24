@@ -15,3 +15,6 @@
 *.war
 *.ear
 
+#Mac
+.DS_Store
+
