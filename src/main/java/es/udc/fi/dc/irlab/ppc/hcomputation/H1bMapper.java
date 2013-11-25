@@ -26,7 +26,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(i, 0), w_i> from H matrix ({w_i}).
+ * Emit <(i+1, 0), w_i> from H matrix ({w_i}).
  */
 public class H1bMapper
 	extends
