@@ -42,4 +42,5 @@ public class H2Reducer extends
 	}
 	context.write(key, new VectorWritable(output));
     }
+
 }
