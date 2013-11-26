@@ -34,4 +34,5 @@ public class H2Mapper extends
 	    throws IOException, InterruptedException {
 	context.write(key, value);
     }
+
 }
