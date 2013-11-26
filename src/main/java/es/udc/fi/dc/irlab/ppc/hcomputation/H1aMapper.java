@@ -42,4 +42,5 @@ public class H1aMapper
 	context.write(new IntPairWritable(movie, 1), new VectorOrPrefWritable(
 		user, score));
     }
+
 }

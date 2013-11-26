@@ -1,4 +1,4 @@
-package es.udc.fi.dc.irlab.ppc;
+package es.udc.fi.dc.irlab.ppc.hcomputation;
 
 import static org.junit.Assert.*;
 
@@ -44,6 +44,7 @@ public class TestH1bMapper {
 	Pair<IntPairWritable, VectorOrPrefWritable> result = list.get(0);
 	assertEquals(outputKey, result.getFirst());
 	assertEquals(outputVector, result.getSecond().getVector());
+
     }
 
 }

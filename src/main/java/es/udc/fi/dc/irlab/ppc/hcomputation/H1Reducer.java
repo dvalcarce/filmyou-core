@@ -43,7 +43,10 @@ public class H1Reducer
 
 	Iterator<VectorOrPrefWritable> it = values.iterator();
 	Vector vector = it.next().getVector();
-
+	if (vector == null) {
+	    throw new IllegalArgumentException("Bad reduce-side join ("
+		    + getClass() + ")");
+	}
 	while (it.hasNext()) {
 	    VectorOrPrefWritable pref = it.next();
 	    user = pref.getUserID();
@@ -55,4 +58,5 @@ public class H1Reducer
 	}
 
     }
+
 }
