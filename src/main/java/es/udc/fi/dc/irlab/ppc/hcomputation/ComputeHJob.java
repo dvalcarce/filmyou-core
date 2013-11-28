@@ -23,6 +23,7 @@ import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -31,6 +32,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
+import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.ppc.util.IntPairKeyPartitioner;
@@ -38,17 +40,22 @@ import es.udc.fi.dc.irlab.ppc.util.IntPairKeyPartitioner;
 public class ComputeHJob extends AbstractJob implements Tool {
 
     private final Path H;
+    private final Path W;
     private Path out1;
     private Path out2;
+    private Path out3;
 
     /**
      * ComputeHJob constructor.
      * 
      * @param H
      *            Path to the H matrix
+     * @param W
+     *            Path to the W matrix
      */
-    public ComputeHJob(Path H) {
+    public ComputeHJob(Path H, Path W) {
 	this.H = H;
+	this.W = H;
     }
 
     /**
@@ -59,11 +66,13 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	parseArguments(args, true, true);
 
 	String directory = getOption("directory");
-	this.out1 = new Path(directory + "/out1");
-	this.out2 = new Path(directory + "/out2");
+	this.out1 = new Path(directory + "/hout1");
+	this.out2 = new Path(directory + "/hout2");
+	this.out3 = new Path(directory + "/hout2");
 
-	runJob1(H, out1);
+	runJob1(W, out1);
 	runJob2(out1, out2);
+	runJob2(W, out3);
 
 	return 0;
     }
@@ -151,6 +160,45 @@ public class ComputeHJob extends AbstractJob implements Tool {
 
 	job.setOutputKeyClass(LongWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
+
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	boolean succeeded = job.waitForCompletion(true);
+	if (!succeeded) {
+	    throw new RuntimeException(job.getJobName() + " failed!");
+	}
+
+    }
+
+    /**
+     * Launch the third job for H computation.
+     * 
+     * @param inputPath
+     *            output of the first job
+     * @param outputPath
+     *            temporal output
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    protected void runJob3(Path inputPath, Path outputPath) throws IOException,
+	    ClassNotFoundException, InterruptedException {
+
+	Job job = new Job(getConf(), "Job H3");
+	job.setJarByClass(ComputeHJob.class);
+
+	job.setInputFormatClass(SequenceFileInputFormat.class);
+	SequenceFileInputFormat.addInputPath(job, inputPath);
+
+	job.setMapperClass(H3Mapper.class);
+	job.setReducerClass(H3Reducer.class);
+
+	job.setMapOutputKeyClass(NullWritable.class);
+	job.setMapOutputValueClass(MatrixWritable.class);
+
+	job.setOutputKeyClass(NullWritable.class);
+	job.setOutputValueClass(MatrixWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);

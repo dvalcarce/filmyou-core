@@ -25,17 +25,21 @@ import org.apache.mahout.common.AbstractJob;
 
 public class ComputeWJob extends AbstractJob implements Tool {
 
+    private final Path H;
     private final Path W;
     private Path out1;
 
     /**
-     * ComputeHJob constructor.
+     * ComputeWJob constructor.
      * 
      * @param H
      *            Path to the H matrix
+     * @param W
+     *            Path to the W matrix
      */
-    public ComputeWJob(Path W) {
-	this.W = W;
+    public ComputeWJob(Path H, Path W) {
+	this.H = H;
+	this.W = H;
     }
 
     /**

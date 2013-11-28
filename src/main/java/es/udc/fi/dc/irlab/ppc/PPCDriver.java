@@ -85,8 +85,8 @@ public class PPCDriver extends AbstractJob {
 		numberOfItems, numberOfClusters);
 
 	for (int i = 0; i < numberOfIterations; i++) {
-	    ToolRunner.run(new Configuration(), new ComputeHJob(H), args);
-	    ToolRunner.run(new Configuration(), new ComputeWJob(W), args);
+	    ToolRunner.run(new Configuration(), new ComputeHJob(H, W), args);
+	    ToolRunner.run(new Configuration(), new ComputeWJob(H, W), args);
 	}
 
 	return 0;
