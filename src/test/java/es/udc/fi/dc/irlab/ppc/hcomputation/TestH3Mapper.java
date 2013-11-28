@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.mahout.math.DenseVector;
@@ -17,11 +18,11 @@ import org.junit.Test;
 
 public class TestH3Mapper {
 
-    private MapDriver<LongWritable, VectorWritable, LongWritable, MatrixWritable> mapDriver;
+    private MapDriver<LongWritable, VectorWritable, NullWritable, MatrixWritable> mapDriver;
 
     @Before
     public void setup() {
-	mapDriver = new MapDriver<LongWritable, VectorWritable, LongWritable, MatrixWritable>();
+	mapDriver = new MapDriver<LongWritable, VectorWritable, NullWritable, MatrixWritable>();
     }
 
     @Test
@@ -30,15 +31,15 @@ public class TestH3Mapper {
 	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
 	VectorWritable inputValue = new VectorWritable(inputVector);
 
-	LongWritable outputKey = new LongWritable(0);
+	NullWritable outputKey = NullWritable.get();
 	double[][] outputRows = { { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 },
 		{ 3.0, 6.0, 9.0 } };
 
 	mapDriver.withMapper(new H3Mapper());
 	mapDriver.withInput(inputKey, inputValue);
 
-	List<Pair<LongWritable, MatrixWritable>> list = mapDriver.run();
-	Pair<LongWritable, MatrixWritable> pair = list.get(0);
+	List<Pair<NullWritable, MatrixWritable>> list = mapDriver.run();
+	Pair<NullWritable, MatrixWritable> pair = list.get(0);
 
 	assertEquals(outputKey, pair.getFirst());
 
