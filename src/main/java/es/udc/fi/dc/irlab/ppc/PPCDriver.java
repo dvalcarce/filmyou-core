@@ -43,8 +43,8 @@ public class PPCDriver extends AbstractJob {
      * Load default command line arguments.
      */
     protected void loadDefaultSetup() {
-	addOption("numberOfUsers", "m", "Number of users", true);
-	addOption("numberOfItems", "n", "Number of movies", true);
+	addOption("numberOfUsers", "n", "Number of users", true);
+	addOption("numberOfItems", "m", "Number of movies", true);
 	addOption("numberOfClusters", "k", "Number of PPC clusters", true);
 	addOption("numberOfIterations", "i", "Number of PPC iterations", "1");
 	addOption("directory", "d", "Working directory", "ppc");
@@ -80,7 +80,8 @@ public class PPCDriver extends AbstractJob {
 	String baseDirectory = getOption("directory");
 
 	Path H = DataInitialization.createMatrix(baseDirectory, "H",
-		numberOfUsers, numberOfClusters);
+		numberOfClusters, numberOfUsers);
+	H = null;
 	Path W = DataInitialization.createMatrix(baseDirectory, "W",
 		numberOfItems, numberOfClusters);
 

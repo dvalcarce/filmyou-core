@@ -41,6 +41,7 @@ public class H1aMapper
 	float score = columns.get("score").getFloat();
 	context.write(new IntPairWritable(movie, 1), new VectorOrPrefWritable(
 		user, score));
+
     }
 
 }

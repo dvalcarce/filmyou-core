@@ -17,10 +17,13 @@
 package es.udc.fi.dc.irlab.ppc.hcomputation;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.cassandra.hadoop.ConfigHelper;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -55,7 +58,27 @@ public class ComputeHJob extends AbstractJob implements Tool {
      */
     public ComputeHJob(Path H, Path W) {
 	this.H = H;
-	this.W = H;
+	this.W = W;
+    }
+
+    /**
+     * Load default command line arguments.
+     */
+    protected void loadDefaultSetup() {
+	addOption("numberOfUsers", "n", "Number of users", true);
+	addOption("numberOfItems", "m", "Number of movies", true);
+	addOption("numberOfClusters", "k", "Number of PPC clusters", true);
+	addOption("numberOfIterations", "i", "Number of PPC iterations", "1");
+	addOption("directory", "d", "Working directory", "ppc");
+	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
+	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
+	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
+		true);
+	addOption("cassandraTable", "table", "Cassandra Column Family name",
+		true);
+	addOption("cassandraPartitioner", "partitioner",
+		"Cassandra Partitioner",
+		"org.apache.cassandra.dht.Murmur3Partitioner");
     }
 
     /**
@@ -63,16 +86,21 @@ public class ComputeHJob extends AbstractJob implements Tool {
      */
     @Override
     public int run(String[] args) throws Exception {
-	parseArguments(args, true, true);
+	loadDefaultSetup();
+
+	Map<String, List<String>> parsedArgs = parseArguments(args, true, true);
+	if (parsedArgs == null) {
+	    throw new IllegalArgumentException("Invalid arguments");
+	}
 
 	String directory = getOption("directory");
 	this.out1 = new Path(directory + "/hout1");
 	this.out2 = new Path(directory + "/hout2");
-	this.out3 = new Path(directory + "/hout2");
+	this.out3 = new Path(directory + "/hout3");
 
 	runJob1(W, out1);
 	runJob2(out1, out2);
-	runJob2(W, out3);
+	runJob3(W, out3);
 
 	return 0;
     }
@@ -104,11 +132,11 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(VectorOrPrefWritable.class);
 
-	job.setOutputKeyClass(LongWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
-
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setOutputKeyClass(LongWritable.class);
+	job.setOutputValueClass(VectorWritable.class);
 
 	job.setPartitionerClass(IntPairKeyPartitioner.class);
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);
@@ -158,11 +186,11 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	job.setMapOutputKeyClass(LongWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
 
-	job.setOutputKeyClass(LongWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
-
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setOutputKeyClass(LongWritable.class);
+	job.setOutputValueClass(VectorWritable.class);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -197,11 +225,11 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(MatrixWritable.class);
 
-	job.setOutputKeyClass(NullWritable.class);
-	job.setOutputValueClass(MatrixWritable.class);
-
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setOutputKeyClass(NullWritable.class);
+	job.setOutputValueClass(MatrixWritable.class);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -210,4 +238,5 @@ public class ComputeHJob extends AbstractJob implements Tool {
 
     }
 
+    
 }

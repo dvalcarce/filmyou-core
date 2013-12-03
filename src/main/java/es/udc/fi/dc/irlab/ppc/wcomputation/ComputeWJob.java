@@ -17,6 +17,8 @@
 package es.udc.fi.dc.irlab.ppc.wcomputation;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -39,7 +41,27 @@ public class ComputeWJob extends AbstractJob implements Tool {
      */
     public ComputeWJob(Path H, Path W) {
 	this.H = H;
-	this.W = H;
+	this.W = W;
+    }
+
+    /**
+     * Load default command line arguments.
+     */
+    protected void loadDefaultSetup() {
+	addOption("numberOfUsers", "n", "Number of users", true);
+	addOption("numberOfItems", "m", "Number of movies", true);
+	addOption("numberOfClusters", "k", "Number of PPC clusters", true);
+	addOption("numberOfIterations", "i", "Number of PPC iterations", "1");
+	addOption("directory", "d", "Working directory", "ppc");
+	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
+	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
+	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
+		true);
+	addOption("cassandraTable", "table", "Cassandra Column Family name",
+		true);
+	addOption("cassandraPartitioner", "partitioner",
+		"Cassandra Partitioner",
+		"org.apache.cassandra.dht.Murmur3Partitioner");
     }
 
     /**
@@ -47,12 +69,17 @@ public class ComputeWJob extends AbstractJob implements Tool {
      */
     @Override
     public int run(String[] args) throws Exception {
-	parseArguments(args, true, true);
+	loadDefaultSetup();
+
+	Map<String, List<String>> parsedArgs = parseArguments(args, true, true);
+	if (parsedArgs == null) {
+	    throw new IllegalArgumentException("Invalid arguments");
+	}
 
 	String directory = getOption("directory");
-	this.out1 = new Path(directory + "/out1");
+	this.out1 = new Path(directory + "/wout1");
 
-	// runJob1(W, out1);
+	// runJob1(H, out1);
 
 	return 0;
     }

@@ -40,5 +40,7 @@ public class H1bMapper
 	Vector vector = value.get();
 	context.write(new IntPairWritable(item, 0), new VectorOrPrefWritable(
 		vector));
+
     }
+
 }

@@ -18,7 +18,7 @@ package es.udc.fi.dc.irlab.ppc.hcomputation;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.math.Matrix;
@@ -31,10 +31,10 @@ import org.apache.mahout.math.VectorWritable;
  * 
  */
 public class H3Mapper extends
-	Mapper<LongWritable, VectorWritable, NullWritable, MatrixWritable> {
+	Mapper<IntWritable, VectorWritable, NullWritable, MatrixWritable> {
 
     @Override
-    protected void map(LongWritable key, VectorWritable value, Context context)
+    protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
 	Vector vector = value.get();
 

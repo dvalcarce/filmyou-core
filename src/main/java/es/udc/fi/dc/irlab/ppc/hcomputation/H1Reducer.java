@@ -37,12 +37,14 @@ public class H1Reducer
     protected void reduce(IntPairWritable key,
 	    Iterable<VectorOrPrefWritable> values, Context context)
 	    throws IOException, InterruptedException {
+
 	long user;
 	double score;
 	VectorWritable output;
 
 	Iterator<VectorOrPrefWritable> it = values.iterator();
 	Vector vector = it.next().getVector();
+
 	if (vector == null) {
 	    throw new IllegalArgumentException("Bad reduce-side join ("
 		    + getClass() + ")");
