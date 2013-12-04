@@ -19,7 +19,7 @@ package es.udc.fi.dc.irlab.ppc.hcomputation;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
@@ -31,7 +31,7 @@ import org.apache.mahout.math.VectorWritable;
  */
 public class H1Reducer
 	extends
-	Reducer<IntPairWritable, VectorOrPrefWritable, LongWritable, VectorWritable> {
+	Reducer<IntPairWritable, VectorOrPrefWritable, IntWritable, VectorWritable> {
 
     @Override
     protected void reduce(IntPairWritable key,
@@ -55,7 +55,7 @@ public class H1Reducer
 	    score = pref.getValue();
 	    if (score > 0) {
 		output = new VectorWritable(vector.times(score));
-		context.write(new LongWritable(user), output);
+		context.write(new IntWritable((int) user), output);
 	    }
 	}
 

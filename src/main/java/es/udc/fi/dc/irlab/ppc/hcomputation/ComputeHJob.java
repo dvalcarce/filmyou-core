@@ -26,7 +26,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
@@ -49,6 +48,7 @@ public class ComputeHJob extends AbstractJob implements Tool {
     private Path X;
     private Path C;
     private Path Y;
+    private Path H2;
 
     /**
      * ComputeHJob constructor.
@@ -100,11 +100,13 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	this.X = new Path(directory + "/X");
 	this.C = new Path(directory + "/C");
 	this.Y = new Path(directory + "/Y");
+	this.H2 = new Path(directory + "/H2");
 
 	runJob1(W, out1);
 	runJob2(out1, X);
 	runJob3(W, C);
 	runJob4(H, Y, C);
+	runJob5(H, X, Y, H2);
 
 	return 0;
     }
@@ -139,7 +141,7 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
 
-	job.setOutputKeyClass(LongWritable.class);
+	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
 
 	job.setPartitionerClass(IntPairKeyPartitioner.class);
@@ -187,13 +189,13 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	job.setMapperClass(H2Mapper.class);
 	job.setReducerClass(H2Reducer.class);
 
-	job.setMapOutputKeyClass(LongWritable.class);
+	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
 
-	job.setOutputKeyClass(LongWritable.class);
+	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
 
 	boolean succeeded = job.waitForCompletion(true);
@@ -282,4 +284,56 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	}
 
     }
+
+    /**
+     * Launch the fifth job for H computation.
+     * 
+     * @param inputPathH
+     *            initial H path
+     * @param inputPathX
+     *            input X
+     * @param inputPathY
+     *            input Y
+     * @param outputPath
+     *            output H path
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    protected void runJob5(Path inputPathH, Path inputPathX, Path inputPathY,
+	    Path outputPath) throws IOException, ClassNotFoundException,
+	    InterruptedException {
+
+	Job job = new Job(getConf(), "Job H5");
+	job.setJarByClass(ComputeHJob.class);
+
+	MultipleInputs.addInputPath(job, inputPathH,
+		SequenceFileInputFormat.class, H5HMapper.class);
+	MultipleInputs.addInputPath(job, inputPathX,
+		SequenceFileInputFormat.class, H5XMapper.class);
+	MultipleInputs.addInputPath(job, inputPathY,
+		SequenceFileInputFormat.class, H5YMapper.class);
+
+	job.setReducerClass(H5Reducer.class);
+
+	job.setMapOutputKeyClass(IntPairWritable.class);
+	job.setMapOutputValueClass(VectorWritable.class);
+
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setOutputKeyClass(IntWritable.class);
+	job.setOutputValueClass(VectorWritable.class);
+
+	job.setPartitionerClass(IntPairKeyPartitioner.class);
+	job.setSortComparatorClass(IntPairWritable.Comparator.class);
+	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
+
+	boolean succeeded = job.waitForCompletion(true);
+	if (!succeeded) {
+	    throw new RuntimeException(job.getJobName() + " failed!");
+	}
+
+    }
+
 }

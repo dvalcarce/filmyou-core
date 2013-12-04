@@ -19,7 +19,7 @@ package es.udc.fi.dc.irlab.ppc.hcomputation;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
@@ -29,10 +29,10 @@ import org.apache.mahout.math.VectorWritable;
  * 
  */
 public class H2Reducer extends
-	Reducer<LongWritable, VectorWritable, LongWritable, VectorWritable> {
+	Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
     @Override
-    protected void reduce(LongWritable key, Iterable<VectorWritable> values,
+    protected void reduce(IntWritable key, Iterable<VectorWritable> values,
 	    Context context) throws IOException, InterruptedException {
 	Iterator<VectorWritable> it = values.iterator();
 	Vector output = it.next().get();
@@ -40,7 +40,8 @@ public class H2Reducer extends
 	while (it.hasNext()) {
 	    output = it.next().get().plus(output);
 	}
-	context.write(key, new VectorWritable(output));
+	context.write(new IntWritable((int) key.get()), new VectorWritable(
+		output));
     }
 
 }

@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
@@ -32,11 +32,11 @@ import org.junit.Test;
 
 public class TestH1Reducer {
 
-    private ReduceDriver<IntPairWritable, VectorOrPrefWritable, LongWritable, VectorWritable> reduceDriver;
+    private ReduceDriver<IntPairWritable, VectorOrPrefWritable, IntWritable, VectorWritable> reduceDriver;
 
     @Before
     public void setup() {
-	reduceDriver = new ReduceDriver<IntPairWritable, VectorOrPrefWritable, LongWritable, VectorWritable>();
+	reduceDriver = new ReduceDriver<IntPairWritable, VectorOrPrefWritable, IntWritable, VectorWritable>();
     }
 
     @Test
@@ -48,7 +48,7 @@ public class TestH1Reducer {
 	inputValues.add(new VectorOrPrefWritable(inputVector));
 	inputValues.add(new VectorOrPrefWritable(1, 2.0f));
 
-	LongWritable outputKey = new LongWritable(1);
+	IntWritable outputKey = new IntWritable(1);
 	Vector outputVector = new DenseVector(new double[] { 2.0, 4.0, 6.0 });
 
 	reduceDriver.withReducer(new H1Reducer()).withInput(inputKey,
