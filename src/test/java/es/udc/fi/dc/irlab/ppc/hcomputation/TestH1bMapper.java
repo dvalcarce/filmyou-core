@@ -46,7 +46,7 @@ public class TestH1bMapper {
     @Test
     public void testMapSimpleData() throws IOException, ClassNotFoundException {
 
-	IntWritable inputKey = new IntWritable(0);
+	IntWritable inputKey = new IntWritable(1);
 	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
 	VectorWritable inputValue = new VectorWritable(inputVector);
 

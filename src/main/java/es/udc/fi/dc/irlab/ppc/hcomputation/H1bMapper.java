@@ -26,7 +26,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(i+1, 0), w_i> from H matrix ({w_i}).
+ * Emit <(i, 0), w_i> from H matrix ({w_i}).
  */
 public class H1bMapper
 	extends
@@ -36,7 +36,7 @@ public class H1bMapper
     protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
 
-	int item = key.get() + 1;
+	int item = key.get();
 	Vector vector = value.get();
 	context.write(new IntPairWritable(item, 0), new VectorOrPrefWritable(
 		vector));
