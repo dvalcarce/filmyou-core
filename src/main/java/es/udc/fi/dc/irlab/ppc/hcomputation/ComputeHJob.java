@@ -25,6 +25,7 @@ import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -45,8 +46,9 @@ public class ComputeHJob extends AbstractJob implements Tool {
     private final Path H;
     private final Path W;
     private Path out1;
-    private Path out2;
-    private Path out3;
+    private Path X;
+    private Path C;
+    private Path Y;
 
     /**
      * ComputeHJob constructor.
@@ -95,12 +97,14 @@ public class ComputeHJob extends AbstractJob implements Tool {
 
 	String directory = getOption("directory");
 	this.out1 = new Path(directory + "/hout1");
-	this.out2 = new Path(directory + "/hout2");
-	this.out3 = new Path(directory + "/hout3");
+	this.X = new Path(directory + "/X");
+	this.C = new Path(directory + "/C");
+	this.Y = new Path(directory + "/Y");
 
 	runJob1(W, out1);
-	runJob2(out1, out2);
-	runJob3(W, out3);
+	runJob2(out1, X);
+	runJob3(W, C);
+	runJob4(H, Y, C);
 
 	return 0;
     }
@@ -238,5 +242,44 @@ public class ComputeHJob extends AbstractJob implements Tool {
 
     }
 
-    
+    /**
+     * Launch the fourth job for H computation.
+     * 
+     * @param inputPath
+     *            output of the first job
+     * @param outputPath
+     *            temporal output
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    protected void runJob4(Path inputPath, Path outputPath, Path cachePath)
+	    throws IOException, ClassNotFoundException, InterruptedException {
+
+	Job job = new Job(getConf(), "Job H4");
+	job.setJarByClass(ComputeHJob.class);
+
+	job.setInputFormatClass(SequenceFileInputFormat.class);
+	SequenceFileInputFormat.addInputPath(job, inputPath);
+
+	job.setMapperClass(H4Mapper.class);
+	job.setNumReduceTasks(0);
+	job.setMapOutputKeyClass(IntWritable.class);
+	job.setMapOutputValueClass(VectorWritable.class);
+
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setOutputKeyClass(IntWritable.class);
+	job.setOutputValueClass(VectorWritable.class);
+
+	DistributedCache
+		.addCacheFile(cachePath.toUri(), job.getConfiguration());
+
+	boolean succeeded = job.waitForCompletion(true);
+	if (!succeeded) {
+	    throw new RuntimeException(job.getJobName() + " failed!");
+	}
+
+    }
 }

@@ -80,8 +80,8 @@ public class PPCDriver extends AbstractJob {
 	String baseDirectory = getOption("directory");
 
 	Path H = DataInitialization.createMatrix(baseDirectory, "H",
-		numberOfClusters, numberOfUsers);
-	H = null;
+		numberOfUsers, numberOfClusters);
+
 	Path W = DataInitialization.createMatrix(baseDirectory, "W",
 		numberOfItems, numberOfClusters);
 
