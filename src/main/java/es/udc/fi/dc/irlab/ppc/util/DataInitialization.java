@@ -65,7 +65,7 @@ public class DataInitialization {
 	Random randomGenerator = new Random();
 	try {
 	    for (int i = 1; i <= rows; i++) {
-		for (int j = 1; j <= cols; j++) {
+		for (int j = 0; j < cols; j++) {
 		    vector.setQuick(j, randomGenerator.nextDouble());
 		}
 		vector = vector.normalize(1);
