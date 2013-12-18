@@ -41,6 +41,7 @@ public class H5Reducer extends
 	Vector vectorX = it.next().get();
 	Vector vectorY = it.next().get();
 
+	// Performs (X ./ Y)
 	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
 	    public double apply(double a, double b) {
 		return a / b;

@@ -33,16 +33,15 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.util.Tool;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
-import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.VectorWritable;
 
+import es.udc.fi.dc.irlab.ppc.MatrixComputationJob;
 import es.udc.fi.dc.irlab.ppc.util.IntPairKeyPartitioner;
 
-public class ComputeHJob extends AbstractJob implements Tool {
+public class ComputeHJob extends MatrixComputationJob {
 
     private final Path H;
     private final Path W;
@@ -66,26 +65,6 @@ public class ComputeHJob extends AbstractJob implements Tool {
     }
 
     /**
-     * Load default command line arguments.
-     */
-    protected void loadDefaultSetup() {
-	addOption("numberOfUsers", "n", "Number of users", true);
-	addOption("numberOfItems", "m", "Number of movies", true);
-	addOption("numberOfClusters", "k", "Number of PPC clusters", true);
-	addOption("numberOfIterations", "i", "Number of PPC iterations", "1");
-	addOption("directory", "d", "Working directory", "ppc");
-	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
-	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
-	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
-		true);
-	addOption("cassandraTable", "table", "Cassandra Column Family name",
-		true);
-	addOption("cassandraPartitioner", "partitioner",
-		"Cassandra Partitioner",
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-    }
-
-    /**
      * Run all chained map-reduce jobs in order to compute H matrix.
      */
     @Override
@@ -97,7 +76,7 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	    throw new IllegalArgumentException("Invalid arguments");
 	}
 
-	String directory = getOption("directory");
+	String directory = getOption("directory") + "/hcomputation";
 	this.out1 = new Path(directory + "/hout1");
 	this.X = new Path(directory + "/X");
 	this.C = new Path(directory + "/C");
@@ -119,7 +98,7 @@ public class ComputeHJob extends AbstractJob implements Tool {
      * Launch the first job for H computation.
      * 
      * @param inputPath
-     *            initial H path
+     *            initial W path
      * @param outputPath
      *            temporal output
      * @throws IOException
@@ -176,7 +155,7 @@ public class ComputeHJob extends AbstractJob implements Tool {
      * @param inputPath
      *            output of the first job
      * @param outputPath
-     *            temporal output
+     *            X path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
@@ -213,9 +192,9 @@ public class ComputeHJob extends AbstractJob implements Tool {
      * Launch the third job for H computation.
      * 
      * @param inputPath
-     *            output of the first job
+     *            W path
      * @param outputPath
-     *            temporal output
+     *            C path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
@@ -252,9 +231,11 @@ public class ComputeHJob extends AbstractJob implements Tool {
      * Launch the fourth job for H computation.
      * 
      * @param inputPath
-     *            output of the first job
+     *            H path
      * @param outputPath
-     *            temporal output
+     *            Y path
+     * @param cachePath
+     *            C path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
