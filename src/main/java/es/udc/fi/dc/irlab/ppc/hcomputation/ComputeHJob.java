@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.ppc.hcomputation;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,7 @@ import org.apache.cassandra.hadoop.ConfigHelper;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -107,6 +109,8 @@ public class ComputeHJob extends AbstractJob implements Tool {
 	runJob3(W, C);
 	runJob4(H, Y, C);
 	runJob5(H, X, Y, H2);
+
+	FileUtil.replaceFile(new File(H2.toString()), new File(H.toString()));
 
 	return 0;
     }
