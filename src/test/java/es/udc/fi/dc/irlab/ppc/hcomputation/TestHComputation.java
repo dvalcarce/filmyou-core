@@ -47,7 +47,8 @@ public class TestHComputation extends IntegrationTest {
 		.insertData(TestData.A, cassandraKeyspace, cassandraTable);
 
 	ToolRunner.run(new Configuration(), new ComputeHJob(H, W), buildArgs());
-	compareData(TestData.H_one, new Path(baseDirectory + "/H"));
+	compareData(TestData.H_one, baseDirectory, new Path(baseDirectory
+		+ "/H"));
 
 	deletePreviousData();
     }

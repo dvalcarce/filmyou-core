@@ -34,7 +34,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <j, y_i> from <j, h_j> where y_i = C·h_j
+ * Emit <j, y_j> from <j, h_j> where y_j = C·h_j
  * 
  */
 public class H4Mapper extends

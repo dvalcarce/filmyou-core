@@ -54,8 +54,8 @@ public class TestH4Mapper {
 	fs.mkdirs(dirPath);
 	fs.create(filePath);
 
-	Matrix matrix = new DenseMatrix(new double[][] { { 2.0, 0.0, 0.0 },
-		{ 0.0, 2.0, 0.0 }, { 0.0, 0.0, 2.0 } });
+	Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
+		{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
 	NullWritable key = NullWritable.get();
 	MatrixWritable value = new MatrixWritable(matrix);
 

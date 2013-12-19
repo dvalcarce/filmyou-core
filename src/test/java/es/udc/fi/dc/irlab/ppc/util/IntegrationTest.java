@@ -38,7 +38,7 @@ import org.apache.mahout.math.VectorWritable;
  */
 public class IntegrationTest {
 
-    protected String baseDirectory = "integrationTestH";
+    protected String baseDirectory = "integrationTest";
     protected int numberOfIterations = 1;
     protected int cassandraPort = 9160;
     protected String cassandraHost = "127.0.0.1";
@@ -98,11 +98,11 @@ public class IntegrationTest {
 	fs.delete(path, true);
     }
 
-    protected void compareData(double[][] data, Path path) throws IOException {
+    protected void compareData(double[][] data, String baseDirectory, Path path) throws IOException {
 	double accuracy = 0.0001;
 	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
-	Path mergedFile = new Path(path.toString() + "/merged");
+	Path mergedFile = new Path(baseDirectory + "/merged");
 
 	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
 
