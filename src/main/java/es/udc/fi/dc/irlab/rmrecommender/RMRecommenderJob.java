@@ -19,8 +19,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 
-import es.udc.fi.dc.irlab.ppc.PPCDriver;
-
 public class RMRecommenderJob extends AbstractJob {
 
     /**
@@ -36,9 +34,9 @@ public class RMRecommenderJob extends AbstractJob {
 
     @Override
     public int run(String[] args) throws Exception {
-	if (ToolRunner.run(new Configuration(), new PPCDriver(), args) < 0) {
-	    throw new RuntimeException("PPCJob failed!");
-	}
+	// if (ToolRunner.run(new Configuration(), new PPCDriver(), args) < 0) {
+	// throw new RuntimeException("PPCJob failed!");
+	// }
 	// if (ToolRunner.run(new Configuration(), new RMJob(), args) < 0) {
 	// throw new RuntimeException("RMJob failed!");
 	// }
