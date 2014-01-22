@@ -31,6 +31,7 @@ public class CassandraUtils {
     }
 
     private Cluster getCluster() {
+	// Cluster is singleton
 	if (cluster == null) {
 	    cluster = Cluster.builder().addContactPoints(host).build();
 	}
@@ -50,17 +51,22 @@ public class CassandraUtils {
 
     }
 
-    private void createTableIfNeeded(Session session, String keyspace,
-	    String table) {
+    private void resetTable(Session session, String keyspace, String table) {
 
+	// Drop table if already exists
 	if (session.getCluster().getMetadata().getKeyspace(keyspace)
-		.getTable(table) == null) {
-	    String cqlStatement = String.format("CREATE TABLE %s ("
-		    + "user int," + "movie int," + "score float,"
-		    + "PRIMARY KEY (user, movie));", table);
+		.getTable(table) != null) {
+	    String cqlStatement = String.format("DROP TABLE %s", table);
 
 	    session.execute(cqlStatement);
 	}
+
+	// Create table
+	String cqlStatement = String
+		.format("CREATE TABLE %s (" + "user int," + "movie int,"
+			+ "score float," + "PRIMARY KEY (user, movie));", table);
+
+	session.execute(cqlStatement);
 
     }
 
@@ -71,8 +77,9 @@ public class CassandraUtils {
 
 	session = getCluster().connect(keyspace);
 
-	createTableIfNeeded(session, keyspace, table);
+	resetTable(session, keyspace, table);
 
+	// Insert data
 	for (int i = 0; i < data.length; i++) {
 	    for (int j = 0; j < data[i].length; j++) {
 		String cqlStatement = String
