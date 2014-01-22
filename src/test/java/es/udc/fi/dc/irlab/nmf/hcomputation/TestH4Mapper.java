@@ -34,8 +34,6 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.H4Mapper;
-
 public class TestH4Mapper {
 
     private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;

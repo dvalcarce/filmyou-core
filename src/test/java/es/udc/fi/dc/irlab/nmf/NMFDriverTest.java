@@ -49,8 +49,8 @@ public class NMFDriverTest extends IntegrationTest {
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
-	cassandraUtils
-		.insertData(NMFTestData.A, cassandraKeyspace, cassandraTable);
+	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+		cassandraTable);
 
 	/* Run job */
 	ToolRunner.run(new Configuration(), new NMFDriver(), buildArgs(H, W));

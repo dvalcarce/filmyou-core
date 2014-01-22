@@ -32,8 +32,6 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.wcomputation.W3Mapper;
-
 public class TestW3Mapper {
 
     private MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable> mapDriver;

@@ -48,8 +48,8 @@ public class TestHComputation extends IntegrationTest {
 
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
-	cassandraUtils
-		.insertData(NMFTestData.A, cassandraKeyspace, cassandraTable);
+	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+		cassandraTable);
 
 	ToolRunner.run(new Configuration(), new ComputeHJob(H, W, H2, W2),
 		buildArgs(H, W));

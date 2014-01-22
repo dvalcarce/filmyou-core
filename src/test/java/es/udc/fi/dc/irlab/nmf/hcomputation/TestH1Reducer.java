@@ -30,8 +30,6 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.H1Reducer;
-
 public class TestH1Reducer {
 
     private ReduceDriver<IntPairWritable, VectorOrPrefWritable, IntWritable, VectorWritable> reduceDriver;

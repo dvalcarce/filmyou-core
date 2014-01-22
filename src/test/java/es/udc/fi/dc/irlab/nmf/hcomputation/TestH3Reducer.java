@@ -33,8 +33,6 @@ import org.apache.mahout.math.Vector;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.H3Reducer;
-
 public class TestH3Reducer {
     private ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable> reduceDriver;
 
