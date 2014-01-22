@@ -32,8 +32,6 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.H1bMapper;
-
 public class TestH1bMapper {
 
     private MapDriver<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> mapDriver;

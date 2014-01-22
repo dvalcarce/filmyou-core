@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf;
+package es.udc.fi.dc.irlab.nmf.ppc;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.ComputeHJob;
+import es.udc.fi.dc.irlab.nmf.AbstractNMFDriver;
+import es.udc.fi.dc.irlab.nmf.ppc.hcomputation.PPCComputeHJob;
 import es.udc.fi.dc.irlab.nmf.wcomputation.ComputeWJob;
 
 /**
- * NMF algorithm driver.
+ * PPC algorithm driver.
  * 
  */
-public class NMFDriver extends AbstractNMFDriver {
+public class PPCDriver extends AbstractNMFDriver {
 
-    public NMFDriver() {
-	super(ComputeHJob.class, ComputeWJob.class);
+    public PPCDriver() {
+	super(PPCComputeHJob.class, ComputeWJob.class);
     }
 
 }

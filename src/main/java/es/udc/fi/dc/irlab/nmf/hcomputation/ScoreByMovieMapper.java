@@ -14,26 +14,33 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Map;
 
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
-import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(i, 2), y_i> from Y matrix ({y_i}).
+ * Emit <(i, 1), (j, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
-public class W5YMapper extends
-	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
+public class ScoreByMovieMapper
+	extends
+	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
+    protected void map(Map<String, ByteBuffer> keys,
+	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	context.write(new IntPairWritable(key.get(), 2), value);
+	int movie = keys.get("movie").getInt();
+	int user = keys.get("user").getInt();
+	float score = columns.get("score").getFloat();
+	context.write(new IntPairWritable(movie, 1), new VectorOrPrefWritable(
+		user, score));
 
     }
 

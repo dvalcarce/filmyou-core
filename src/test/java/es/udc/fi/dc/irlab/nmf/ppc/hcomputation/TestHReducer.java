@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
+
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ import java.util.List;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
+import org.apache.hadoop.mrunit.types.Pair;
 import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
@@ -29,9 +32,7 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.H5Reducer;
-
-public class TestH5Reducer {
+public class TestHReducer {
 
     private ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
 
@@ -42,6 +43,8 @@ public class TestH5Reducer {
 
     @Test
     public void testReducer() throws IOException {
+	double accuracy = 0.0001;
+
 	IntPairWritable inputKey = new IntPairWritable(1, 0);
 	List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
 
@@ -53,13 +56,21 @@ public class TestH5Reducer {
 		5.0, 4.0 })));
 
 	IntWritable outputKey = new IntWritable(1);
-	Vector outputVector = new DenseVector(new double[] { 3.0, 4.0, 15.0 });
+	Vector outputVector = new DenseVector(new double[] { 0.30952381, 0.75,
+		1.48275862 });
 
-	reduceDriver.withReducer(new H5Reducer());
+	reduceDriver.withReducer(new PPCHReducer());
 	reduceDriver.withInput(inputKey, inputValues);
-	reduceDriver.withOutput(outputKey, new VectorWritable(outputVector));
 
-	reduceDriver.runTest();
+	List<Pair<IntWritable, VectorWritable>> list = reduceDriver.run();
+	Pair<IntWritable, VectorWritable> pair = list.get(0);
+
+	assertEquals(outputKey, pair.getFirst());
+	Vector vector = pair.getSecond().get();
+
+	for (int i = 0; i < outputVector.size(); i++) {
+	    assertEquals(outputVector.get(i), vector.get(i), accuracy);
+	}
     }
 
 }

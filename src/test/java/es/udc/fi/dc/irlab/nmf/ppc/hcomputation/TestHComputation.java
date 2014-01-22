@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -27,10 +27,10 @@ import es.udc.fi.dc.irlab.nmf.util.IntegrationTest;
 import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
- * Integration test for one iteration of WComputation (NMF)
+ * Integration test for one iteration of HComputation (PPC)
  * 
  */
-public class TestWComputation extends IntegrationTest {
+public class TestHComputation extends IntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -51,9 +51,10 @@ public class TestWComputation extends IntegrationTest {
 	cassandraUtils
 		.insertData(NMFTestData.A, cassandraKeyspace, cassandraTable);
 
-	ToolRunner.run(new Configuration(), new ComputeWJob(H, W, H2, W2),
+	ToolRunner.run(new Configuration(), new PPCComputeHJob(H, W, H2, W2),
 		buildArgs(H, W));
-	compareData(NMFTestData.W_one, baseDirectory, W2);
+	compareData(NMFTestData.H_one, baseDirectory, new Path(baseDirectory
+		+ "/H2"));
 
 	deletePreviousData();
 

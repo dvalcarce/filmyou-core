@@ -55,9 +55,10 @@ public class IntegrationTest {
      */
     protected String[] buildArgs(Path H, Path W) {
 	String[] result = new String[] { "--numberOfUsers",
-		String.valueOf(TestData.numberOfUsers), "--numberOfItems",
-		String.valueOf(TestData.numberOfItems), "--numberOfClusters",
-		String.valueOf(TestData.numberOfClusters),
+		String.valueOf(NMFTestData.numberOfUsers), "--numberOfItems",
+		String.valueOf(NMFTestData.numberOfItems),
+		"--numberOfClusters",
+		String.valueOf(NMFTestData.numberOfClusters),
 		"--numberOfIterations", String.valueOf(numberOfIterations),
 		"--directory", baseDirectory, "--cassandraPort",
 		String.valueOf(cassandraPort), "--cassandraHost",

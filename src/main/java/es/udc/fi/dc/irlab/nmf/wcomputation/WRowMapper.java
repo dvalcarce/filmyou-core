@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
 
@@ -24,16 +24,16 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(j, 1), x_j> from X matrix ({x_j}).
+ * Emit <(i, 0), w_i> from H matrix ({w_i}).
  */
-public class H5XMapper extends
+public class WRowMapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
 
     @Override
     protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
 
-	context.write(new IntPairWritable(key.get(), 1), value);
+	context.write(new IntPairWritable(key.get(), 0), value);
 
     }
 

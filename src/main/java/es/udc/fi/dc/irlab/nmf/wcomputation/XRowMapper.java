@@ -14,19 +14,27 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.ComputeHJob;
-import es.udc.fi.dc.irlab.nmf.wcomputation.ComputeWJob;
+import java.io.IOException;
+
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.mahout.common.IntPairWritable;
+import org.apache.mahout.math.VectorWritable;
 
 /**
- * NMF algorithm driver.
- * 
+ * Emit <(i, 1), x_i> from X matrix ({x_i}).
  */
-public class NMFDriver extends AbstractNMFDriver {
+public class XRowMapper extends
+	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
 
-    public NMFDriver() {
-	super(ComputeHJob.class, ComputeWJob.class);
+    @Override
+    protected void map(IntWritable key, VectorWritable value, Context context)
+	    throws IOException, InterruptedException {
+
+	context.write(new IntPairWritable(key.get(), 1), value);
+
     }
 
 }

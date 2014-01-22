@@ -21,14 +21,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.NMFDriver;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.nmf.util.IntegrationTest;
-import es.udc.fi.dc.irlab.nmf.util.TestData;
+import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
- * Integration test for ten iterations of PCC algorithm
+ * Integration test for ten iterations of NMF algorithm
  * 
  */
 public class NMFDriverTest extends IntegrationTest {
@@ -40,25 +39,25 @@ public class NMFDriverTest extends IntegrationTest {
 
 	numberOfIterations = 10;
 
-	Path H = DataInitialization.createMatrix(TestData.H_init,
-		baseDirectory, "H", TestData.numberOfUsers,
-		TestData.numberOfClusters);
-	Path W = DataInitialization.createMatrix(TestData.W_init,
-		baseDirectory, "W", TestData.numberOfItems,
-		TestData.numberOfClusters);
+	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
+		baseDirectory, "H", NMFTestData.numberOfUsers,
+		NMFTestData.numberOfClusters);
+	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
+		baseDirectory, "W", NMFTestData.numberOfItems,
+		NMFTestData.numberOfClusters);
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils
-		.insertData(TestData.A, cassandraKeyspace, cassandraTable);
+		.insertData(NMFTestData.A, cassandraKeyspace, cassandraTable);
 
 	/* Run job */
 	ToolRunner.run(new Configuration(), new NMFDriver(), buildArgs(H, W));
 
 	/* Run asserts */
-	compareData(TestData.H_ten, baseDirectory, H);
-	compareData(TestData.W_ten, baseDirectory, W);
+	compareData(NMFTestData.H_ten, baseDirectory, H);
+	compareData(NMFTestData.W_ten, baseDirectory, W);
 
 	deletePreviousData();
 

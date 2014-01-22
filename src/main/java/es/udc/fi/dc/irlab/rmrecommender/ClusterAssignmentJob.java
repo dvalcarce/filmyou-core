@@ -19,9 +19,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 
-import es.udc.fi.dc.irlab.nmf.ppc.PPCDriver;
-
-public class RMRecommenderJob extends AbstractJob {
+public class ClusterAssignmentJob extends AbstractJob {
 
     /**
      * Main routine. Launch RMRecommender job.
@@ -31,20 +29,14 @@ public class RMRecommenderJob extends AbstractJob {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-	ToolRunner.run(new Configuration(), new RMRecommenderJob(), args);
+	ToolRunner.run(new Configuration(), new ClusterAssignmentJob(), args);
     }
 
     @Override
     public int run(String[] args) throws Exception {
-	if (ToolRunner.run(new Configuration(), new PPCDriver(), args) < 0) {
-	    throw new RuntimeException("PPCJob failed!");
-	}
-
-	if (ToolRunner.run(new Configuration(), new ClusterAssignmentJob(),
-		args) < 0) {
-	    throw new RuntimeException("ClusterAssignmentJob failed!");
-	}
-
+	// if (ToolRunner.run(new Configuration(), new PPCDriver(), args) < 0) {
+	// throw new RuntimeException("PPCJob failed!");
+	// }
 	// if (ToolRunner.run(new Configuration(), new RMJob(), args) < 0) {
 	// throw new RuntimeException("RMJob failed!");
 	// }

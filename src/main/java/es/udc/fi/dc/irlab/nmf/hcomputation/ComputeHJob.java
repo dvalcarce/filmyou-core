@@ -40,8 +40,6 @@ import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 
 public class ComputeHJob extends MatrixComputationJob {
 
-    private String directory;
-
     /**
      * ComputeHJob constructor.
      * 
@@ -101,7 +99,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	job.setJarByClass(ComputeHJob.class);
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
-		CqlPagingInputFormat.class, H1aMapper.class);
+		CqlPagingInputFormat.class, ScoreByMovieMapper.class);
 	MultipleInputs.addInputPath(job, inputPath,
 		SequenceFileInputFormat.class, H1bMapper.class);
 
@@ -159,7 +157,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
 	job.setMapperClass(Mapper.class);
-	job.setReducerClass(H2Reducer.class);
+	job.setReducerClass(XColumnReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -282,13 +280,13 @@ public class ComputeHJob extends MatrixComputationJob {
 	job.setJarByClass(ComputeHJob.class);
 
 	MultipleInputs.addInputPath(job, inputPathH,
-		SequenceFileInputFormat.class, H5HMapper.class);
+		SequenceFileInputFormat.class, HColumnMapper.class);
 	MultipleInputs.addInputPath(job, inputPathX,
-		SequenceFileInputFormat.class, H5XMapper.class);
+		SequenceFileInputFormat.class, XColumnMapper.class);
 	MultipleInputs.addInputPath(job, inputPathY,
-		SequenceFileInputFormat.class, H5YMapper.class);
+		SequenceFileInputFormat.class, YColumnMapper.class);
 
-	job.setReducerClass(H5Reducer.class);
+	job.setReducerClass(HReducer.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);

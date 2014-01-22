@@ -21,14 +21,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.ComputeHJob;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.nmf.util.IntegrationTest;
-import es.udc.fi.dc.irlab.nmf.util.TestData;
+import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
- * Integration test for one iteration of HComputation
+ * Integration test for one iteration of HComputation (NMF)
  * 
  */
 public class TestHComputation extends IntegrationTest {
@@ -38,24 +37,23 @@ public class TestHComputation extends IntegrationTest {
 
 	deletePreviousData();
 
-	Path H = DataInitialization.createMatrix(TestData.H_init,
-		baseDirectory, "H", TestData.numberOfUsers,
-		TestData.numberOfClusters);
-	Path W = DataInitialization.createMatrix(TestData.W_init,
-		baseDirectory, "W", TestData.numberOfItems,
-		TestData.numberOfClusters);
+	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
+		baseDirectory, "H", NMFTestData.numberOfUsers,
+		NMFTestData.numberOfClusters);
+	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
+		baseDirectory, "W", NMFTestData.numberOfItems,
+		NMFTestData.numberOfClusters);
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
 
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils
-		.insertData(TestData.A, cassandraKeyspace, cassandraTable);
+		.insertData(NMFTestData.A, cassandraKeyspace, cassandraTable);
 
 	ToolRunner.run(new Configuration(), new ComputeHJob(H, W, H2, W2),
 		buildArgs(H, W));
-	compareData(TestData.H_one, baseDirectory, new Path(baseDirectory
-		+ "/H2"));
+	compareData(NMFTestData.H_one, baseDirectory, H2);
 
 	deletePreviousData();
 

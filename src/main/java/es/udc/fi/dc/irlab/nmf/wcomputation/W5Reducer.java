@@ -27,7 +27,7 @@ import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 
 /**
- * Emit <i, h_i · x_i / y_i> from <i, {h_i, x_i, y_i}>.
+ * Emit <i, w_i · x_i / y_i> from <i, {w_i, x_i, y_i}>.
  */
 public class W5Reducer extends
 	Reducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
@@ -37,7 +37,7 @@ public class W5Reducer extends
 	    Context context) throws IOException, InterruptedException {
 
 	Iterator<VectorWritable> it = values.iterator();
-	Vector vectorH = it.next().get();
+	Vector vectorW = it.next().get();
 	Vector vectorX = it.next().get();
 	Vector vectorY = it.next().get();
 
@@ -49,7 +49,7 @@ public class W5Reducer extends
 	});
 
 	context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		vectorH.times(vectorXY)));
+		vectorW.times(vectorXY)));
 
     }
 }

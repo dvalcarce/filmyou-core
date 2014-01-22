@@ -17,10 +17,10 @@
 package es.udc.fi.dc.irlab.nmf.util;
 
 /**
- * Contains data for testing purposes.
+ * Contains data for NMF testing purposes.
  * 
  */
-public class TestData {
+public class NMFTestData {
 
     public static final int numberOfUsers = 30;
     public static final int numberOfItems = 100;

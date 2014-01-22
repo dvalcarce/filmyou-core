@@ -28,9 +28,7 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.hcomputation.H2Reducer;
-
-public class TestH2Reducer {
+public class TestXColumnReducer {
 
     private ReduceDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
 
@@ -53,7 +51,7 @@ public class TestH2Reducer {
 	Vector outputVector = new DenseVector(new double[] { 5.0, 10.0, 15.0 });
 	VectorWritable outputValue = new VectorWritable(outputVector);
 
-	reduceDriver.withReducer(new H2Reducer());
+	reduceDriver.withReducer(new XColumnReducer());
 	reduceDriver.withInput(inputKey, inputValues);
 	reduceDriver.withOutput(outputKey, outputValue);
 

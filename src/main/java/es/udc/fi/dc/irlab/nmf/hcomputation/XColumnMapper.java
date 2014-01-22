@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 
@@ -24,9 +24,9 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(i, 1), x_i> from X matrix ({x_i}).
+ * Emit <(j, 1), x_j> from X matrix ({x_j}).
  */
-public class W5XMapper extends
+public class XColumnMapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
 
     @Override

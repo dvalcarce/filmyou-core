@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
 
 import java.io.IOException;
 
@@ -36,9 +36,19 @@ import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
+import es.udc.fi.dc.irlab.nmf.hcomputation.H1Reducer;
+import es.udc.fi.dc.irlab.nmf.hcomputation.H1bMapper;
+import es.udc.fi.dc.irlab.nmf.hcomputation.H3Mapper;
+import es.udc.fi.dc.irlab.nmf.hcomputation.H3Reducer;
+import es.udc.fi.dc.irlab.nmf.hcomputation.H4Mapper;
+import es.udc.fi.dc.irlab.nmf.hcomputation.HColumnMapper;
+import es.udc.fi.dc.irlab.nmf.hcomputation.ScoreByMovieMapper;
+import es.udc.fi.dc.irlab.nmf.hcomputation.XColumnMapper;
+import es.udc.fi.dc.irlab.nmf.hcomputation.XColumnReducer;
+import es.udc.fi.dc.irlab.nmf.hcomputation.YColumnMapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 
-public class ComputeWJob extends MatrixComputationJob {
+public class PPCComputeHJob extends MatrixComputationJob {
 
     /**
      * ComputeHJob constructor.
@@ -52,7 +62,7 @@ public class ComputeWJob extends MatrixComputationJob {
      * @param W2
      *            Path to the output W matrix
      */
-    public ComputeWJob(Path H, Path W, Path H2, Path W2) {
+    public PPCComputeHJob(Path H, Path W, Path H2, Path W2) {
 	super(H, W, H2, W2);
     }
 
@@ -63,29 +73,29 @@ public class ComputeWJob extends MatrixComputationJob {
     public int run(String[] args) throws Exception {
 	parseInput(args);
 
-	directory = getOption("directory") + "/wcomputation";
+	directory = getOption("directory") + "/hcomputation";
 
 	cleanPreviousData(directory);
 
-	this.out1 = new Path(directory + "/wout1");
+	this.out1 = new Path(directory + "/hout1");
 	this.X = new Path(directory + "/X");
 	this.C = new Path(directory + "/C");
 	this.Y = new Path(directory + "/Y");
 
-	runJob1(H, out1);
+	runJob1(W, out1);
 	runJob2(out1, X);
-	runJob3(H, C);
-	runJob4(W, Y, C);
-	runJob5(W, X, Y, W2);
+	runJob3(W, C);
+	runJob4(H, Y, C);
+	runJob5(H, X, Y, H2);
 
 	return 0;
     }
 
     /**
-     * Launch the first job for W computation.
+     * Launch the first job for H computation.
      * 
      * @param inputPath
-     *            initial H path
+     *            initial W path
      * @param outputPath
      *            temporal output
      * @throws IOException
@@ -95,15 +105,15 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob1(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job W1");
-	job.setJarByClass(ComputeWJob.class);
+	Job job = new Job(getConf(), "PPC_H1");
+	job.setJarByClass(PPCComputeHJob.class);
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
-		CqlPagingInputFormat.class, ScoreByUserMapper.class);
+		CqlPagingInputFormat.class, ScoreByMovieMapper.class);
 	MultipleInputs.addInputPath(job, inputPath,
-		SequenceFileInputFormat.class, W1bMapper.class);
+		SequenceFileInputFormat.class, H1bMapper.class);
 
-	job.setReducerClass(W1Reducer.class);
+	job.setReducerClass(H1Reducer.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(VectorOrPrefWritable.class);
@@ -137,7 +147,7 @@ public class ComputeWJob extends MatrixComputationJob {
     }
 
     /**
-     * Launch the second job for W computation.
+     * Launch the second job for H computation.
      * 
      * @param inputPath
      *            output of the first job
@@ -150,14 +160,14 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob2(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job W2");
-	job.setJarByClass(ComputeWJob.class);
+	Job job = new Job(getConf(), "PPC_H2");
+	job.setJarByClass(PPCComputeHJob.class);
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
 	job.setMapperClass(Mapper.class);
-	job.setReducerClass(XRowReducer.class);
+	job.setReducerClass(XColumnReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -176,7 +186,7 @@ public class ComputeWJob extends MatrixComputationJob {
     }
 
     /**
-     * Launch the third job for W computation.
+     * Launch the third job for H computation.
      * 
      * @param inputPath
      *            W path
@@ -189,14 +199,14 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob3(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job W3");
-	job.setJarByClass(ComputeWJob.class);
+	Job job = new Job(getConf(), "PPC_H3");
+	job.setJarByClass(PPCComputeHJob.class);
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
-	job.setMapperClass(W3Mapper.class);
-	job.setReducerClass(W3Reducer.class);
+	job.setMapperClass(H3Mapper.class);
+	job.setReducerClass(H3Reducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(MatrixWritable.class);
@@ -230,13 +240,13 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob4(Path inputPath, Path outputPath, Path cachePath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job W4");
-	job.setJarByClass(ComputeWJob.class);
+	Job job = new Job(getConf(), "PPC_H4");
+	job.setJarByClass(PPCComputeHJob.class);
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
-	job.setMapperClass(W4Mapper.class);
+	job.setMapperClass(H4Mapper.class);
 	job.setNumReduceTasks(0);
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -260,33 +270,37 @@ public class ComputeWJob extends MatrixComputationJob {
     /**
      * Launch the fifth job for H computation.
      * 
-     * @param inputPathW
-     *            initial W path
+     * @param inputPathH
+     *            initial H path
      * @param inputPathX
      *            input X
      * @param inputPathY
      *            input Y
+     * @param inputPathD
+     *            input D
+     * @param inputPathE
+     *            input E
      * @param outputPath
-     *            output W path
+     *            output H path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob5(Path inputPathW, Path inputPathX, Path inputPathY,
+    protected void runJob5(Path inputPathH, Path inputPathX, Path inputPathY,
 	    Path outputPath) throws IOException, ClassNotFoundException,
 	    InterruptedException {
 
-	Job job = new Job(getConf(), "Job W5");
-	job.setJarByClass(ComputeWJob.class);
+	Job job = new Job(getConf(), "PPC_H5");
+	job.setJarByClass(PPCComputeHJob.class);
 
-	MultipleInputs.addInputPath(job, inputPathW,
-		SequenceFileInputFormat.class, WRowMapper.class);
+	MultipleInputs.addInputPath(job, inputPathH,
+		SequenceFileInputFormat.class, HColumnMapper.class);
 	MultipleInputs.addInputPath(job, inputPathX,
-		SequenceFileInputFormat.class, XRowMapper.class);
+		SequenceFileInputFormat.class, XColumnMapper.class);
 	MultipleInputs.addInputPath(job, inputPathY,
-		SequenceFileInputFormat.class, YRowMapper.class);
+		SequenceFileInputFormat.class, YColumnMapper.class);
 
-	job.setReducerClass(W5Reducer.class);
+	job.setReducerClass(PPCHReducer.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);

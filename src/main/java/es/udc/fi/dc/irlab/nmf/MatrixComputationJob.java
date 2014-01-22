@@ -29,6 +29,8 @@ import org.apache.mahout.common.AbstractJob;
 
 abstract public class MatrixComputationJob extends AbstractJob implements Tool {
 
+    protected String directory;
+
     protected Path H;
     protected Path W;
     protected Path H2;

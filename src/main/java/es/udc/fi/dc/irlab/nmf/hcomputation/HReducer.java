@@ -14,34 +14,42 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
+import org.apache.mahout.math.function.DoubleDoubleFunction;
 
 /**
- * Emit <j,x_j> from <j, {A_{i,j}w_i^T}> where x_j = sum_i(A_{i,j}w_i^T)
- * 
+ * Emit <j, h_j · x_j / y_j> from <j, {h_j, x_j, y_j}>.
  */
-public class W2Reducer extends
-	Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class HReducer extends
+	Reducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
 
     @Override
-    protected void reduce(IntWritable key, Iterable<VectorWritable> values,
+    protected void reduce(IntPairWritable key, Iterable<VectorWritable> values,
 	    Context context) throws IOException, InterruptedException {
+
 	Iterator<VectorWritable> it = values.iterator();
-	Vector output = it.next().get();
+	Vector vectorH = it.next().get();
+	Vector vectorX = it.next().get();
+	Vector vectorY = it.next().get();
 
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
-	}
-	context.write(new IntWritable((int) key.get()), new VectorWritable(
-		output));
+	// Performs (X ./ Y)
+	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
+	    public double apply(double a, double b) {
+		return a / b;
+	    }
+	});
+
+	context.write(new IntWritable(key.getFirst()), new VectorWritable(
+		vectorH.times(vectorXY)));
+
     }
-
 }
