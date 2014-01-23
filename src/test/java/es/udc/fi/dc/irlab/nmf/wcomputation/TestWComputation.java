@@ -16,21 +16,20 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
-import es.udc.fi.dc.irlab.nmf.util.IntegrationTest;
+import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
 import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
  * Integration test for one iteration of WComputation (NMF)
  * 
  */
-public class TestWComputation extends IntegrationTest {
+public class TestWComputation extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -51,8 +50,12 @@ public class TestWComputation extends IntegrationTest {
 	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
 		cassandraTable);
 
-	ToolRunner.run(new Configuration(), new ComputeWJob(H, W, H2, W2),
-		buildArgs(H, W));
+	numberOfUsers = NMFTestData.numberOfUsers;
+	numberOfItems = NMFTestData.numberOfItems;
+	numberOfClusters = NMFTestData.numberOfClusters;
+	numberOfIterations = 1;
+
+	ToolRunner.run(buildConf(H, W), new ComputeWJob(H, W, H2, W2), null);
 	compareData(NMFTestData.W_one, baseDirectory, W2);
 
 	deletePreviousData();

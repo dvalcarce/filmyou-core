@@ -61,9 +61,7 @@ public class ComputeHJob extends MatrixComputationJob {
      */
     @Override
     public int run(String[] args) throws Exception {
-	parseInput(args);
-
-	directory = getOption("directory") + "/hcomputation";
+	directory = getConf().get("directory") + "/hcomputation";
 
 	cleanPreviousData(directory);
 
@@ -121,12 +119,14 @@ public class ComputeHJob extends MatrixComputationJob {
 	// Cassandra settings
 	Configuration conf = job.getConfiguration();
 
-	ConfigHelper.setInputRpcPort(conf, getOption("cassandraPort"));
-	ConfigHelper.setInputInitialAddress(conf, getOption("cassandraHost"));
+	ConfigHelper.setInputRpcPort(conf, getConf().get("cassandraPort"));
+	ConfigHelper.setInputInitialAddress(conf, getConf()
+		.get("cassandraHost"));
 	ConfigHelper.setInputPartitioner(conf,
-		getOption("cassandraPartitioner"));
-	ConfigHelper.setInputColumnFamily(conf, getOption("cassandraKeyspace"),
-		getOption("cassandraTable"), true);
+		getConf().get("cassandraPartitioner"));
+	ConfigHelper.setInputColumnFamily(conf,
+		getConf().get("cassandraKeyspace"),
+		getConf().get("cassandraTable"), true);
 	ConfigHelper.setReadConsistencyLevel(conf, "ONE");
 
 	boolean succeeded = job.waitForCompletion(true);

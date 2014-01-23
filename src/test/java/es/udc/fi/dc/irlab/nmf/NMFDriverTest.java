@@ -16,21 +16,20 @@
 
 package es.udc.fi.dc.irlab.nmf;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
-import es.udc.fi.dc.irlab.nmf.util.IntegrationTest;
+import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
 import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
  * Integration test for ten iterations of NMF algorithm
  * 
  */
-public class NMFDriverTest extends IntegrationTest {
+public class NMFDriverTest extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -53,7 +52,7 @@ public class NMFDriverTest extends IntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	ToolRunner.run(new Configuration(), new NMFDriver(), buildArgs(H, W));
+	ToolRunner.run(buildConf(H, W), new NMFDriver(), null);
 
 	/* Run asserts */
 	compareData(NMFTestData.H_ten, baseDirectory, H);

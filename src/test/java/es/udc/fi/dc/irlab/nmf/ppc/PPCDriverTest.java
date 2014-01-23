@@ -16,7 +16,6 @@
 
 package es.udc.fi.dc.irlab.nmf.ppc;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
@@ -24,13 +23,13 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.nmf.ppc.util.PPCTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
-import es.udc.fi.dc.irlab.nmf.util.IntegrationTest;
+import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
 
 /**
  * Integration test for ten iterations of PPC algorithm
  * 
  */
-public class PPCDriverTest extends IntegrationTest {
+public class PPCDriverTest extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -53,7 +52,7 @@ public class PPCDriverTest extends IntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	ToolRunner.run(new Configuration(), new PPCDriver(), buildArgs(H, W));
+	ToolRunner.run(buildConf(H, W), new PPCDriver(), null);
 
 	/* Run asserts */
 	compareData(PPCTestData.W_ten, baseDirectory, W);

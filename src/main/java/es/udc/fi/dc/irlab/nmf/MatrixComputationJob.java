@@ -18,8 +18,6 @@ package es.udc.fi.dc.irlab.nmf;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -48,50 +46,12 @@ abstract public class MatrixComputationJob extends AbstractJob implements Tool {
     }
 
     /**
-     * Parse command line arguments.
-     * 
-     * @param args
-     *            command line arguments
-     * @throws IOException
-     */
-    protected void parseInput(String[] args) throws IOException {
-	loadDefaultSetup();
-
-	Map<String, List<String>> parsedArgs = parseArguments(args, true, true);
-	if (parsedArgs == null) {
-	    throw new IllegalArgumentException("Invalid arguments");
-	}
-    }
-
-    /**
-     * Load default command line arguments.
-     */
-    protected void loadDefaultSetup() {
-	addOption("numberOfUsers", "n", "Number of users", true);
-	addOption("numberOfItems", "m", "Number of movies", true);
-	addOption("numberOfClusters", "k", "Number of clusters", true);
-	addOption("numberOfIterations", "i", "Number of iterations", "1");
-	addOption("directory", "d", "Working directory", "clustering");
-	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
-	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
-	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
-		true);
-	addOption("cassandraTable", "table", "Cassandra Column Family name",
-		true);
-	addOption("cassandraPartitioner", "partitioner",
-		"Cassandra Partitioner",
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-	addOption("H", "h", "Initial H matrix", false);
-	addOption("W", "w", "Initial W matrix", false);
-    }
-
-    /**
      * Delete directory.
      * 
      * @throws IOException
      */
     protected void cleanPreviousData(String path) throws IOException {
-	Configuration conf = new Configuration();
+	Configuration conf = getConf();
 	FileSystem fs = FileSystem.get(URI.create(path), conf);
 	fs.delete(new Path(path), true);
     }

@@ -17,8 +17,6 @@
 package es.udc.fi.dc.irlab.nmf;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -57,28 +55,6 @@ public abstract class AbstractNMFDriver extends AbstractJob {
     }
 
     /**
-     * Load default command line arguments.
-     */
-    protected void loadDefaultSetup() {
-	addOption("numberOfUsers", "n", "Number of users", true);
-	addOption("numberOfItems", "m", "Number of movies", true);
-	addOption("numberOfClusters", "k", "Number of clusters", true);
-	addOption("numberOfIterations", "i", "Number of iterations", "1");
-	addOption("directory", "d", "Working directory", "clustering");
-	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
-	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
-	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
-		true);
-	addOption("cassandraTable", "table", "Cassandra Column Family name",
-		true);
-	addOption("cassandraPartitioner", "partitioner",
-		"Cassandra Partitioner",
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-	addOption("H", "h", "Initial H matrix", false);
-	addOption("W", "w", "Initial W matrix", false);
-    }
-
-    /**
      * Create random initial data for H and W.
      * 
      * @throws IOException
@@ -97,24 +73,18 @@ public abstract class AbstractNMFDriver extends AbstractJob {
      */
     @Override
     public int run(String[] args) throws Exception {
-	/* Parse input */
-	loadDefaultSetup();
-	Map<String, List<String>> parsedArgs = parseArguments(args, true, true);
-	if (parsedArgs == null) {
-	    throw new IllegalArgumentException("Invalid arguments");
-	}
+	numberOfUsers = getConf().getInt("numberOfUsers", 0);
+	numberOfItems = getConf().getInt("numberOfItems", 0);
+	numberOfClusters = getConf().getInt("numberOfClusters", 0);
+	numberOfIterations = getConf().getInt("numberOfIterations", 0);
 
-	numberOfUsers = Integer.parseInt(getOption("numberOfUsers"));
-	numberOfItems = Integer.parseInt(getOption("numberOfItems"));
-	numberOfClusters = Integer.parseInt(getOption("numberOfClusters"));
-	numberOfIterations = Integer.parseInt(getOption("numberOfIterations"));
-
-	baseDirectory = getOption("directory");
+	baseDirectory = getConf().get("directory");
 
 	/* Matrix initialisation */
-	if (getOption("H") != null) {
-	    H = new Path(getOption("H"));
-	    W = new Path(getOption("W"));
+	Configuration conf = getConf();
+	if (conf.get("H") != null) {
+	    H = new Path(conf.get("H"));
+	    W = new Path(conf.get("W"));
 	} else {
 	    createInitialMatrices();
 	}
@@ -132,8 +102,8 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 		    new Class[] { Path.class, Path.class, Path.class,
 			    Path.class }).newInstance(H, W, H2, W2);
 
-	    ToolRunner.run(new Configuration(), wJob, args);
-	    ToolRunner.run(new Configuration(), hJob, args);
+	    ToolRunner.run(getConf(), wJob, args);
+	    ToolRunner.run(getConf(), hJob, args);
 
 	    fs.delete(H, true);
 	    fs.delete(W, true);

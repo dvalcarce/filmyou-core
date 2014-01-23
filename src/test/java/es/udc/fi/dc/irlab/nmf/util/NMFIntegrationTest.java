@@ -34,10 +34,15 @@ import org.apache.mahout.math.VectorWritable;
  * Integration test class utility
  * 
  */
-public class IntegrationTest {
+public class NMFIntegrationTest {
 
     protected String baseDirectory = "integrationTest";
-    protected int numberOfIterations = 1;
+
+    protected int numberOfUsers = 0;
+    protected int numberOfItems = 0;
+    protected int numberOfClusters = 0;
+    protected int numberOfIterations = 0;
+
     protected int cassandraPort = 9160;
     protected String cassandraHost = "127.0.0.1";
     protected String cassandraPartitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
@@ -53,20 +58,23 @@ public class IntegrationTest {
      *            W matrix path
      * @return
      */
-    protected String[] buildArgs(Path H, Path W) {
-	String[] result = new String[] { "--numberOfUsers",
-		String.valueOf(NMFTestData.numberOfUsers), "--numberOfItems",
-		String.valueOf(NMFTestData.numberOfItems),
-		"--numberOfClusters",
-		String.valueOf(NMFTestData.numberOfClusters),
-		"--numberOfIterations", String.valueOf(numberOfIterations),
-		"--directory", baseDirectory, "--cassandraPort",
-		String.valueOf(cassandraPort), "--cassandraHost",
-		cassandraHost, "--cassandraKeyspace", cassandraKeyspace,
-		"--cassandraTable", cassandraTable, "--cassandraPartitioner",
-		cassandraPartitioner, "--H", H.toString(), "--W", W.toString() };
-	return result;
+    protected Configuration buildConf(Path H, Path W) {
+	Configuration conf = new Configuration();
 
+	conf.setInt("numberOfUsers", NMFTestData.numberOfUsers);
+	conf.setInt("numberOfItems", NMFTestData.numberOfItems);
+	conf.setInt("numberOfClusters", NMFTestData.numberOfClusters);
+	conf.setInt("numberOfIterations", numberOfIterations);
+	conf.set("directory", baseDirectory);
+	conf.setInt("cassandraPort", cassandraPort);
+	conf.set("cassandraHost", cassandraHost);
+	conf.set("cassandraKeyspace", cassandraKeyspace);
+	conf.set("cassandraPartitioner", cassandraPartitioner);
+	conf.set("cassandraTable", cassandraTable);
+	conf.set("H", H.toString());
+	conf.set("W", W.toString());
+
+	return conf;
     }
 
     protected void deletePreviousData() throws IOException {
