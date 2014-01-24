@@ -16,14 +16,15 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.nmf.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
-import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
  * Integration test for one iteration of WComputation (NMF)
@@ -36,27 +37,30 @@ public class TestWComputation extends NMFIntegrationTest {
 
 	deletePreviousData();
 
+	int numberOfUsers = NMFTestData.numberOfUsers;
+	int numberOfItems = NMFTestData.numberOfItems;
+	int numberOfClusters = NMFTestData.numberOfClusters;
+	int numberOfIterations = 1;
+
 	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
-		baseDirectory, "H", NMFTestData.numberOfUsers,
-		NMFTestData.numberOfClusters);
+		baseDirectory, "H", numberOfUsers, numberOfClusters);
 	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
-		baseDirectory, "W", NMFTestData.numberOfItems,
-		NMFTestData.numberOfClusters);
+		baseDirectory, "W", numberOfItems, numberOfClusters);
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
 
+	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
 		cassandraTable);
 
-	numberOfUsers = NMFTestData.numberOfUsers;
-	numberOfItems = NMFTestData.numberOfItems;
-	numberOfClusters = NMFTestData.numberOfClusters;
-	numberOfIterations = 1;
+	/* Run job */
+	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
+		numberOfClusters, numberOfIterations);
 
-	ToolRunner.run(buildConf(H, W), new ComputeWJob(H, W, H2, W2), null);
-	compareData(NMFTestData.W_one, baseDirectory, W2);
+	ToolRunner.run(conf, new ComputeWJob(H, W, H2, W2), null);
+	compareVectorData(NMFTestData.W_one, baseDirectory, W2);
 
 	deletePreviousData();
 

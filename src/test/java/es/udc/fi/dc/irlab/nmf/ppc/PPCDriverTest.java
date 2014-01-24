@@ -16,11 +16,12 @@
 
 package es.udc.fi.dc.irlab.nmf.ppc;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.ppc.util.PPCTestData;
+import es.udc.fi.dc.irlab.nmf.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
@@ -36,7 +37,10 @@ public class PPCDriverTest extends NMFIntegrationTest {
 
 	deletePreviousData();
 
-	numberOfIterations = 10;
+	int numberOfUsers = PPCTestData.numberOfUsers;
+	int numberOfItems = PPCTestData.numberOfItems;
+	int numberOfClusters = PPCTestData.numberOfClusters;
+	int numberOfIterations = 10;
 
 	Path H = DataInitialization.createMatrix(PPCTestData.H_init,
 		baseDirectory, "H", PPCTestData.numberOfUsers,
@@ -52,13 +56,17 @@ public class PPCDriverTest extends NMFIntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	ToolRunner.run(buildConf(H, W), new PPCDriver(), null);
+	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
+		numberOfClusters, numberOfIterations);
+
+	ToolRunner.run(conf, new PPCDriver(), null);
 
 	/* Run asserts */
-	compareData(PPCTestData.W_ten, baseDirectory, W);
-	compareData(PPCTestData.H_ten, baseDirectory, H);
+	compareVectorData(PPCTestData.H_ten, baseDirectory, H);
+	compareVectorData(PPCTestData.W_ten, baseDirectory, W);
 
 	deletePreviousData();
 
     }
+
 }

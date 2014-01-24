@@ -16,14 +16,15 @@
 
 package es.udc.fi.dc.irlab.nmf;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.nmf.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
-import es.udc.fi.dc.irlab.nmf.util.NMFTestData;
 
 /**
  * Integration test for ten iterations of NMF algorithm
@@ -36,14 +37,15 @@ public class NMFDriverTest extends NMFIntegrationTest {
 
 	deletePreviousData();
 
-	numberOfIterations = 10;
+	int numberOfUsers = NMFTestData.numberOfUsers;
+	int numberOfItems = NMFTestData.numberOfItems;
+	int numberOfClusters = NMFTestData.numberOfClusters;
+	int numberOfIterations = 10;
 
 	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
-		baseDirectory, "H", NMFTestData.numberOfUsers,
-		NMFTestData.numberOfClusters);
+		baseDirectory, "H", numberOfUsers, numberOfClusters);
 	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
-		baseDirectory, "W", NMFTestData.numberOfItems,
-		NMFTestData.numberOfClusters);
+		baseDirectory, "W", numberOfItems, numberOfClusters);
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -52,13 +54,17 @@ public class NMFDriverTest extends NMFIntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	ToolRunner.run(buildConf(H, W), new NMFDriver(), null);
+	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
+		numberOfClusters, numberOfIterations);
+
+	ToolRunner.run(conf, new NMFDriver(), null);
 
 	/* Run asserts */
-	compareData(NMFTestData.H_ten, baseDirectory, H);
-	compareData(NMFTestData.W_ten, baseDirectory, W);
+	compareVectorData(NMFTestData.H_ten, baseDirectory, H);
+	compareVectorData(NMFTestData.W_ten, baseDirectory, W);
 
 	deletePreviousData();
 
     }
+
 }

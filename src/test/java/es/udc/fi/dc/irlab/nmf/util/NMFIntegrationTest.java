@@ -16,32 +16,16 @@
 
 package es.udc.fi.dc.irlab.nmf.util;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.net.URI;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.mahout.math.Vector;
-import org.apache.mahout.math.VectorWritable;
+
+import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
  * Integration test class utility
  * 
  */
-public class NMFIntegrationTest {
-
-    protected String baseDirectory = "integrationTest";
-
-    protected int numberOfUsers = 0;
-    protected int numberOfItems = 0;
-    protected int numberOfClusters = 0;
-    protected int numberOfIterations = 0;
+public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
 
     protected int cassandraPort = 9160;
     protected String cassandraHost = "127.0.0.1";
@@ -50,20 +34,25 @@ public class NMFIntegrationTest {
     protected String cassandraTable = "ratings";
 
     /**
-     * Build command line arguments for jobs.
+     * Build configuration object for NMF/PPC jobs.
      * 
      * @param H
      *            H matrix path
      * @param W
      *            W matrix path
-     * @return
+     * @param numberOfUsers
+     * @param numberOfItems
+     * @param numberOfClusters
+     * @param numberOfIterations
+     * @return Configuration object
      */
-    protected Configuration buildConf(Path H, Path W) {
+    protected Configuration buildConf(Path H, Path W, int numberOfUsers,
+	    int numberOfItems, int numberOfClusters, int numberOfIterations) {
 	Configuration conf = new Configuration();
 
-	conf.setInt("numberOfUsers", NMFTestData.numberOfUsers);
-	conf.setInt("numberOfItems", NMFTestData.numberOfItems);
-	conf.setInt("numberOfClusters", NMFTestData.numberOfClusters);
+	conf.setInt("numberOfUsers", numberOfUsers);
+	conf.setInt("numberOfItems", numberOfItems);
+	conf.setInt("numberOfClusters", numberOfClusters);
 	conf.setInt("numberOfIterations", numberOfIterations);
 	conf.set("directory", baseDirectory);
 	conf.setInt("cassandraPort", cassandraPort);
@@ -71,45 +60,37 @@ public class NMFIntegrationTest {
 	conf.set("cassandraKeyspace", cassandraKeyspace);
 	conf.set("cassandraPartitioner", cassandraPartitioner);
 	conf.set("cassandraTable", cassandraTable);
-	conf.set("H", H.toString());
-	conf.set("W", W.toString());
+	if (H != null) {
+	    conf.set("H", H.toString());
+	}
+	if (W != null) {
+	    conf.set("W", W.toString());
+	}
 
 	return conf;
     }
 
-    protected void deletePreviousData() throws IOException {
-	Configuration conf = new Configuration();
-	FileSystem fs = FileSystem.get(URI.create(baseDirectory), conf);
-	Path path = new Path(baseDirectory);
-	fs.delete(path, true);
+    /**
+     * Build configuration object for Clustering Assignment job.
+     * 
+     * @param H
+     *            H matrix path
+     * @param clustering
+     *            clustering path
+     * @param numberOfUsers
+     * @param numberOfClusters
+     * @return
+     */
+    protected Configuration buildConf(Path H, Path clustering,
+	    int numberOfUsers, int numberOfClusters) {
+
+	Configuration conf = buildConf(H, null, numberOfUsers, 0,
+		numberOfClusters, 0);
+
+	conf.set("clustering", clustering.toString());
+
+	return conf;
+
     }
 
-    protected void compareData(double[][] data, String baseDirectory, Path path)
-	    throws IOException {
-	double accuracy = 0.0001;
-	Configuration conf = new Configuration();
-	FileSystem fs = FileSystem.get(path.toUri(), conf);
-	Path mergedFile = new Path(baseDirectory + "/merged");
-
-	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
-
-	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-		mergedFile, conf)) {
-
-	    IntWritable key = new IntWritable();
-	    VectorWritable val = new VectorWritable();
-
-	    if (reader.next(key, val)) {
-		for (Vector.Element element : val.get().all()) {
-		    assertEquals(data[key.get() - 1][element.index()],
-			    element.get(), accuracy);
-		}
-	    } else {
-		throw new RuntimeException(
-			"assertEquals->reader.next() failed!");
-	    }
-	}
-
-	fs.delete(mergedFile, false);
-    }
 }

@@ -15,13 +15,69 @@
  */
 package es.udc.fi.dc.irlab.rmrecommender;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 
+import es.udc.fi.dc.irlab.nmf.clustering.ClusterAssignmentJob;
 import es.udc.fi.dc.irlab.nmf.ppc.PPCDriver;
 
 public class RMRecommenderJob extends AbstractJob {
+
+    /**
+     * Load default command line arguments.
+     */
+    private void loadDefaultSetup() {
+	addOption("numberOfUsers", "n", "Number of users", true);
+	addOption("numberOfItems", "m", "Number of movies", true);
+	addOption("numberOfClusters", "k", "Number of clusters", true);
+	addOption("numberOfIterations", "i", "Number of iterations", "50");
+	addOption("directory", "d", "Working directory", "clustering");
+	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
+	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
+	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
+		true);
+	addOption("cassandraTable", "table", "Cassandra Column Family name",
+		true);
+	addOption("cassandraPartitioner", "partitioner",
+		"Cassandra Partitioner",
+		"org.apache.cassandra.dht.Murmur3Partitioner");
+	addOption("H", "h", "Initial H matrix", false);
+	addOption("W", "w", "Initial W matrix", false);
+    }
+
+    /**
+     * Parse command line arguments and update job configuration.
+     * 
+     * @param args
+     *            command line arguments
+     * @throws IOException
+     */
+    protected void parseInput(String[] args) throws IOException {
+	/* Add options */
+	loadDefaultSetup();
+
+	/* Parse arguments */
+	Map<String, List<String>> parsedArgs = parseArguments(args, true, true);
+	if (parsedArgs == null) {
+	    throw new IllegalArgumentException("Invalid arguments");
+	}
+
+	/* Update job configuration */
+	Configuration conf = getConf();
+
+	for (Entry<String, List<String>> entry : parsedArgs.entrySet()) {
+	    String key = entry.getKey();
+	    for (String value : entry.getValue()) {
+		conf.set(key, value);
+	    }
+	}
+    }
 
     /**
      * Main routine. Launch RMRecommender job.
@@ -36,19 +92,20 @@ public class RMRecommenderJob extends AbstractJob {
 
     @Override
     public int run(String[] args) throws Exception {
-	if (ToolRunner.run(new Configuration(), new PPCDriver(), args) < 0) {
+	parseInput(args);
+
+	if (ToolRunner.run(getConf(), new PPCDriver(), args) < 0) {
 	    throw new RuntimeException("PPCJob failed!");
 	}
 
-	if (ToolRunner.run(new Configuration(), new ClusterAssignmentJob(),
-		args) < 0) {
+	if (ToolRunner.run(getConf(), new ClusterAssignmentJob(), args) < 0) {
 	    throw new RuntimeException("ClusterAssignmentJob failed!");
 	}
 
 	// if (ToolRunner.run(new Configuration(), new RMJob(), args) < 0) {
 	// throw new RuntimeException("RMJob failed!");
 	// }
+
 	return 0;
     }
-
 }

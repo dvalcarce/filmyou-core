@@ -14,53 +14,50 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.clustering;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.nmf.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.nmf.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
 
 /**
- * Integration test for one iteration of HComputation (NMF)
+ * Integration test for cluster assignment.
  * 
  */
-public class TestHComputation extends NMFIntegrationTest {
+public class TestClusterAssignment extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
 
 	deletePreviousData();
 
-	int numberOfUsers = NMFTestData.numberOfUsers;
-	int numberOfItems = NMFTestData.numberOfItems;
-	int numberOfClusters = NMFTestData.numberOfClusters;
-	int numberOfIterations = 1;
+	int numberOfUsers = ClusteringTestData.numberOfUsers;
+	int numberOfClusters = ClusteringTestData.numberOfClusters;
 
-	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
-	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
-		baseDirectory, "W", numberOfItems, numberOfClusters);
-	Path H2 = new Path(baseDirectory + "/H2");
-	Path W2 = new Path(baseDirectory + "/W2");
+	Path H = DataInitialization.createMatrix(ClusteringTestData.H,
+		baseDirectory, "H", ClusteringTestData.numberOfUsers,
+		ClusteringTestData.numberOfClusters);
+	Path clustering = new Path(baseDirectory + "/clustering");
 
-	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
 		cassandraTable);
 
 	/* Run job */
-	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
-		numberOfClusters, numberOfIterations);
+	Configuration conf = buildConf(H, clustering, numberOfUsers,
+		numberOfClusters);
 
-	ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
-	compareVectorData(NMFTestData.H_one, baseDirectory, H2);
+	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
+	compareIntSetData(ClusteringTestData.clustering, baseDirectory,
+		clustering);
 
 	deletePreviousData();
 
