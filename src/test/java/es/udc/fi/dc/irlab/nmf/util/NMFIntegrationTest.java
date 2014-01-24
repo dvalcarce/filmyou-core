@@ -27,11 +27,13 @@ import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
  */
 public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
 
-    protected int cassandraPort = 9160;
-    protected String cassandraHost = "127.0.0.1";
+    protected int cassandraPort = Integer.parseInt(System
+	    .getenv("CASSANDRA_PORT"));
+    protected String cassandraHost = System.getenv("CASSANDRA_HOST");
     protected String cassandraPartitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
     protected String cassandraKeyspace = "recommendertest";
     protected String cassandraTable = "ratings";
+    protected String hadoopHost = System.getenv("HADOOP_HOST");
 
     /**
      * Build configuration object for NMF/PPC jobs.
@@ -49,6 +51,10 @@ public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
     protected Configuration buildConf(Path H, Path W, int numberOfUsers,
 	    int numberOfItems, int numberOfClusters, int numberOfIterations) {
 	Configuration conf = new Configuration();
+
+	conf.set("fs.default.name", "hdfs://" + hadoopHost + ":8020");
+	conf.set("mapred.job.tracker", "hdfs://" + hadoopHost + ":8021");
+	conf.set("dfs.namenode.rpc-address", hadoopHost);
 
 	conf.setInt("numberOfUsers", numberOfUsers);
 	conf.setInt("numberOfItems", numberOfItems);
