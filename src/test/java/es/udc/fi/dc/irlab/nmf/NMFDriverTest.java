@@ -34,17 +34,18 @@ public class NMFDriverTest extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
-
-	deletePreviousData();
-
 	int numberOfUsers = NMFTestData.numberOfUsers;
 	int numberOfItems = NMFTestData.numberOfItems;
 	int numberOfClusters = NMFTestData.numberOfClusters;
 	int numberOfIterations = 10;
 
-	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
+	Configuration conf = buildConf();
+	deletePreviousData(conf);
+
+	/* Data initialization */
+	Path H = DataInitialization.createMatrix(conf, NMFTestData.H_init,
 		baseDirectory, "H", numberOfUsers, numberOfClusters);
-	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
+	Path W = DataInitialization.createMatrix(conf, NMFTestData.W_init,
 		baseDirectory, "W", numberOfItems, numberOfClusters);
 
 	/* Insert data in Cassandra */
@@ -54,17 +55,15 @@ public class NMFDriverTest extends NMFIntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
-		numberOfClusters, numberOfIterations);
-
+	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
+		numberOfIterations);
 	ToolRunner.run(conf, new NMFDriver(), null);
 
 	/* Run asserts */
 	compareVectorData(NMFTestData.H_ten, baseDirectory, H);
 	compareVectorData(NMFTestData.W_ten, baseDirectory, W);
 
-	deletePreviousData();
-
+	deletePreviousData(conf);
     }
 
 }

@@ -95,11 +95,11 @@ public class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createMatrix(double[][] data, String baseDirectory,
-	    String filename, int rows, int cols) throws IOException {
+    public static Path createMatrix(Configuration conf, double[][] data,
+	    String baseDirectory, String filename, int rows, int cols)
+	    throws IOException {
 
 	String uri = baseDirectory + "/" + filename;
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 

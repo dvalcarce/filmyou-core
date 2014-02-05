@@ -34,17 +34,18 @@ public class TestPPCHComputation extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
-
-	deletePreviousData();
-
 	int numberOfUsers = PPCTestData.numberOfUsers;
 	int numberOfItems = PPCTestData.numberOfItems;
 	int numberOfClusters = PPCTestData.numberOfClusters;
 	int numberOfIterations = 1;
 
-	Path H = DataInitialization.createMatrix(PPCTestData.H_init,
+	Configuration conf = buildConf();
+	deletePreviousData(conf);
+
+	/* Data initialization */
+	Path H = DataInitialization.createMatrix(conf, PPCTestData.H_init,
 		baseDirectory, "H", numberOfUsers, numberOfClusters);
-	Path W = DataInitialization.createMatrix(PPCTestData.W_init,
+	Path W = DataInitialization.createMatrix(conf, PPCTestData.W_init,
 		baseDirectory, "W", numberOfItems, numberOfClusters);
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
@@ -56,15 +57,14 @@ public class TestPPCHComputation extends NMFIntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-
-	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
-		numberOfClusters, numberOfIterations);
-
+	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
+		numberOfIterations);
 	ToolRunner.run(conf, new PPCComputeHJob(H, W, H2, W2), null);
+
+	/* Run asserts */
 	compareVectorData(PPCTestData.H_one, baseDirectory, H2);
 
-	deletePreviousData();
-
+	deletePreviousData(conf);
     }
 
 }

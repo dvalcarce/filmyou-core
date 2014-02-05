@@ -34,20 +34,19 @@ public class PPCDriverTest extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
-
-	deletePreviousData();
-
 	int numberOfUsers = PPCTestData.numberOfUsers;
 	int numberOfItems = PPCTestData.numberOfItems;
 	int numberOfClusters = PPCTestData.numberOfClusters;
 	int numberOfIterations = 10;
 
-	Path H = DataInitialization.createMatrix(PPCTestData.H_init,
-		baseDirectory, "H", PPCTestData.numberOfUsers,
-		PPCTestData.numberOfClusters);
-	Path W = DataInitialization.createMatrix(PPCTestData.W_init,
-		baseDirectory, "W", PPCTestData.numberOfItems,
-		PPCTestData.numberOfClusters);
+	Configuration conf = buildConf();
+	deletePreviousData(conf);
+
+	/* Data initialization */
+	Path H = DataInitialization.createMatrix(conf, PPCTestData.H_init,
+		baseDirectory, "H", numberOfUsers, numberOfClusters);
+	Path W = DataInitialization.createMatrix(conf, PPCTestData.W_init,
+		baseDirectory, "W", numberOfItems, numberOfClusters);
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -56,17 +55,15 @@ public class PPCDriverTest extends NMFIntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
-		numberOfClusters, numberOfIterations);
-
+	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
+		numberOfIterations);
 	ToolRunner.run(conf, new PPCDriver(), null);
 
 	/* Run asserts */
 	compareVectorData(PPCTestData.H_ten, baseDirectory, H);
 	compareVectorData(PPCTestData.W_ten, baseDirectory, W);
 
-	deletePreviousData();
-
+	deletePreviousData(conf);
     }
 
 }

@@ -35,32 +35,32 @@ public class TestClusterAssignment extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
-
-	deletePreviousData();
-
 	int numberOfUsers = ClusteringTestData.numberOfUsers;
 	int numberOfClusters = ClusteringTestData.numberOfClusters;
 
-	Path H = DataInitialization.createMatrix(ClusteringTestData.H,
-		baseDirectory, "H", ClusteringTestData.numberOfUsers,
-		ClusteringTestData.numberOfClusters);
+	Configuration conf = buildConf();
+	deletePreviousData(conf);
+
+	/* Data initialization */
+	Path H = DataInitialization.createMatrix(conf, ClusteringTestData.H,
+		baseDirectory, "H", numberOfUsers, numberOfClusters);
 	Path clustering = new Path(baseDirectory + "/clustering");
 
+	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
 		cassandraTable);
 
 	/* Run job */
-	Configuration conf = buildConf(H, clustering, numberOfUsers,
-		numberOfClusters);
-
+	conf = buildConf(H, clustering, numberOfUsers, numberOfClusters);
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
+
+	/* Run asserts */
 	compareIntSetData(ClusteringTestData.clustering, baseDirectory,
 		clustering);
 
-	deletePreviousData();
-
+	deletePreviousData(conf);
     }
 
 }

@@ -48,8 +48,7 @@ public abstract class HadoopIntegrationTest {
      * 
      * @throws IOException
      */
-    protected void deletePreviousData() throws IOException {
-	Configuration conf = new Configuration();
+    protected void deletePreviousData(Configuration conf) throws IOException {
 	FileSystem fs = FileSystem.get(URI.create(baseDirectory), conf);
 	Path path = new Path(baseDirectory);
 	fs.delete(path, true);

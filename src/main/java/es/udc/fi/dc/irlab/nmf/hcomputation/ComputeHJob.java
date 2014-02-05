@@ -129,6 +129,8 @@ public class ComputeHJob extends MatrixComputationJob {
 		getConf().get("cassandraTable"), true);
 	ConfigHelper.setReadConsistencyLevel(conf, "ONE");
 
+	System.err.println("About to launch job#1");
+
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
 	    throw new RuntimeException(job.getJobName() + " failed!");

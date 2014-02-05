@@ -32,8 +32,23 @@ public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
     protected String cassandraHost = System.getenv("CASSANDRA_HOST");
     protected String cassandraPartitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
     protected String cassandraKeyspace = "recommendertest";
-    protected String cassandraTable = "ratings";
+    protected String cassandraTable = "rat";
     protected String hadoopHost = System.getenv("HADOOP_HOST");
+
+    /**
+     * Build basic configuration
+     * 
+     * @return Configuration object
+     */
+    protected Configuration buildConf() {
+	Configuration conf = new Configuration();
+
+	// conf.set("fs.default.name", "hdfs://" + hadoopHost + ":8020");
+	// conf.set("mapred.job.tracker", hadoopHost + ":8021");
+	// conf.set("dfs.namenode.rpc-address", hadoopHost);
+
+	return conf;
+    }
 
     /**
      * Build configuration object for NMF/PPC jobs.
@@ -50,22 +65,22 @@ public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
      */
     protected Configuration buildConf(Path H, Path W, int numberOfUsers,
 	    int numberOfItems, int numberOfClusters, int numberOfIterations) {
-	Configuration conf = new Configuration();
 
-	conf.set("fs.default.name", "hdfs://" + hadoopHost + ":8020");
-	conf.set("mapred.job.tracker", "hdfs://" + hadoopHost + ":8021");
-	conf.set("dfs.namenode.rpc-address", hadoopHost);
+	Configuration conf = buildConf();
+
+	conf.set("directory", baseDirectory);
 
 	conf.setInt("numberOfUsers", numberOfUsers);
 	conf.setInt("numberOfItems", numberOfItems);
 	conf.setInt("numberOfClusters", numberOfClusters);
 	conf.setInt("numberOfIterations", numberOfIterations);
-	conf.set("directory", baseDirectory);
+
 	conf.setInt("cassandraPort", cassandraPort);
 	conf.set("cassandraHost", cassandraHost);
 	conf.set("cassandraKeyspace", cassandraKeyspace);
 	conf.set("cassandraPartitioner", cassandraPartitioner);
 	conf.set("cassandraTable", cassandraTable);
+
 	if (H != null) {
 	    conf.set("H", H.toString());
 	}
@@ -74,6 +89,7 @@ public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
 	}
 
 	return conf;
+
     }
 
     /**
@@ -93,7 +109,9 @@ public abstract class NMFIntegrationTest extends HadoopIntegrationTest {
 	Configuration conf = buildConf(H, null, numberOfUsers, 0,
 		numberOfClusters, 0);
 
-	conf.set("clustering", clustering.toString());
+	if (clustering != null) {
+	    conf.set("clustering", clustering.toString());
+	}
 
 	return conf;
 

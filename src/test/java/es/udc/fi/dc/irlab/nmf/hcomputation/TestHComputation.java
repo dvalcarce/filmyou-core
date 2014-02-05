@@ -34,17 +34,18 @@ public class TestHComputation extends NMFIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
-
-	deletePreviousData();
-
 	int numberOfUsers = NMFTestData.numberOfUsers;
 	int numberOfItems = NMFTestData.numberOfItems;
 	int numberOfClusters = NMFTestData.numberOfClusters;
 	int numberOfIterations = 1;
 
-	Path H = DataInitialization.createMatrix(NMFTestData.H_init,
+	Configuration conf = buildConf();
+	deletePreviousData(conf);
+
+	/* Data initialization */
+	Path H = DataInitialization.createMatrix(conf, NMFTestData.H_init,
 		baseDirectory, "H", numberOfUsers, numberOfClusters);
-	Path W = DataInitialization.createMatrix(NMFTestData.W_init,
+	Path W = DataInitialization.createMatrix(conf, NMFTestData.W_init,
 		baseDirectory, "W", numberOfItems, numberOfClusters);
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
@@ -56,14 +57,14 @@ public class TestHComputation extends NMFIntegrationTest {
 		cassandraTable);
 
 	/* Run job */
-	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
-		numberOfClusters, numberOfIterations);
-
+	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
+		numberOfIterations);
 	ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
+
+	/* Run asserts */
 	compareVectorData(NMFTestData.H_one, baseDirectory, H2);
 
-	deletePreviousData();
-
+	deletePreviousData(conf);
     }
 
 }

@@ -23,6 +23,8 @@ public class CassandraUtils {
 
     private String host;
     private Cluster cluster;
+    private Session blank_session;
+    private Session keyspace_session;
 
     public CassandraUtils(String host, String partitioner) {
 
@@ -38,21 +40,44 @@ public class CassandraUtils {
 	return cluster;
     }
 
-    private void createKeyspaceIfNeeded(Session session, String keyspace) {
+    private Session getSession(String keyspace) {
+	// Session is singleton
+	if (keyspace == null) {
+	    if (blank_session == null) {
+		blank_session = getCluster().connect();
+	    }
+	    return blank_session;
+	}
 
+	if (keyspace_session == null) {
+	    keyspace_session = getCluster().connect(keyspace);
+	}
+
+	return keyspace_session;
+    }
+
+    private void shutdownSessions() {
+	if (blank_session != null) {
+	    blank_session.shutdown();
+	}
+
+	if (keyspace_session != null) {
+	    keyspace_session.shutdown();
+	}
+    }
+
+    private void createKeyspaceIfNeeded(Session session, String keyspace) {
 	if (session.getCluster().getMetadata().getKeyspace(keyspace) == null) {
 	    String cqlStatement = String
 		    .format("CREATE KEYSPACE %s WITH REPLICATION ="
-			    + "{'class' : 'SimpleStrategy', 'replication_factor': 1};",
+			    + "{'class' : 'SimpleStrategy', 'replication_factor': 3};",
 			    keyspace);
 
 	    session.execute(cqlStatement);
 	}
-
     }
 
     private void resetTable(Session session, String keyspace, String table) {
-
 	// Drop table if already exists
 	if (session.getCluster().getMetadata().getKeyspace(keyspace)
 		.getTable(table) != null) {
@@ -67,16 +92,13 @@ public class CassandraUtils {
 			+ "score float," + "PRIMARY KEY (user, movie));", table);
 
 	session.execute(cqlStatement);
-
     }
 
     public void insertData(double[][] data, String keyspace, String table) {
-	Session session = getCluster().connect();
-
+	Session session = getSession(null);
 	createKeyspaceIfNeeded(session, keyspace);
 
-	session = getCluster().connect(keyspace);
-
+	session = getSession(keyspace);
 	resetTable(session, keyspace, table);
 
 	// Insert data
@@ -85,10 +107,12 @@ public class CassandraUtils {
 		String cqlStatement = String
 			.format("INSERT INTO %s (user, movie, score) VALUES (%d, %d, %f);",
 				table, j + 1, i + 1, data[i][j]);
-
 		session.execute(cqlStatement);
 	    }
 	}
+
+	shutdownSessions();
+	getCluster().shutdown();
     }
 
 }
