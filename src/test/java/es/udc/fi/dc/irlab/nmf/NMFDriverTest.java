@@ -24,13 +24,14 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.nmf.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
-import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
  * Integration test for ten iterations of NMF algorithm
  * 
  */
-public class NMFDriverTest extends NMFIntegrationTest {
+public class NMFDriverTest extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -40,7 +41,7 @@ public class NMFDriverTest extends NMFIntegrationTest {
 	int numberOfIterations = 10;
 
 	Configuration conf = buildConf();
-	deletePreviousData(conf);
+	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, NMFTestData.H_init,
@@ -60,10 +61,10 @@ public class NMFDriverTest extends NMFIntegrationTest {
 	ToolRunner.run(conf, new NMFDriver(), null);
 
 	/* Run asserts */
-	compareVectorData(NMFTestData.H_ten, baseDirectory, H);
-	compareVectorData(NMFTestData.W_ten, baseDirectory, W);
+	compareMatrixData(NMFTestData.H_ten, baseDirectory, H);
+	compareMatrixData(NMFTestData.W_ten, baseDirectory, W);
 
-	deletePreviousData(conf);
+	HDFSUtils.removeData(conf, conf.get("directory"));
     }
 
 }

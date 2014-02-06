@@ -69,6 +69,9 @@ public class PPCComputeHJob extends MatrixComputationJob {
 
     /**
      * Run all chained map-reduce jobs in order to compute H matrix.
+     * 
+     * @param args
+     * @thors Exception
      */
     @Override
     public int run(String[] args) throws Exception {
@@ -267,10 +270,6 @@ public class PPCComputeHJob extends MatrixComputationJob {
      *            input X
      * @param inputPathY
      *            input Y
-     * @param inputPathD
-     *            input D
-     * @param inputPathE
-     *            input E
      * @param outputPath
      *            output H path
      * @throws IOException

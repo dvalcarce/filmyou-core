@@ -104,6 +104,9 @@ public class CassandraUtils {
 	// Insert data
 	for (int i = 0; i < data.length; i++) {
 	    for (int j = 0; j < data[i].length; j++) {
+		if (data[i][j] == 0.0) {
+		    continue;
+		}
 		String cqlStatement = String
 			.format("INSERT INTO %s (user, movie, score) VALUES (%d, %d, %f);",
 				table, j + 1, i + 1, data[i][j]);

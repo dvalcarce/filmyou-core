@@ -28,6 +28,10 @@ import org.apache.mahout.common.AbstractJob;
 import es.udc.fi.dc.irlab.nmf.clustering.ClusterAssignmentJob;
 import es.udc.fi.dc.irlab.nmf.ppc.PPCDriver;
 
+/**
+ * Relevance Model Recommender
+ * 
+ */
 public class RMRecommenderJob extends AbstractJob {
 
     /**

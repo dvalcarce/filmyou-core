@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,54 +14,47 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.clustering;
+package es.udc.fi.dc.irlab.rm;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.testdata.ClusteringTestData;
-import es.udc.fi.dc.irlab.nmf.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
-import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
- * Integration test for cluster assignment.
+ * Integration test class utility
  * 
  */
-public class TestClusterAssignment extends HadoopIntegrationTest {
+public class TestRM2 extends HadoopIntegrationTest {
 
     @Test
-    public void integrationTest() throws Exception {
-	int numberOfUsers = ClusteringTestData.numberOfUsers;
-	int numberOfClusters = ClusteringTestData.numberOfClusters;
-
+    public void test() throws Exception {
 	Configuration conf = buildConf();
 	HDFSUtils.removeData(conf, conf.get("directory"));
 
-	/* Data initialization */
-	Path H = DataInitialization.createMatrix(conf, ClusteringTestData.H,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
-	Path clustering = new Path(baseDirectory + "/clustering");
+	String directory = conf.get("directory") + "/rm2";
+	Path userSum = new Path(directory + "/userSum");
+	Path movieSum = new Path(directory + "/movieSum");
+	Path totalSum = new Path(directory + "/totalSum");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
-	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+	cassandraUtils.insertData(RMTestData.A, cassandraKeyspace,
 		cassandraTable);
 
 	/* Run job */
-	conf = buildConf(H, clustering, numberOfUsers, numberOfClusters);
-	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
+	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */
-	compareIntSetData(ClusteringTestData.clustering, baseDirectory,
-		clustering);
+	compareVectorData(RMTestData.userSum, baseDirectory, userSum);
+	compareVectorData(RMTestData.movieSum, baseDirectory, movieSum);
+	compareScalarData(RMTestData.totalSum, baseDirectory, totalSum);
 
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	// HDFSUtils.removeData(conf, conf.get("directory"));
     }
-
 }

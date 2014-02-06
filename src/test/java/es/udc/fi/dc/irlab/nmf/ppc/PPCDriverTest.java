@@ -24,13 +24,14 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.nmf.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
-import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
  * Integration test for ten iterations of PPC algorithm
  * 
  */
-public class PPCDriverTest extends NMFIntegrationTest {
+public class PPCDriverTest extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -40,7 +41,7 @@ public class PPCDriverTest extends NMFIntegrationTest {
 	int numberOfIterations = 10;
 
 	Configuration conf = buildConf();
-	deletePreviousData(conf);
+	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, PPCTestData.H_init,
@@ -60,10 +61,10 @@ public class PPCDriverTest extends NMFIntegrationTest {
 	ToolRunner.run(conf, new PPCDriver(), null);
 
 	/* Run asserts */
-	compareVectorData(PPCTestData.H_ten, baseDirectory, H);
-	compareVectorData(PPCTestData.W_ten, baseDirectory, W);
+	compareMatrixData(PPCTestData.H_ten, baseDirectory, H);
+	compareMatrixData(PPCTestData.W_ten, baseDirectory, W);
 
-	deletePreviousData(conf);
+	HDFSUtils.removeData(conf, conf.get("directory"));
     }
 
 }

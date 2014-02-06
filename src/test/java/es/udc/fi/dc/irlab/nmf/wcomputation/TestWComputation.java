@@ -24,13 +24,14 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.nmf.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
-import es.udc.fi.dc.irlab.nmf.util.NMFIntegrationTest;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
  * Integration test for one iteration of WComputation (NMF)
  * 
  */
-public class TestWComputation extends NMFIntegrationTest {
+public class TestWComputation extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -40,7 +41,7 @@ public class TestWComputation extends NMFIntegrationTest {
 	int numberOfIterations = 1;
 
 	Configuration conf = buildConf();
-	deletePreviousData(conf);
+	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, NMFTestData.H_init,
@@ -62,9 +63,9 @@ public class TestWComputation extends NMFIntegrationTest {
 	ToolRunner.run(conf, new ComputeWJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareVectorData(NMFTestData.W_one, baseDirectory, W2);
+	compareMatrixData(NMFTestData.W_one, baseDirectory, W2);
 
-	deletePreviousData(conf);
+	HDFSUtils.removeData(conf, conf.get("directory"));
     }
 
 }

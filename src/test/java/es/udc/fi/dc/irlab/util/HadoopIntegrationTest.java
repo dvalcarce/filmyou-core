@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,7 +27,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
@@ -41,17 +42,92 @@ import com.google.common.primitives.Ints;
  */
 public abstract class HadoopIntegrationTest {
 
+    protected static final double accuracy = 0.0001;
+
     protected String baseDirectory = "integrationTest";
 
+    protected int cassandraPort = Integer.parseInt(System
+	    .getenv("CASSANDRA_PORT"));
+    protected String cassandraHost = System.getenv("CASSANDRA_HOST");
+    protected String cassandraPartitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
+    protected String cassandraKeyspace = "recommendertest";
+    protected String cassandraTable = "ratings";
+
     /**
-     * Delete old data
+     * Build basic configuration
      * 
-     * @throws IOException
+     * @return Configuration object
      */
-    protected void deletePreviousData(Configuration conf) throws IOException {
-	FileSystem fs = FileSystem.get(URI.create(baseDirectory), conf);
-	Path path = new Path(baseDirectory);
-	fs.delete(path, true);
+    protected Configuration buildConf() {
+	Configuration conf = new Configuration();
+
+	conf.set("directory", baseDirectory);
+	conf.setInt("cassandraPort", cassandraPort);
+	conf.set("cassandraHost", cassandraHost);
+	conf.set("cassandraKeyspace", cassandraKeyspace);
+	conf.set("cassandraPartitioner", cassandraPartitioner);
+	conf.set("cassandraTable", cassandraTable);
+
+	return conf;
+    }
+
+    /**
+     * Build configuration object for NMF/PPC jobs.
+     * 
+     * @param H
+     *            H matrix path
+     * @param W
+     *            W matrix path
+     * @param numberOfUsers
+     * @param numberOfItems
+     * @param numberOfClusters
+     * @param numberOfIterations
+     * @return Configuration object
+     */
+    protected Configuration buildConf(Path H, Path W, int numberOfUsers,
+	    int numberOfItems, int numberOfClusters, int numberOfIterations) {
+
+	Configuration conf = buildConf();
+
+	conf.setInt("numberOfUsers", numberOfUsers);
+	conf.setInt("numberOfItems", numberOfItems);
+	conf.setInt("numberOfClusters", numberOfClusters);
+	conf.setInt("numberOfIterations", numberOfIterations);
+
+	if (H != null) {
+	    conf.set("H", H.toString());
+	}
+	if (W != null) {
+	    conf.set("W", W.toString());
+	}
+
+	return conf;
+
+    }
+
+    /**
+     * Build configuration object for Clustering Assignment job.
+     * 
+     * @param H
+     *            H matrix path
+     * @param clustering
+     *            clustering path
+     * @param numberOfUsers
+     * @param numberOfClusters
+     * @return
+     */
+    protected Configuration buildConf(Path H, Path clustering,
+	    int numberOfUsers, int numberOfClusters) {
+
+	Configuration conf = buildConf(H, null, numberOfUsers, 0,
+		numberOfClusters, 0);
+
+	if (clustering != null) {
+	    conf.set("clustering", clustering.toString());
+	}
+
+	return conf;
+
     }
 
     /**
@@ -66,10 +142,8 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareVectorData(double[][] data, String baseDirectory,
+    protected void compareMatrixData(double[][] data, String baseDirectory,
 	    Path path) throws IOException {
-
-	double accuracy = 0.0001;
 
 	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
@@ -97,6 +171,88 @@ public abstract class HadoopIntegrationTest {
 		fail("Data length does not match");
 	    }
 
+	}
+
+	fs.delete(mergedFile, false);
+
+    }
+
+    /**
+     * Compare the data vector with the data stored on given path (as
+     * FloatWritable).
+     * 
+     * @param data
+     *            data to be compared
+     * @param baseDirectory
+     *            a temporal file will be created in this folder
+     * @param path
+     *            path to the data
+     * @throws IOException
+     */
+    protected void compareVectorData(double[] data, String baseDirectory,
+	    Path path) throws IOException {
+
+	Configuration conf = new Configuration();
+	FileSystem fs = FileSystem.get(path.toUri(), conf);
+	Path mergedFile = new Path(baseDirectory + "/merged");
+
+	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
+
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+		mergedFile, conf)) {
+
+	    IntWritable key = new IntWritable();
+	    FloatWritable val = new FloatWritable();
+
+	    int count = 0;
+
+	    while (reader.next(key, val)) {
+		count++;
+		assertEquals(data[key.get() - 1], val.get(), accuracy);
+	    }
+
+	    if (count != data.length) {
+		fail("Data length does not match");
+	    }
+
+	}
+
+	fs.delete(mergedFile, false);
+
+    }
+
+    /**
+     * Compare the data scalar with the data stored on given path (as
+     * FloatWritable).
+     * 
+     * @param data
+     *            data to be compared
+     * @param baseDirectory
+     *            a temporal file will be created in this folder
+     * @param path
+     *            path to the data
+     * @throws IOException
+     */
+    protected void compareScalarData(double data, String baseDirectory,
+	    Path path) throws IOException {
+
+	Configuration conf = new Configuration();
+	FileSystem fs = FileSystem.get(path.toUri(), conf);
+	Path mergedFile = new Path(baseDirectory + "/merged");
+
+	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
+
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+		mergedFile, conf)) {
+
+	    NullWritable key = NullWritable.get();
+	    FloatWritable val = new FloatWritable();
+
+	    if (reader.next(key, val)) {
+		assertEquals(data, val.get(), accuracy);
+	    } else {
+		fail("Data length does not match");
+	    }
 	}
 
 	fs.delete(mergedFile, false);
