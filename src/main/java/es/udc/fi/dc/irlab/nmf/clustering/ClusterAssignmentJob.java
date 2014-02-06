@@ -17,9 +17,7 @@
 package es.udc.fi.dc.irlab.nmf.clustering;
 
 import java.io.IOException;
-import java.net.URI;
 
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -27,6 +25,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
+import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.IntSetWritable;
 
 /**
@@ -35,15 +34,16 @@ import es.udc.fi.dc.irlab.util.IntSetWritable;
  */
 public class ClusterAssignmentJob extends AbstractJob {
 
-    protected String directory = "clusterAssignment";
+    protected String directory;
+
     protected Path H;
     protected Path clustering;
 
     @Override
     public int run(String[] args) throws Exception {
-	/* Remove old data */
-	FileSystem fs = FileSystem.get(URI.create(directory), getConf());
-	fs.delete(new Path(directory), true);
+	directory = getConf().get("directory") + "/clusterAssignment";
+
+	HDFSUtils.removeData(getConf(), directory);
 
 	/* Prepare paths */
 	H = new Path(getConf().get("H"));

@@ -18,7 +18,6 @@ package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
 
-import org.apache.cassandra.hadoop.ConfigHelper;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -37,6 +36,8 @@ import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.util.CassandraSetup;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class ComputeWJob extends MatrixComputationJob {
 
@@ -63,7 +64,7 @@ public class ComputeWJob extends MatrixComputationJob {
     public int run(String[] args) throws Exception {
 	directory = getConf().get("directory") + "/wcomputation";
 
-	cleanPreviousData(directory);
+	HDFSUtils.removeData(getConf(), directory);
 
 	this.out1 = new Path(directory + "/wout1");
 	this.X = new Path(directory + "/X");
@@ -116,18 +117,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
-	// Cassandra settings
-	Configuration conf = job.getConfiguration();
-
-	ConfigHelper.setInputRpcPort(conf, getConf().get("cassandraPort"));
-	ConfigHelper.setInputInitialAddress(conf, getConf()
-		.get("cassandraHost"));
-	ConfigHelper.setInputPartitioner(conf,
-		getConf().get("cassandraPartitioner"));
-	ConfigHelper.setInputColumnFamily(conf,
-		getConf().get("cassandraKeyspace"),
-		getConf().get("cassandraTable"), true);
-	ConfigHelper.setReadConsistencyLevel(conf, "ONE");
+	Configuration jobConf = job.getConfiguration();
+	CassandraSetup.updateConf(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

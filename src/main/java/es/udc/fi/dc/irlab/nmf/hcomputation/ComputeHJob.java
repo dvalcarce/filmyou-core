@@ -18,7 +18,6 @@ package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 
-import org.apache.cassandra.hadoop.ConfigHelper;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -37,6 +36,8 @@ import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.util.CassandraSetup;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class ComputeHJob extends MatrixComputationJob {
 
@@ -63,7 +64,7 @@ public class ComputeHJob extends MatrixComputationJob {
     public int run(String[] args) throws Exception {
 	directory = getConf().get("directory") + "/hcomputation";
 
-	cleanPreviousData(directory);
+	HDFSUtils.removeData(getConf(), directory);
 
 	this.out1 = new Path(directory + "/hout1");
 	this.X = new Path(directory + "/X");
@@ -94,7 +95,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job H1");
-	job.setJarByClass(ComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
 		CqlPagingInputFormat.class, ScoreByMovieMapper.class);
@@ -116,20 +117,8 @@ public class ComputeHJob extends MatrixComputationJob {
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
-	// Cassandra settings
-	Configuration conf = job.getConfiguration();
-
-	ConfigHelper.setInputRpcPort(conf, getConf().get("cassandraPort"));
-	ConfigHelper.setInputInitialAddress(conf, getConf()
-		.get("cassandraHost"));
-	ConfigHelper.setInputPartitioner(conf,
-		getConf().get("cassandraPartitioner"));
-	ConfigHelper.setInputColumnFamily(conf,
-		getConf().get("cassandraKeyspace"),
-		getConf().get("cassandraTable"), true);
-	ConfigHelper.setReadConsistencyLevel(conf, "ONE");
-
-	System.err.println("About to launch job#1");
+	Configuration jobConf = job.getConfiguration();
+	CassandraSetup.updateConf(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -153,7 +142,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job H2");
-	job.setJarByClass(ComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
@@ -192,7 +181,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job H3");
-	job.setJarByClass(ComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
@@ -233,7 +222,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job H4");
-	job.setJarByClass(ComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
@@ -279,7 +268,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	    InterruptedException {
 
 	Job job = new Job(getConf(), "Job H5");
-	job.setJarByClass(ComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, inputPathH,
 		SequenceFileInputFormat.class, HColumnMapper.class);

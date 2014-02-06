@@ -40,6 +40,7 @@ public class IntSetWritable implements Writable {
      * 
      * @param in
      *            DataInput
+     * @throws IOException
      */
     @Override
     public void readFields(DataInput in) throws IOException {
@@ -60,6 +61,7 @@ public class IntSetWritable implements Writable {
      * 
      * @param out
      *            DataOutput
+     * @throws IOException
      */
     @Override
     public void write(DataOutput out) throws IOException {

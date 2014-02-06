@@ -18,7 +18,6 @@ package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
 
 import java.io.IOException;
 
-import org.apache.cassandra.hadoop.ConfigHelper;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -47,6 +46,8 @@ import es.udc.fi.dc.irlab.nmf.hcomputation.XColumnMapper;
 import es.udc.fi.dc.irlab.nmf.hcomputation.XColumnReducer;
 import es.udc.fi.dc.irlab.nmf.hcomputation.YColumnMapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.util.CassandraSetup;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class PPCComputeHJob extends MatrixComputationJob {
 
@@ -73,7 +74,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
     public int run(String[] args) throws Exception {
 	directory = getConf().get("directory") + "/hcomputation";
 
-	cleanPreviousData(directory);
+	HDFSUtils.removeData(getConf(), directory);
 
 	this.out1 = new Path(directory + "/hout1");
 	this.X = new Path(directory + "/X");
@@ -104,7 +105,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "PPC_H1");
-	job.setJarByClass(PPCComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
 		CqlPagingInputFormat.class, ScoreByMovieMapper.class);
@@ -126,18 +127,8 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
-	// Cassandra settings
-	Configuration conf = job.getConfiguration();
-
-	ConfigHelper.setInputRpcPort(conf, getConf().get("cassandraPort"));
-	ConfigHelper.setInputInitialAddress(conf, getConf()
-		.get("cassandraHost"));
-	ConfigHelper.setInputPartitioner(conf,
-		getConf().get("cassandraPartitioner"));
-	ConfigHelper.setInputColumnFamily(conf,
-		getConf().get("cassandraKeyspace"),
-		getConf().get("cassandraTable"), true);
-	ConfigHelper.setReadConsistencyLevel(conf, "ONE");
+	Configuration jobConf = job.getConfiguration();
+	CassandraSetup.updateConf(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -161,7 +152,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "PPC_H2");
-	job.setJarByClass(PPCComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
@@ -200,7 +191,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "PPC_H3");
-	job.setJarByClass(PPCComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
@@ -241,7 +232,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "PPC_H4");
-	job.setJarByClass(PPCComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
@@ -291,7 +282,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	    InterruptedException {
 
 	Job job = new Job(getConf(), "PPC_H5");
-	job.setJarByClass(PPCComputeHJob.class);
+	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, inputPathH,
 		SequenceFileInputFormat.class, HColumnMapper.class);

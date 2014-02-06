@@ -22,10 +22,9 @@ import java.net.URI;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.util.Tool;
 import org.apache.mahout.common.AbstractJob;
 
-public abstract class MatrixComputationJob extends AbstractJob implements Tool {
+public abstract class MatrixComputationJob extends AbstractJob {
 
     protected String directory;
 

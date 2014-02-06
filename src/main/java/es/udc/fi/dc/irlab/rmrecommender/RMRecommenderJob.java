@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package es.udc.fi.dc.irlab.rmrecommender;
 
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class RMRecommenderJob extends AbstractJob {
 	addOption("numberOfItems", "m", "Number of movies", true);
 	addOption("numberOfClusters", "k", "Number of clusters", true);
 	addOption("numberOfIterations", "i", "Number of iterations", "50");
-	addOption("directory", "d", "Working directory", "clustering");
+	addOption("directory", "d", "Working directory", "recommendation");
 	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
 	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
 	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
@@ -49,6 +50,7 @@ public class RMRecommenderJob extends AbstractJob {
 		"org.apache.cassandra.dht.Murmur3Partitioner");
 	addOption("H", "h", "Initial H matrix", false);
 	addOption("W", "w", "Initial W matrix", false);
+	addOption("clustering", "cluster", "Clustering results", "clustering");
     }
 
     /**
@@ -108,4 +110,5 @@ public class RMRecommenderJob extends AbstractJob {
 
 	return 0;
     }
+
 }
