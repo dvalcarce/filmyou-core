@@ -27,6 +27,7 @@ import org.apache.mahout.common.AbstractJob;
 
 import es.udc.fi.dc.irlab.nmf.clustering.ClusterAssignmentJob;
 import es.udc.fi.dc.irlab.nmf.ppc.PPCDriver;
+import es.udc.fi.dc.irlab.rm.RM2Job;
 
 /**
  * Relevance Model Recommender
@@ -108,9 +109,9 @@ public class RMRecommenderJob extends AbstractJob {
 	    throw new RuntimeException("ClusterAssignmentJob failed!");
 	}
 
-	// if (ToolRunner.run(new Configuration(), new RMJob(), args) < 0) {
-	// throw new RuntimeException("RMJob failed!");
-	// }
+	if (ToolRunner.run(new Configuration(), new RM2Job(), args) < 0) {
+	    throw new RuntimeException("RMJob failed!");
+	}
 
 	return 0;
     }

@@ -55,6 +55,6 @@ public class TestRM2 extends HadoopIntegrationTest {
 	compareVectorData(RMTestData.movieSum, baseDirectory, movieSum);
 	compareScalarData(RMTestData.totalSum, baseDirectory, totalSum);
 
-	// HDFSUtils.removeData(conf, conf.get("directory"));
+	HDFSUtils.removeData(conf, conf.get("directory"));
     }
 }
