@@ -25,7 +25,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <j,x_j> from <j, {A_{i,j}w_i^T}> where x_j = sum_i(A_{i,j}w_i^T)
+ * Emit <j,x_j> from <j, {A_{i,j}w_i^T}> where x_j = sum_i(A_{i,j}w_i^T).
  * 
  */
 public class XColumnReducer extends

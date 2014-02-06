@@ -48,6 +48,14 @@ public abstract class AbstractNMFDriver extends AbstractJob {
     private Path H2;
     private Path W2;
 
+    /**
+     * AbstractNMFDriver constructor.
+     * 
+     * @param hClass
+     *            class of a MatrixComputationJob for h computation
+     * @param wClass
+     *            class of a MatrixComputationJob for w computation
+     */
     public AbstractNMFDriver(Class<? extends MatrixComputationJob> hClass,
 	    Class<? extends MatrixComputationJob> wClass) {
 	this.hClass = hClass;
@@ -70,6 +78,7 @@ public abstract class AbstractNMFDriver extends AbstractJob {
     /**
      * Compute H and W matrices.
      * 
+     * @param args
      */
     @Override
     public int run(String[] args) throws Exception {

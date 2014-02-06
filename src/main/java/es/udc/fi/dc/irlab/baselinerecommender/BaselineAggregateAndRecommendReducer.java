@@ -57,10 +57,10 @@ public class BaselineAggregateAndRecommendReducer
     private static final Logger log = LoggerFactory
 	    .getLogger(AggregateAndRecommendReducer.class);
 
-    static final String ITEMID_INDEX_PATH = "itemIDIndexPath";
-    static final String NUM_RECOMMENDATIONS = "numRecommendations";
-    static final int DEFAULT_NUM_RECOMMENDATIONS = 10;
-    static final String ITEMS_FILE = "itemsFile";
+    final static String ITEMID_INDEX_PATH = "itemIDIndexPath";
+    final static String NUM_RECOMMENDATIONS = "numRecommendations";
+    final static int DEFAULT_NUM_RECOMMENDATIONS = 10;
+    final static String ITEMS_FILE = "itemsFile";
 
     private boolean booleanData;
     private int recommendationsPerUser;

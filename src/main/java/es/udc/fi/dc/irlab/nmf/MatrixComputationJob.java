@@ -25,7 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.Tool;
 import org.apache.mahout.common.AbstractJob;
 
-abstract public class MatrixComputationJob extends AbstractJob implements Tool {
+public abstract class MatrixComputationJob extends AbstractJob implements Tool {
 
     protected String directory;
 

@@ -14,7 +14,7 @@ public class IntPairKeyPartitioner extends
     public int getPartition(IntPairWritable key, Writable value,
 	    int numPartitions) {
 
-	return (new Integer(key.getFirst()).hashCode() & Integer.MAX_VALUE)
+	return (Integer.valueOf(key.getFirst()).hashCode() & Integer.MAX_VALUE)
 		% numPartitions;
 
     }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package es.udc.fi.dc.irlab.nmf.clustering;
 
 import java.io.IOException;
@@ -37,7 +38,6 @@ public class ClusterAssignmentJob extends AbstractJob {
     protected String directory = "clusterAssignment";
     protected Path H;
     protected Path clustering;
-    protected Path out;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -48,7 +48,6 @@ public class ClusterAssignmentJob extends AbstractJob {
 	/* Prepare paths */
 	H = new Path(getConf().get("H"));
 	clustering = new Path(getConf().get("clustering"));
-	out = new Path(directory + "/out");
 
 	/* Launch job */
 	findClustersJob(H, clustering);

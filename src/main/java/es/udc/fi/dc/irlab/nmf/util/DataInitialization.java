@@ -114,9 +114,6 @@ public class DataInitialization {
 		writer.append(new IntWritable(i), new VectorWritable(vector));
 		i++;
 	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	    System.exit(1);
 	} finally {
 	    IOUtils.closeStream(writer);
 	}

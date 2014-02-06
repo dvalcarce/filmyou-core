@@ -17,16 +17,30 @@ public class IntSetWritable implements Writable {
 
     private Set<Integer> set = new HashSet<Integer>();
 
+    /**
+     * Constructs an empty IntSetWritable.
+     */
     public IntSetWritable() {
-
     }
 
+    /**
+     * Constructs an IntSetWritable containing the elements of the specified
+     * collection.
+     * 
+     * @param collection
+     */
     public IntSetWritable(Iterable<? extends IntWritable> collection) {
 	for (IntWritable item : collection) {
 	    set.add(item.get());
 	}
     }
 
+    /**
+     * Read object serialization from in.
+     * 
+     * @param in
+     *            DataInput
+     */
     @Override
     public void readFields(DataInput in) throws IOException {
 	// Clear set
@@ -41,6 +55,12 @@ public class IntSetWritable implements Writable {
 	}
     }
 
+    /**
+     * Write object serialization to out.
+     * 
+     * @param out
+     *            DataOutput
+     */
     @Override
     public void write(DataOutput out) throws IOException {
 	// Write size
@@ -52,10 +72,20 @@ public class IntSetWritable implements Writable {
 	}
     }
 
+    /**
+     * Obtain the inner set.
+     * 
+     * @return the set
+     */
     public Set<Integer> get() {
 	return set;
     }
 
+    /**
+     * Replace the inner set.
+     * 
+     * @param set
+     */
     public void set(Set<Integer> set) {
 	this.set = set;
     }

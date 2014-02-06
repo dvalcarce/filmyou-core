@@ -35,7 +35,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <i, y_i> from <i, w_i> where y_i = w_i·C
+ * Emit <i, y_i> from <i, w_i> where y_i = w_i·C.
  * 
  */
 public class W4Mapper extends
