@@ -53,11 +53,11 @@ public class HDFSUtils {
     }
 
     /**
-     * Open a SequenceFile and read a float.
+     * Open a SequenceFile and read a double.
      * 
      * @param path
      * @param baseDirectory
-     * @return
+     * @return the double
      * @throws IOException
      */
     public static double getDoubleFromSequenceFile(Path path,

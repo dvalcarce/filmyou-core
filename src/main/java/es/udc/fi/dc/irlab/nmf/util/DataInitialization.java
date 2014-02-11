@@ -35,6 +35,10 @@ import org.apache.mahout.math.VectorWritable;
  */
 public class DataInitialization {
 
+    private DataInitialization() {
+
+    }
+
     /**
      * Create a (rows x cols) matrix of random values. Each row is normalized
      * according to the L_1 norm.
