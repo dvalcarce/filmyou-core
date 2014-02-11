@@ -26,7 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 public class CassandraSetup {
 
     private CassandraSetup() {
-    };
+
+    }
 
     /**
      * Update Cassandra settings of jobConf with myConf info.

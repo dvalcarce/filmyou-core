@@ -33,6 +33,10 @@ import org.apache.hadoop.io.SequenceFile;
  */
 public class HDFSUtils {
 
+    private HDFSUtils() {
+
+    }
+
     /**
      * Remove data from HDFS
      * 
@@ -58,6 +62,7 @@ public class HDFSUtils {
      */
     public static double getDoubleFromSequenceFile(Path path,
 	    String baseDirectory) throws IOException {
+
 	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
 	Path mergedFile = new Path(baseDirectory + "/merged");
@@ -74,8 +79,9 @@ public class HDFSUtils {
 		return val.get();
 	    }
 
-	    throw new IOException();
 	}
+
+	throw new IOException();
 
     }
 
