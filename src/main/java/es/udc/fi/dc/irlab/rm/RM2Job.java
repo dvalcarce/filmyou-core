@@ -21,7 +21,7 @@ import java.io.IOException;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -41,8 +41,9 @@ public class RM2Job extends AbstractJob {
     private String directory;
 
     private Path userSum;
-    private Path movieSum;
+    private Path itemSum;
     private Path totalSum;
+    private Path itemColl;
 
     /**
      * Run all chained map-reduce jobs in order to compute RM2.
@@ -56,12 +57,17 @@ public class RM2Job extends AbstractJob {
 	HDFSUtils.removeData(getConf(), directory);
 
 	userSum = new Path(directory + "/userSum");
-	movieSum = new Path(directory + "/movieSum");
+	itemSum = new Path(directory + "/movieSum");
 	totalSum = new Path(directory + "/totalSum");
+	itemColl = new Path(directory + "/itemColl");
 
-	runJob1(userSum);
-	runJob2(movieSum);
-	runJob3(movieSum, totalSum);
+	runUserSum(userSum);
+	runMovieSum(itemSum);
+	runTotalSum(itemSum, totalSum);
+
+	double sum = HDFSUtils.getDoubleFromSequenceFile(totalSum, directory);
+
+	runItemProbInCollection(itemSum, sum, itemColl);
 
 	return 0;
     }
@@ -69,12 +75,12 @@ public class RM2Job extends AbstractJob {
     /**
      * Calculates the sum of the ratings of each user.
      * 
-     * @param outputPath
+     * @param userSum
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob1(Path outputPath) throws IOException,
+    protected void runUserSum(Path userSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job RM2-1");
@@ -87,13 +93,13 @@ public class RM2Job extends AbstractJob {
 	job.setReducerClass(SumReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(FloatWritable.class);
+	job.setMapOutputValueClass(DoubleWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+	SequenceFileOutputFormat.setOutputPath(job, userSum);
 
 	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(FloatWritable.class);
+	job.setOutputValueClass(DoubleWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
 	CassandraSetup.updateConf(getConf(), jobConf);
@@ -106,14 +112,14 @@ public class RM2Job extends AbstractJob {
     }
 
     /**
-     * Calculates the sum of the ratings of each movie.
+     * Calculates the sum of the ratings of each item.
      * 
-     * @param outputPath
+     * @param itemSum
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob2(Path outputPath) throws IOException,
+    protected void runMovieSum(Path itemSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job RM2-2");
@@ -126,13 +132,13 @@ public class RM2Job extends AbstractJob {
 	job.setReducerClass(SumReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(FloatWritable.class);
+	job.setMapOutputValueClass(DoubleWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+	SequenceFileOutputFormat.setOutputPath(job, itemSum);
 
 	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(FloatWritable.class);
+	job.setOutputValueClass(DoubleWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
 	CassandraSetup.updateConf(getConf(), jobConf);
@@ -147,36 +153,78 @@ public class RM2Job extends AbstractJob {
     /**
      * Calculates the sum of the ratings of the collection.
      * 
-     * @param inputPath
-     * @param outputPath
+     * @param itemSum
+     * @param totalSum
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob3(Path inputPath, Path outputPath) throws IOException,
+    protected void runTotalSum(Path itemSum, Path totalSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job RM2-3");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, inputPath);
+	SequenceFileInputFormat.addInputPath(job, itemSum);
 
 	job.setMapperClass(NullMapper.class);
 	job.setCombinerClass(SumReducer.class);
 	job.setReducerClass(SumReducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
-	job.setMapOutputValueClass(FloatWritable.class);
+	job.setMapOutputValueClass(DoubleWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+	SequenceFileOutputFormat.setOutputPath(job, totalSum);
 
 	job.setOutputKeyClass(NullWritable.class);
-	job.setOutputValueClass(FloatWritable.class);
+	job.setOutputValueClass(DoubleWritable.class);
+
+	boolean succeeded = job.waitForCompletion(true);
+	if (!succeeded) {
+	    throw new RuntimeException(job.getJobName() + " failed!");
+	}
+
+    }
+
+    /**
+     * Calculates the probability of a item in the collection.
+     * 
+     * @param itemSum
+     *            sum of the ratings of each movie
+     * @param totalSum
+     *            global sum of the ratings
+     * @param itemColl
+     *            result
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    protected void runItemProbInCollection(Path itemSum, double totalSum,
+	    Path itemColl) throws ClassNotFoundException, IOException,
+	    InterruptedException {
+	Job job = new Job(getConf(), "Job RM2-4");
+	job.setJarByClass(this.getClass());
+
+	job.setInputFormatClass(SequenceFileInputFormat.class);
+	SequenceFileInputFormat.addInputPath(job, itemSum);
+
+	job.setMapperClass(ItemProbInCollectionMapper.class);
+
+	job.setMapOutputKeyClass(IntWritable.class);
+	job.setMapOutputValueClass(DoubleWritable.class);
+
+	job.setNumReduceTasks(0);
+
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	SequenceFileOutputFormat.setOutputPath(job, itemColl);
+
+	job.setOutputKeyClass(IntWritable.class);
+	job.setOutputValueClass(DoubleWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConf(getConf(), jobConf);
+	jobConf.set("rm.totalSum", String.valueOf(totalSum));
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

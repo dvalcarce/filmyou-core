@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package es.udc.fi.dc.irlab.rm;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -27,10 +27,10 @@ import org.apache.hadoop.mapreduce.Mapper;
  * Emit <NULL, x> from <i, x> where x = sum_j A_{i, j}.
  */
 public class NullMapper extends
-	Mapper<IntWritable, FloatWritable, NullWritable, FloatWritable> {
+	Mapper<IntWritable, DoubleWritable, NullWritable, DoubleWritable> {
 
     @Override
-    protected void map(IntWritable key, FloatWritable value, Context context)
+    protected void map(IntWritable key, DoubleWritable value, Context context)
 	    throws IOException, InterruptedException {
 
 	context.write(NullWritable.get(), value);

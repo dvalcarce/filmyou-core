@@ -40,6 +40,7 @@ public class TestRM2 extends HadoopIntegrationTest {
 	Path userSum = new Path(directory + "/userSum");
 	Path movieSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
+	Path itemColl = new Path(directory + "/itemColl");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -54,6 +55,7 @@ public class TestRM2 extends HadoopIntegrationTest {
 	compareVectorData(RMTestData.userSum, baseDirectory, userSum);
 	compareVectorData(RMTestData.movieSum, baseDirectory, movieSum);
 	compareScalarData(RMTestData.totalSum, baseDirectory, totalSum);
+	compareVectorData(RMTestData.itemColl, baseDirectory, itemColl);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

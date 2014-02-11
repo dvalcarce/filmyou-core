@@ -27,7 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -179,7 +179,7 @@ public abstract class HadoopIntegrationTest {
 
     /**
      * Compare the data vector with the data stored on given path (as
-     * FloatWritable).
+     * DoubleWritable).
      * 
      * @param data
      *            data to be compared
@@ -202,7 +202,7 @@ public abstract class HadoopIntegrationTest {
 		mergedFile, conf)) {
 
 	    IntWritable key = new IntWritable();
-	    FloatWritable val = new FloatWritable();
+	    DoubleWritable val = new DoubleWritable();
 
 	    int count = 0;
 
@@ -246,7 +246,7 @@ public abstract class HadoopIntegrationTest {
 		mergedFile, conf)) {
 
 	    NullWritable key = NullWritable.get();
-	    FloatWritable val = new FloatWritable();
+	    DoubleWritable val = new DoubleWritable();
 
 	    if (reader.next(key, val)) {
 		assertEquals(data, val.get(), accuracy);

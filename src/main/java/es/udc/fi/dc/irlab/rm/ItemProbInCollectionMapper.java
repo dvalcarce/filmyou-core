@@ -17,29 +17,30 @@
 package es.udc.fi.dc.irlab.rm;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * Emit <j, (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ * Emit <NULL, x> from <i, x> where x = sum_j A_{i, j}.
  */
-public class SimpleScoreByUserMapper
-	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, DoubleWritable> {
+public class ItemProbInCollectionMapper extends
+	Mapper<IntWritable, DoubleWritable, IntWritable, DoubleWritable> {
+
+    private static final String parameter = "rm.totalSum";
 
     @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
+    protected void map(IntWritable key, DoubleWritable value, Context context)
 	    throws IOException, InterruptedException {
 
-	int user = keys.get("user").getInt();
-	float score = columns.get("score").getFloat();
+	double result;
+	double globalSum = Double.valueOf(context.getConfiguration().get(
+		parameter));
 
-	context.write(new IntWritable(user), new DoubleWritable(score));
+	result = value.get() / globalSum;
+
+	context.write(key, new DoubleWritable(result));
 
     }
 

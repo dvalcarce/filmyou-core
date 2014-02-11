@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.io.FloatWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -29,7 +29,7 @@ import org.apache.hadoop.mapreduce.Mapper;
  */
 public class SimpleScoreByMovieMapper
 	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, FloatWritable> {
+	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, DoubleWritable> {
 
     @Override
     protected void map(Map<String, ByteBuffer> keys,
@@ -39,7 +39,7 @@ public class SimpleScoreByMovieMapper
 	int movie = keys.get("movie").getInt();
 	float score = columns.get("score").getFloat();
 
-	context.write(new IntWritable(movie), new FloatWritable(score));
+	context.write(new IntWritable(movie), new DoubleWritable(score));
 
     }
 
