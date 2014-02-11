@@ -77,7 +77,9 @@ public class CassandraUtils {
 	}
     }
 
-    private void resetTable(Session session, String keyspace, String table) {
+    private void resetTable(Session session, String keyspace, String table)
+	    throws InterruptedException {
+
 	// Drop table if already exists
 	if (session.getCluster().getMetadata().getKeyspace(keyspace)
 		.getTable(table) != null) {
@@ -86,15 +88,24 @@ public class CassandraUtils {
 	    session.execute(cqlStatement);
 	}
 
+	// Wait for table deletion
+	while (session.getCluster().getMetadata().getKeyspace(keyspace)
+		.getTable(table) != null) {
+	    Thread.sleep(1000);
+	}
+
 	// Create table
 	String cqlStatement = String
 		.format("CREATE TABLE %s (" + "user int," + "movie int,"
 			+ "score float," + "PRIMARY KEY (user, movie));", table);
 
 	session.execute(cqlStatement);
+
     }
 
-    public void insertData(double[][] data, String keyspace, String table) {
+    public void insertData(double[][] data, String keyspace, String table)
+	    throws InterruptedException {
+
 	Session session = getSession(null);
 	createKeyspaceIfNeeded(session, keyspace);
 
@@ -116,6 +127,7 @@ public class CassandraUtils {
 
 	shutdownSessions();
 	getCluster().shutdown();
+
     }
 
 }
