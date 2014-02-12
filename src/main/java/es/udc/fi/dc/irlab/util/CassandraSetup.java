@@ -17,10 +17,11 @@
 package es.udc.fi.dc.irlab.util;
 
 import org.apache.cassandra.hadoop.ConfigHelper;
+import org.apache.cassandra.hadoop.cql3.CqlConfigHelper;
 import org.apache.hadoop.conf.Configuration;
 
 /**
- * Utility class
+ * Utility class for setting up configuration for Cassandra input/output.
  * 
  */
 public class CassandraSetup {
@@ -30,7 +31,9 @@ public class CassandraSetup {
     }
 
     /**
-     * Update Cassandra settings of jobConf with myConf info.
+     * Update Cassandra settings of jobConf with myConf info for reading data
+     * from Cassandra.
+     * 
      * 
      * @param myConf
      *            configuration of the present class
@@ -38,18 +41,53 @@ public class CassandraSetup {
      *            configuration of the job to be launched
      * @return jobConf
      */
-    public static Configuration updateConf(final Configuration myConf,
-	    final Configuration jobConf) {
+    public static Configuration updateConfForInput(Configuration myConf,
+	    Configuration jobConf) {
 
-	ConfigHelper.setInputRpcPort(jobConf, myConf.get("cassandraPort"));
-	ConfigHelper.setInputInitialAddress(jobConf,
-		myConf.get("cassandraHost"));
-	ConfigHelper.setInputPartitioner(jobConf,
-		myConf.get("cassandraPartitioner"));
-	ConfigHelper.setInputColumnFamily(jobConf,
-		myConf.get("cassandraKeyspace"), myConf.get("cassandraTable"),
-		true);
+	String host = myConf.get("cassandraHost");
+	String keyspace = myConf.get("cassandraKeyspace");
+	String tableIn = myConf.get("cassandraTableIn");
+	String port = myConf.get("cassandraPort");
+	String partitioner = myConf.get("cassandraPartitioner");
+
+	ConfigHelper.setInputRpcPort(jobConf, port);
+	ConfigHelper.setInputInitialAddress(jobConf, host);
+	ConfigHelper.setInputPartitioner(jobConf, partitioner);
+	ConfigHelper.setInputColumnFamily(jobConf, keyspace, tableIn, true);
 	ConfigHelper.setReadConsistencyLevel(jobConf, "ONE");
+
+	return jobConf;
+
+    }
+
+    /**
+     * Update Cassandra settings of jobConf with myConf info for writing data to
+     * Cassandra.
+     * 
+     * @param myConf
+     *            configuration of the present class
+     * @param jobConf
+     *            configuration of the job to be launched
+     * @return jobConf
+     */
+    public static Configuration updateConfForOutput(Configuration myConf,
+	    Configuration jobConf) {
+
+	String host = myConf.get("cassandraHost");
+	String keyspace = myConf.get("cassandraKeyspace");
+	String tableOut = myConf.get("cassandraTableOut");
+	String port = myConf.get("cassandraPort");
+	String partitioner = myConf.get("cassandraPartitioner");
+	String ttl = myConf.get("cassandraTTL");
+
+	ConfigHelper.setOutputRpcPort(jobConf, port);
+	ConfigHelper.setOutputInitialAddress(jobConf, host);
+	ConfigHelper.setOutputPartitioner(jobConf, partitioner);
+	ConfigHelper.setOutputColumnFamily(jobConf, keyspace, tableOut);
+
+	String query = "UPDATE " + keyspace + "." + tableOut + " USING TTL "
+		+ ttl + " SET score = ? ";
+	CqlConfigHelper.setOutputCql(jobConf, query);
 
 	return jobConf;
 

@@ -46,7 +46,7 @@ public class TestRM2 extends HadoopIntegrationTest {
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(RMTestData.A, cassandraKeyspace,
-		cassandraTable);
+		cassandraTableIn);
 
 	/* Run job */
 	ToolRunner.run(conf, new RM2Job(), null);

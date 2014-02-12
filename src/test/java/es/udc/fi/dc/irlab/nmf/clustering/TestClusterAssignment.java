@@ -51,7 +51,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
-		cassandraTable);
+		cassandraTableIn);
 
 	/* Run job */
 	conf = buildConf(H, clustering, numberOfUsers, numberOfClusters);

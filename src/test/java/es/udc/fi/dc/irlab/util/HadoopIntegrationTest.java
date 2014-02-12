@@ -51,7 +51,8 @@ public abstract class HadoopIntegrationTest {
     protected String cassandraHost = System.getenv("CASSANDRA_HOST");
     protected String cassandraPartitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
     protected String cassandraKeyspace = "recommendertest";
-    protected String cassandraTable = "ratings";
+    protected String cassandraTableIn = "ratings";
+    protected String cassandraTableOut = "recommendations";
 
     /**
      * Build basic configuration
@@ -66,7 +67,8 @@ public abstract class HadoopIntegrationTest {
 	conf.set("cassandraHost", cassandraHost);
 	conf.set("cassandraKeyspace", cassandraKeyspace);
 	conf.set("cassandraPartitioner", cassandraPartitioner);
-	conf.set("cassandraTable", cassandraTable);
+	conf.set("cassandraTableIn", cassandraTableIn);
+	conf.set("cassandraTableOut", cassandraTableOut);
 
 	return conf;
     }

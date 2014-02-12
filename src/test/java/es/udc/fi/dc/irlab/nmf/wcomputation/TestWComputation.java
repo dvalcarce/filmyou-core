@@ -55,7 +55,7 @@ public class TestWComputation extends HadoopIntegrationTest {
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
-		cassandraTable);
+		cassandraTableIn);
 
 	/* Run job */
 	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,

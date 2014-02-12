@@ -53,7 +53,7 @@ public class PPCDriverTest extends HadoopIntegrationTest {
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
 	cassandraUtils.insertData(PPCTestData.A, cassandraKeyspace,
-		cassandraTable);
+		cassandraTableIn);
 
 	/* Run job */
 	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
