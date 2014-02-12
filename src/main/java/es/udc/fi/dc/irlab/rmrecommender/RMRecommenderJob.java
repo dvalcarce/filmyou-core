@@ -47,9 +47,12 @@ public class RMRecommenderJob extends AbstractJob {
 	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
 	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
 	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
-		true);
-	addOption("cassandraTable", "table", "Cassandra Column Family name",
-		true);
+		"recommendertest");
+	addOption("cassandraTableIn", "table",
+		"Cassandra Column Family name for input data", "ratings");
+	addOption("cassandraTableOut", "table",
+		"Cassandra Column Family name for output data",
+		"recommendations");
 	addOption("cassandraPartitioner", "partitioner",
 		"Cassandra Partitioner",
 		"org.apache.cassandra.dht.Murmur3Partitioner");

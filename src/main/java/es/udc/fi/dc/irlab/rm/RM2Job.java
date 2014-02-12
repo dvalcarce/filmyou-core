@@ -31,6 +31,7 @@ import org.apache.mahout.common.AbstractJob;
 
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
 /**
  * Relevance Model 2 job.
@@ -39,11 +40,6 @@ import es.udc.fi.dc.irlab.util.HDFSUtils;
 public class RM2Job extends AbstractJob {
 
     private String directory;
-
-    private Path userSum;
-    private Path itemSum;
-    private Path totalSum;
-    private Path itemColl;
 
     /**
      * Run all chained map-reduce jobs in order to compute RM2.
@@ -56,10 +52,11 @@ public class RM2Job extends AbstractJob {
 
 	HDFSUtils.removeData(getConf(), directory);
 
-	userSum = new Path(directory + "/userSum");
-	itemSum = new Path(directory + "/movieSum");
-	totalSum = new Path(directory + "/totalSum");
-	itemColl = new Path(directory + "/itemColl");
+	Path userSum = new Path(directory + "/userSum");
+	Path itemSum = new Path(directory + "/movieSum");
+	Path totalSum = new Path(directory + "/totalSum");
+	Path itemColl = new Path(directory + "/itemColl");
+	Path clustering = new Path(getConf().get("clustering"));
 
 	runUserSum(userSum);
 	runMovieSum(itemSum);
@@ -68,6 +65,8 @@ public class RM2Job extends AbstractJob {
 	double sum = HDFSUtils.getDoubleFromSequenceFile(totalSum, directory);
 
 	runItemProbInCollection(itemSum, sum, itemColl);
+
+	// runItemRecommendation(userSum, clustering, itemColl);
 
 	return 0;
     }
@@ -102,7 +101,7 @@ public class RM2Job extends AbstractJob {
 	job.setOutputValueClass(DoubleWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConf(getConf(), jobConf);
+	CassandraSetup.updateConfForInput(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -141,7 +140,7 @@ public class RM2Job extends AbstractJob {
 	job.setOutputValueClass(DoubleWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConf(getConf(), jobConf);
+	CassandraSetup.updateConfForInput(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -217,8 +216,8 @@ public class RM2Job extends AbstractJob {
 
 	job.setNumReduceTasks(0);
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, itemColl);
+	job.setOutputFormatClass(MapFileOutputFormat.class);
+	MapFileOutputFormat.setOutputPath(job, itemColl);
 
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(DoubleWritable.class);
@@ -232,5 +231,47 @@ public class RM2Job extends AbstractJob {
 	}
 
     }
+
+    /**
+     * Calculates the item recomendation scores.
+     * 
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws ClassNotFoundException
+     */
+    // protected void runItemRecommendation(Path userSum, Path clustering,
+    // Path itemColl) throws ClassNotFoundException, IOException,
+    // InterruptedException {
+    // Job job = new Job(getConf(), "Job RM2-5");
+    // job.setJarByClass(this.getClass());
+    //
+    // MultipleInputs.addInputPath(job, new Path("unused"),
+    // CqlPagingInputFormat.class, ScoreByClusterMapper.class);
+    // MultipleInputs.addInputPath(job, userSum,
+    // SequenceFileInputFormat.class, Mapper.class);
+    //
+    // job.setMapOutputKeyClass(Map.class);
+    // job.setMapOutputValueClass(List.class);
+    //
+    // job.setReducerClass(null);
+    //
+    // job.setOutputFormatClass(CqlOutputFormat.class);
+    //
+    // job.setOutputKeyClass(Map.class);
+    // job.setOutputValueClass(List.class);
+    //
+    // Configuration jobConf = job.getConfiguration();
+    // CassandraSetup.updateConfForOutput(getConf(), jobConf);
+    //
+    // DistributedCache.addCacheFile(clustering.toUri(),
+    // job.getConfiguration());
+    // DistributedCache.addCacheFile(itemColl.toUri(), job.getConfiguration());
+    //
+    // boolean succeeded = job.waitForCompletion(true);
+    // if (!succeeded) {
+    // throw new RuntimeException(job.getJobName() + " failed!");
+    // }
+    //
+    // }
 
 }

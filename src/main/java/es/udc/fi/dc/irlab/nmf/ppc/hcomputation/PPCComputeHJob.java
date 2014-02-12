@@ -131,7 +131,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
 	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConf(getConf(), jobConf);
+	CassandraSetup.updateConfForInput(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
