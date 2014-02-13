@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Writable;
@@ -91,7 +92,16 @@ public class MapFileOutputFormat extends
     public static MapFile.Reader[] getReaders(Path dir, Configuration conf)
 	    throws IOException {
 	FileSystem fs = dir.getFileSystem(conf);
-	Path[] names = FileUtil.stat2Paths(fs.listStatus(dir));
+
+	// Fix for bug MAPREDUCE-5448
+	PathFilter filter = new PathFilter() {
+	    @Override
+	    public boolean accept(final Path path) {
+		final String name = path.getName();
+		return !name.startsWith("_") && !name.startsWith(".");
+	    }
+	};
+	Path[] names = FileUtil.stat2Paths(fs.listStatus(dir, filter));
 
 	// sort names, so that hash partitioning works
 	Arrays.sort(names);
