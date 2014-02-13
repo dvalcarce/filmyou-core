@@ -45,9 +45,9 @@ public class NMFDriverTest extends HadoopIntegrationTest {
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, NMFTestData.H_init,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
+		baseDirectory, "H");
 	Path W = DataInitialization.createMatrix(conf, NMFTestData.W_init,
-		baseDirectory, "W", numberOfItems, numberOfClusters);
+		baseDirectory, "W");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -61,8 +61,8 @@ public class NMFDriverTest extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new NMFDriver(), null);
 
 	/* Run asserts */
-	compareMatrixData(NMFTestData.H_ten, baseDirectory, H);
-	compareMatrixData(NMFTestData.W_ten, baseDirectory, W);
+	compareMatrixData(conf, NMFTestData.H_ten, baseDirectory, H);
+	compareMatrixData(conf, NMFTestData.W_ten, baseDirectory, W);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

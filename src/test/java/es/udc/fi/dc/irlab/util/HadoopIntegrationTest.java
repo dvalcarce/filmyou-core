@@ -29,8 +29,11 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
@@ -133,6 +136,27 @@ public abstract class HadoopIntegrationTest {
     }
 
     /**
+     * Build configuration object for RM2 Assignment job.
+     * 
+     * @param clustering
+     *            clustering path
+     * @param numberOfUsers
+     * @param numberOfClusters
+     * @return
+     */
+    protected Configuration buildConf(Path clustering) {
+
+	Configuration conf = buildConf();
+
+	if (clustering != null) {
+	    conf.set("clustering", clustering.toString());
+	}
+
+	return conf;
+
+    }
+
+    /**
      * Compare the data matrix with the data stored on given path (as
      * VectorWritable).
      * 
@@ -144,10 +168,9 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareMatrixData(double[][] data, String baseDirectory,
-	    Path path) throws IOException {
+    protected void compareMatrixData(Configuration conf, double[][] data,
+	    String baseDirectory, Path path) throws IOException {
 
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
 	Path mergedFile = new Path(baseDirectory + "/merged");
 
@@ -191,10 +214,9 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareVectorData(double[] data, String baseDirectory,
-	    Path path) throws IOException {
+    protected void compareDoubleVectorData(Configuration conf, double[] data,
+	    String baseDirectory, Path path) throws IOException {
 
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
 	Path mergedFile = new Path(baseDirectory + "/merged");
 
@@ -224,6 +246,39 @@ public abstract class HadoopIntegrationTest {
     }
 
     /**
+     * Compare the data vector with the data stored on given path (as a MapFile
+     * of <IntWritable, IntWritable>).
+     * 
+     * @param data
+     *            data to be compared
+     * @param baseDirectory
+     *            a temporal file will be created in this folder
+     * @param path
+     *            path to the data
+     * @throws IOException
+     */
+    protected void compareIntVectorData(Configuration conf, int[] data,
+	    String baseDirectory, Path path) throws IOException {
+
+	Reader[] readers = MapFileOutputFormat.getReaders(path, conf);
+	Partitioner<IntWritable, IntWritable> partitioner = new HashPartitioner<IntWritable, IntWritable>();
+
+	IntWritable key;
+	IntWritable val = new IntWritable();
+
+	for (int i = 1; i <= data.length; i++) {
+	    key = new IntWritable(i);
+
+	    if (MapFileOutputFormat.getEntry(readers, partitioner, key, val) == null) {
+		fail(String.format("data %d not found", i));
+	    }
+
+	    assertEquals(data[i - 1], val.get());
+	}
+
+    }
+
+    /**
      * Compare the data scalar with the data stored on given path (as
      * FloatWritable).
      * 
@@ -235,10 +290,9 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareScalarData(double data, String baseDirectory,
-	    Path path) throws IOException {
+    protected void compareScalarData(Configuration conf, double data,
+	    String baseDirectory, Path path) throws IOException {
 
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
 	Path mergedFile = new Path(baseDirectory + "/merged");
 
@@ -273,10 +327,9 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareIntSetData(int[][] data, String baseDirectory,
-	    Path path) throws IOException {
+    protected void compareIntSetData(Configuration conf, int[][] data,
+	    String baseDirectory, Path path) throws IOException {
 
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
 	Path mergedFile = new Path(baseDirectory + "/merged");
 

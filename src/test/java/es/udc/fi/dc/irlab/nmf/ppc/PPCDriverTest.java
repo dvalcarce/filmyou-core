@@ -45,9 +45,9 @@ public class PPCDriverTest extends HadoopIntegrationTest {
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, PPCTestData.H_init,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
+		baseDirectory, "H");
 	Path W = DataInitialization.createMatrix(conf, PPCTestData.W_init,
-		baseDirectory, "W", numberOfItems, numberOfClusters);
+		baseDirectory, "W");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -61,10 +61,9 @@ public class PPCDriverTest extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new PPCDriver(), null);
 
 	/* Run asserts */
-	compareMatrixData(PPCTestData.H_ten, baseDirectory, H);
-	compareMatrixData(PPCTestData.W_ten, baseDirectory, W);
+	compareMatrixData(conf, PPCTestData.H_ten, baseDirectory, H);
+	compareMatrixData(conf, PPCTestData.W_ten, baseDirectory, W);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }
-
 }

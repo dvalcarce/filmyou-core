@@ -45,9 +45,9 @@ public class TestHComputation extends HadoopIntegrationTest {
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, NMFTestData.H_init,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
+		baseDirectory, "H");
 	Path W = DataInitialization.createMatrix(conf, NMFTestData.W_init,
-		baseDirectory, "W", numberOfItems, numberOfClusters);
+		baseDirectory, "W");
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
 
@@ -63,7 +63,7 @@ public class TestHComputation extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareMatrixData(NMFTestData.H_one, baseDirectory, H2);
+	compareMatrixData(conf, NMFTestData.H_one, baseDirectory, H2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

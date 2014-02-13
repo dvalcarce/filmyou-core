@@ -60,29 +60,31 @@ public class HDFSUtils {
      * @return the double
      * @throws IOException
      */
-    public static double getDoubleFromSequenceFile(Path path,
-	    String baseDirectory) throws IOException {
+    public static double getDoubleFromSequenceFile(Configuration conf,
+	    Path path, String baseDirectory) throws IOException {
 
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
 	Path mergedFile = new Path(baseDirectory + "/merged");
 
-	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
+	try {
+	    FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
 
-	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-		mergedFile, conf)) {
+	    try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+		    mergedFile, conf)) {
 
-	    NullWritable key = NullWritable.get();
-	    DoubleWritable val = new DoubleWritable();
+		NullWritable key = NullWritable.get();
+		DoubleWritable val = new DoubleWritable();
 
-	    if (reader.next(key, val)) {
-		return val.get();
+		if (reader.next(key, val)) {
+		    return val.get();
+		}
+
 	    }
-
+	} finally {
+	    removeData(conf, mergedFile.toString());
 	}
 
 	throw new IOException();
 
     }
-
 }

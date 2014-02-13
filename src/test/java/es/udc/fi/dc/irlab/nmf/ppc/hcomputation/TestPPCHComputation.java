@@ -45,9 +45,9 @@ public class TestPPCHComputation extends HadoopIntegrationTest {
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, PPCTestData.H_init,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
+		baseDirectory, "H");
 	Path W = DataInitialization.createMatrix(conf, PPCTestData.W_init,
-		baseDirectory, "W", numberOfItems, numberOfClusters);
+		baseDirectory, "W");
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
 
@@ -63,7 +63,7 @@ public class TestPPCHComputation extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new PPCComputeHJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareMatrixData(PPCTestData.H_one, baseDirectory, H2);
+	compareMatrixData(conf, PPCTestData.H_one, baseDirectory, H2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

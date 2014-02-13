@@ -68,11 +68,11 @@ public abstract class AbstractNMFDriver extends AbstractJob {
      * @throws IOException
      */
     protected void createInitialMatrices() throws IOException {
-	H = DataInitialization.createMatrix(baseDirectory, "H", numberOfUsers,
-		numberOfClusters);
+	H = DataInitialization.createMatrix(getConf(), baseDirectory, "H",
+		numberOfUsers, numberOfClusters);
 
-	W = DataInitialization.createMatrix(baseDirectory, "W", numberOfItems,
-		numberOfClusters);
+	W = DataInitialization.createMatrix(getConf(), baseDirectory, "W",
+		numberOfItems, numberOfClusters);
     }
 
     /**

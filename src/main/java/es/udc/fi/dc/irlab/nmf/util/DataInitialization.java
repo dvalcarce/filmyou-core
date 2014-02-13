@@ -13,11 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package es.udc.fi.dc.irlab.nmf.util;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -28,6 +31,10 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
+
+import com.google.common.primitives.Ints;
+
+import es.udc.fi.dc.irlab.util.IntSetWritable;
 
 /**
  * Utility class for initializing random structures in HDFS.
@@ -43,6 +50,8 @@ public class DataInitialization {
      * Create a (rows x cols) matrix of random values. Each row is normalized
      * according to the L_1 norm.
      * 
+     * @param conf
+     *            Configuration file
      * @param baseDirectory
      *            working directory
      * @param filename
@@ -54,11 +63,10 @@ public class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createMatrix(String baseDirectory, String filename,
-	    int rows, int cols) throws IOException {
+    public static Path createMatrix(Configuration conf, String baseDirectory,
+	    String filename, int rows, int cols) throws IOException {
 
 	String uri = baseDirectory + "/" + filename;
-	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 
@@ -84,24 +92,21 @@ public class DataInitialization {
     }
 
     /**
-     * Create a (rows x cols) matrix from data.
+     * Create a (rows x cols) matrix from double data.
      * 
+     * @param conf
+     *            Configuration file
      * @param data
      *            matrix data
      * @param baseDirectory
      *            working directory
      * @param filename
      *            name of the file where the matrix is going to be stored.
-     * @param rows
-     *            number of rows
-     * @param cols
-     *            number of columns
      * @return Path of the matrix
      * @throws IOException
      */
     public static Path createMatrix(Configuration conf, double[][] data,
-	    String baseDirectory, String filename, int rows, int cols)
-	    throws IOException {
+	    String baseDirectory, String filename) throws IOException {
 
 	String uri = baseDirectory + "/" + filename;
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
@@ -110,6 +115,7 @@ public class DataInitialization {
 	SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
 		IntWritable.class, VectorWritable.class);
 
+	int cols = data[0].length;
 	Vector vector = new DenseVector(cols);
 	int i = 1;
 	try {
@@ -126,4 +132,44 @@ public class DataInitialization {
 
     }
 
+    /**
+     * Create a list of intSets from int[][] data.
+     * 
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            matrix data
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createIntSets(Configuration conf, int[][] data,
+	    String baseDirectory, String filename) throws IOException {
+
+	String uri = baseDirectory + "/" + filename;
+	FileSystem fs = FileSystem.get(URI.create(uri), conf);
+	Path path = new Path(uri);
+
+	SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+		IntWritable.class, IntSetWritable.class);
+
+	int cols = data[0].length;
+	Set<Integer> intset = new HashSet<Integer>(cols);
+	int i = 1;
+	try {
+	    for (int[] row : data) {
+		intset.addAll(Ints.asList(row));
+		writer.append(new IntWritable(i), new IntSetWritable(intset));
+		i++;
+	    }
+	} finally {
+	    IOUtils.closeStream(writer);
+	}
+
+	return path;
+
+    }
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 
 	/* Data initialization */
 	Path H = DataInitialization.createMatrix(conf, ClusteringTestData.H,
-		baseDirectory, "H", numberOfUsers, numberOfClusters);
+		baseDirectory, "H");
 	Path clustering = new Path(baseDirectory + "/clustering");
 
 	/* Insert data in Cassandra */
@@ -58,8 +58,8 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
 
 	/* Run asserts */
-	compareIntSetData(ClusteringTestData.clustering, baseDirectory,
-		clustering);
+	compareIntVectorData(conf, ClusteringTestData.clustering,
+		baseDirectory, clustering);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

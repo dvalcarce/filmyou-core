@@ -40,8 +40,20 @@ public class IntSetWritable implements Writable {
     }
 
     /**
-     * Constructs an IntSetWritable containing the elements of the specified
-     * collection.
+     * Constructs an IntSetWritable containing the Integer elements of the
+     * specified set.
+     * 
+     * @param collection
+     */
+    public IntSetWritable(Set<? extends Integer> set) {
+	for (Integer item : set) {
+	    this.set.add(item);
+	}
+    }
+
+    /**
+     * Constructs an IntSetWritable containing the IntWritable elements of the
+     * specified collection.
      * 
      * @param collection
      */
