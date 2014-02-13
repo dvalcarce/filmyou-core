@@ -24,7 +24,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * Emit <NULL, x> from <i, x> where x = sum_j A_{i, j}.
+ * Emit &lt;NULL, x> from &lt;i, x> where x = sum_j A_{i, j}.
  */
 public class NullMapper extends
 	Mapper<IntWritable, DoubleWritable, NullWritable, DoubleWritable> {

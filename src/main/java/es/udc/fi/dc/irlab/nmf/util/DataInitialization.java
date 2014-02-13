@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
@@ -127,7 +128,7 @@ public class DataInitialization {
     }
 
     /**
-     * Create a list of IntWritables from int[] data.
+     * Create a MapFile&lt;IntWritable, IntWritable> from int[] data.
      * 
      * @param conf
      *            Configuration file
@@ -140,17 +141,21 @@ public class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createIntVector(Configuration conf, int[] data,
+    public static Path createMapIntVector(Configuration conf, int[] data,
 	    String baseDirectory, String filename) throws IOException {
 
-	String uri = baseDirectory + "/" + filename;
+	String parentUri = baseDirectory + "/" + filename;
+	String uri = parentUri + "/data";
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
+	Path parent = new Path(parentUri);
 
-	SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-		IntWritable.class, IntWritable.class);
+	MapFile.Writer writer = null;
 
 	try {
+	    writer = new MapFile.Writer(conf, fs, path.toString(),
+		    IntWritable.class, IntWritable.class);
+
 	    for (int i = 1; i <= data.length; i++) {
 		writer.append(new IntWritable(i), new IntWritable(data[i - 1]));
 	    }
@@ -158,7 +163,7 @@ public class DataInitialization {
 	    IOUtils.closeStream(writer);
 	}
 
-	return path;
+	return parent;
 
     }
 }

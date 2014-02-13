@@ -46,7 +46,7 @@ public class TestRM2 extends HadoopIntegrationTest {
 	Path movieSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
-	Path clustering = DataInitialization.createIntVector(conf,
+	Path clustering = DataInitialization.createMapIntVector(conf,
 		ClusteringTestData.clustering, baseDirectory, "clustering");
 
 	/* Insert data in Cassandra */

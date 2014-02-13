@@ -26,7 +26,7 @@ import org.apache.mahout.math.VectorWritable;
 /**
  * Find the cluster of each user.
  * 
- * Emit <j, k> from <j, h_j> where k = arg max (h_j).
+ * Emit &lt;j, k> from &lt;j, h_j> where k = arg max (h_j).
  */
 public class FindClusterMapper extends
 	Mapper<IntWritable, VectorWritable, IntWritable, IntWritable> {

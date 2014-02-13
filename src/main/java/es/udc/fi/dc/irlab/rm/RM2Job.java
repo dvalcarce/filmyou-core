@@ -17,10 +17,7 @@
 package es.udc.fi.dc.irlab.rm;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
-import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -29,12 +26,10 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.mahout.clustering.spectral.common.IntDoublePairWritable;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
 
@@ -76,7 +71,7 @@ public class RM2Job extends AbstractJob {
 
 	runItemProbInCollection(itemSum, sum, itemColl);
 
-	// runItemRecommendation(userSum, clustering, itemColl);
+	runItemRecommendation(userSum, clustering, itemColl);
 
 	return 0;
     }
@@ -259,22 +254,23 @@ public class RM2Job extends AbstractJob {
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
 		CqlPagingInputFormat.class, ScoreByClusterMapper.class);
-	MultipleInputs.addInputPath(job, userSum,
-		SequenceFileInputFormat.class, Mapper.class);
+	// MultipleInputs.addInputPath(job, userSum,
+	// SequenceFileInputFormat.class, Mapper.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
-	job.setMapOutputValueClass(IntDoublePairWritable.class);
+	job.setMapOutputValueClass(PreferenceWritable.class);
 
 	job.setReducerClass(Reducer.class);
 
-	job.setOutputFormatClass(CqlOutputFormat.class);
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	SequenceFileOutputFormat.setOutputPath(job, new Path("tmp"));
 
-	job.setOutputKeyClass(Map.class);
-	job.setOutputValueClass(List.class);
+	job.setOutputKeyClass(IntPairWritable.class);
+	job.setOutputValueClass(PreferenceWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
 	CassandraSetup.updateConfForInput(getConf(), jobConf);
-	CassandraSetup.updateConfForOutput(getConf(), jobConf);
+	// CassandraSetup.updateConfForOutput(getConf(), jobConf);
 
 	DistributedCache.addCacheFile(clustering.toUri(),
 		job.getConfiguration());
