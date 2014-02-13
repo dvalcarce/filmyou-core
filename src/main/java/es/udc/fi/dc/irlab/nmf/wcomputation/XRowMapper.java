@@ -24,7 +24,7 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(i, 1), x_i> from X matrix ({x_i}).
+ * Emit &lt;(i, 1), x_i> from X matrix ({x_i}).
  */
 public class XRowMapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {

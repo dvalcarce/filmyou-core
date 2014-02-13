@@ -25,7 +25,7 @@ import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 
 /**
- * Emit <(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
 public class ScoreByUserMapper
 	extends

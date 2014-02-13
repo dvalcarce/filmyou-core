@@ -27,7 +27,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <NULL, h_j h_j^T> from <j, h_j>.
+ * Emit &lt;NULL, h_j h_j^T> from &lt;j, h_j>.
  * 
  */
 public class W3Mapper extends

@@ -24,7 +24,7 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(j, 2), y_j> from Y matrix ({y_j}).
+ * Emit &lt;(j, 2), y_j> from Y matrix ({y_j}).
  */
 public class YColumnMapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {

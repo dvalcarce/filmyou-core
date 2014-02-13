@@ -27,7 +27,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <j, A_{i,j}w_i^T> from <i, {w_i, {(j, A_{i, j}})>.
+ * Emit &lt;j, A_{i,j}w_i^T> from &lt;i, w_i, (j, A_{i, j})>.
  */
 public class H1Reducer
 	extends

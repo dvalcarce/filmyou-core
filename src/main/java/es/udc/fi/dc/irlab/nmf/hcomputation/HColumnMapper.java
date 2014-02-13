@@ -24,7 +24,7 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(j, 0), h_j> from H matrix ({h_j}).
+ * Emit &lt;(j, 0), h_j> from H matrix ({h_j}).
  */
 public class HColumnMapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {

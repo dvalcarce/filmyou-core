@@ -25,7 +25,7 @@ import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixWritable;
 
 /**
- * Emit <i, sum_i(w_i^T w_i)> from <NULL, w_i^T w_i>.
+ * Emit &lt;i, sum_i(w_i^T w_i)> from &lt;NULL, w_i^T w_i>.
  * 
  */
 public class H3Reducer extends

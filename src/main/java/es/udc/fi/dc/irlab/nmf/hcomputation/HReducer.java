@@ -27,7 +27,7 @@ import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 
 /**
- * Emit <j, h_j · x_j / y_j> from <j, {h_j, x_j, y_j}>.
+ * Emit &lt;j, h_j · x_j / y_j> from &lt;j, {h_j, x_j, y_j}>.
  */
 public class HReducer extends
 	Reducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {

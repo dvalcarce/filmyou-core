@@ -25,7 +25,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <i, x_i> from <j, {A_{i,j}h_j^T}> where x_i = sum_i(A_{i,j}h_j^T).
+ * Emit &lt;i, x_i> from &lt;j, {A_{i,j}h_j^T}> where x_i = sum_i(A_{i,j}h_j^T).
  * 
  */
 public class XRowReducer extends

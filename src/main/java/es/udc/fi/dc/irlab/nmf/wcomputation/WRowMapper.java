@@ -24,7 +24,7 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit <(i, 0), w_i> from H matrix ({w_i}).
+ * Emit &lt;(i, 0), w_i> from H matrix ({w_i}).
  */
 public class WRowMapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {

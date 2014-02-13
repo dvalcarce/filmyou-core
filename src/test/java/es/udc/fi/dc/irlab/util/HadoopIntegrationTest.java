@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,8 +34,6 @@ import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
-
-import com.google.common.primitives.Ints;
 
 /**
  * Integration test class utility
@@ -119,7 +115,7 @@ public abstract class HadoopIntegrationTest {
      *            clustering path
      * @param numberOfUsers
      * @param numberOfClusters
-     * @return
+     * @return conf
      */
     protected Configuration buildConf(Path H, Path clustering,
 	    int numberOfUsers, int numberOfClusters) {
@@ -140,9 +136,7 @@ public abstract class HadoopIntegrationTest {
      * 
      * @param clustering
      *            clustering path
-     * @param numberOfUsers
-     * @param numberOfClusters
-     * @return
+     * @return conf
      */
     protected Configuration buildConf(Path clustering) {
 
@@ -158,7 +152,7 @@ public abstract class HadoopIntegrationTest {
 
     /**
      * Compare the data matrix with the data stored on given path (as
-     * VectorWritable).
+     * {@literal SequenceFile<IntWritable, VectorWritable>}).
      * 
      * @param data
      *            data to be compared
@@ -204,7 +198,7 @@ public abstract class HadoopIntegrationTest {
 
     /**
      * Compare the data vector with the data stored on given path (as
-     * DoubleWritable).
+     * {@literal SequenceFile<IntWritable, DoubleWritable>}).
      * 
      * @param data
      *            data to be compared
@@ -247,7 +241,7 @@ public abstract class HadoopIntegrationTest {
 
     /**
      * Compare the data vector with the data stored on given path (as a MapFile
-     * of <IntWritable, IntWritable>).
+     * of {@literal <IntWritable, IntWritable>}).
      * 
      * @param data
      *            data to be compared
@@ -279,8 +273,8 @@ public abstract class HadoopIntegrationTest {
     }
 
     /**
-     * Compare the data scalar with the data stored on given path (as
-     * FloatWritable).
+     * Compare the data scalar with the data stored on given path (as a
+     * {@literal SequenceFile<NullWritable, FloatWritable>}).
      * 
      * @param data
      *            data to be compared
@@ -315,50 +309,4 @@ public abstract class HadoopIntegrationTest {
 
     }
 
-    /**
-     * Compare the data matrix with the data stored on given path (as
-     * IntSetWritable).
-     * 
-     * @param data
-     *            data to be compared
-     * @param baseDirectory
-     *            a temporal file will be created in this folder
-     * @param path
-     *            path to the data
-     * @throws IOException
-     */
-    protected void compareIntSetData(Configuration conf, int[][] data,
-	    String baseDirectory, Path path) throws IOException {
-
-	FileSystem fs = FileSystem.get(path.toUri(), conf);
-	Path mergedFile = new Path(baseDirectory + "/merged");
-
-	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
-
-	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-		mergedFile, conf)) {
-
-	    IntWritable key = new IntWritable();
-	    IntSetWritable val = new IntSetWritable();
-
-	    int count = 0;
-
-	    while (reader.next(key, val)) {
-		count++;
-
-		Set<Integer> set = new HashSet<Integer>(Ints.asList(data[key
-			.get() - 1]));
-
-		assertEquals(set, val.get());
-	    }
-
-	    if (count != data.length) {
-		fail("Data length does not match");
-	    }
-
-	}
-
-	fs.delete(mergedFile, false);
-
-    }
 }
