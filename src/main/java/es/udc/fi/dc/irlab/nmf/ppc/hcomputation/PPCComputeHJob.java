@@ -71,7 +71,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
      * Run all chained map-reduce jobs in order to compute H matrix.
      * 
      * @param args
-     * @thors Exception
+     * @throws Exception
      */
     @Override
     public int run(String[] args) throws Exception {

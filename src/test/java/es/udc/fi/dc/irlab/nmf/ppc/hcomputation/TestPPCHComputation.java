@@ -44,9 +44,9 @@ public class TestPPCHComputation extends HadoopIntegrationTest {
 	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
-	Path H = DataInitialization.createMatrix(conf, PPCTestData.H_init,
+	Path H = DataInitialization.createDoubleMatrix(conf, PPCTestData.H_init,
 		baseDirectory, "H");
-	Path W = DataInitialization.createMatrix(conf, PPCTestData.W_init,
+	Path W = DataInitialization.createDoubleMatrix(conf, PPCTestData.W_init,
 		baseDirectory, "W");
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");

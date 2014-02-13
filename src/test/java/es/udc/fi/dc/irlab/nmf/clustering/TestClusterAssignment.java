@@ -43,7 +43,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
-	Path H = DataInitialization.createMatrix(conf, ClusteringTestData.H,
+	Path H = DataInitialization.createDoubleMatrix(conf, ClusteringTestData.H,
 		baseDirectory, "H");
 	Path clustering = new Path(baseDirectory + "/clustering");
 
@@ -58,7 +58,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
 
 	/* Run asserts */
-	compareIntVectorData(conf, ClusteringTestData.clustering,
+	compareMapIntVectorData(conf, ClusteringTestData.clustering,
 		baseDirectory, clustering);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));

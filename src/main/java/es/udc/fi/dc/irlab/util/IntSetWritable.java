@@ -43,7 +43,7 @@ public class IntSetWritable implements Writable {
      * Constructs an IntSetWritable containing the Integer elements of the
      * specified set.
      * 
-     * @param collection
+     * @param set
      */
     public IntSetWritable(Set<? extends Integer> set) {
 	for (Integer item : set) {

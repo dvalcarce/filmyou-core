@@ -18,9 +18,7 @@ package es.udc.fi.dc.irlab.nmf.util;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -31,10 +29,6 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
-
-import com.google.common.primitives.Ints;
-
-import es.udc.fi.dc.irlab.util.IntSetWritable;
 
 /**
  * Utility class for initializing random structures in HDFS.
@@ -105,7 +99,7 @@ public class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createMatrix(Configuration conf, double[][] data,
+    public static Path createDoubleMatrix(Configuration conf, double[][] data,
 	    String baseDirectory, String filename) throws IOException {
 
 	String uri = baseDirectory + "/" + filename;
@@ -133,12 +127,12 @@ public class DataInitialization {
     }
 
     /**
-     * Create a list of intSets from int[][] data.
+     * Create a list of IntWritables from int[] data.
      * 
      * @param conf
      *            Configuration file
      * @param data
-     *            matrix data
+     *            vector data
      * @param baseDirectory
      *            working directory
      * @param filename
@@ -146,7 +140,7 @@ public class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createIntSets(Configuration conf, int[][] data,
+    public static Path createIntVector(Configuration conf, int[] data,
 	    String baseDirectory, String filename) throws IOException {
 
 	String uri = baseDirectory + "/" + filename;
@@ -154,16 +148,11 @@ public class DataInitialization {
 	Path path = new Path(uri);
 
 	SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-		IntWritable.class, IntSetWritable.class);
+		IntWritable.class, IntWritable.class);
 
-	int cols = data[0].length;
-	Set<Integer> intset = new HashSet<Integer>(cols);
-	int i = 1;
 	try {
-	    for (int[] row : data) {
-		intset.addAll(Ints.asList(row));
-		writer.append(new IntWritable(i), new IntSetWritable(intset));
-		i++;
+	    for (int i = 1; i <= data.length; i++) {
+		writer.append(new IntWritable(i), new IntWritable(data[i - 1]));
 	    }
 	} finally {
 	    IOUtils.closeStream(writer);

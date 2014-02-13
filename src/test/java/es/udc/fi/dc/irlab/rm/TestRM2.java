@@ -21,7 +21,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.nmf.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
+import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
@@ -34,13 +36,18 @@ public class TestRM2 extends HadoopIntegrationTest {
     @Test
     public void test() throws Exception {
 	Configuration conf = buildConf();
-	HDFSUtils.removeData(conf, conf.get("directory"));
 
+	String baseDirectory = conf.get("directory");
 	String directory = conf.get("directory") + "/rm2";
+
+	HDFSUtils.removeData(conf, baseDirectory);
+
 	Path userSum = new Path(directory + "/userSum");
 	Path movieSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
+	Path clustering = DataInitialization.createIntVector(conf,
+		ClusteringTestData.clustering, baseDirectory, "clustering");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -49,14 +56,19 @@ public class TestRM2 extends HadoopIntegrationTest {
 		cassandraTableIn);
 
 	/* Run job */
+	conf = buildConf(clustering);
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */
-	compareVectorData(RMTestData.userSum, baseDirectory, userSum);
-	compareVectorData(RMTestData.movieSum, baseDirectory, movieSum);
-	compareScalarData(RMTestData.totalSum, baseDirectory, totalSum);
-	compareVectorData(RMTestData.itemColl, baseDirectory, itemColl);
+	compareDoubleVectorData(conf, RMTestData.userSum, baseDirectory,
+		userSum);
+	compareDoubleVectorData(conf, RMTestData.movieSum, baseDirectory,
+		movieSum);
+	compareScalarData(conf, RMTestData.totalSum, baseDirectory, totalSum);
+	compareMapDoubleVectorData(conf, RMTestData.itemColl, baseDirectory,
+		itemColl);
 
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	HDFSUtils.removeData(conf, baseDirectory);
     }
+
 }

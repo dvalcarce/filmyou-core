@@ -240,6 +240,39 @@ public abstract class HadoopIntegrationTest {
     }
 
     /**
+     * Compare the data vector with the data stored on given path (as
+     * {@literal MapFile<IntWritable, DoubleWritable>}).
+     * 
+     * @param data
+     *            data to be compared
+     * @param baseDirectory
+     *            a temporal file will be created in this folder
+     * @param path
+     *            path to the data
+     * @throws IOException
+     */
+    protected void compareMapDoubleVectorData(Configuration conf,
+	    double[] data, String baseDirectory, Path path) throws IOException {
+
+	Reader[] readers = MapFileOutputFormat.getReaders(path, conf);
+	Partitioner<IntWritable, DoubleWritable> partitioner = new HashPartitioner<IntWritable, DoubleWritable>();
+
+	IntWritable key;
+	DoubleWritable val = new DoubleWritable();
+
+	for (int i = 1; i <= data.length; i++) {
+	    key = new IntWritable(i);
+
+	    if (MapFileOutputFormat.getEntry(readers, partitioner, key, val) == null) {
+		fail(String.format("data %d not found", i));
+	    }
+
+	    assertEquals(data[i - 1], val.get(), accuracy);
+	}
+
+    }
+
+    /**
      * Compare the data vector with the data stored on given path (as a MapFile
      * of {@literal <IntWritable, IntWritable>}).
      * 
@@ -251,7 +284,7 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareIntVectorData(Configuration conf, int[] data,
+    protected void compareMapIntVectorData(Configuration conf, int[] data,
 	    String baseDirectory, Path path) throws IOException {
 
 	Reader[] readers = MapFileOutputFormat.getReaders(path, conf);
