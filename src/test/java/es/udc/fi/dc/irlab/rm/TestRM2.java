@@ -1,5 +1,4 @@
 /**
-s
  * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +22,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.testdata.ClusteringTestData;
+import es.udc.fi.dc.irlab.nmf.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
@@ -60,7 +60,8 @@ public class TestRM2 extends HadoopIntegrationTest {
 		cassandraTableIn);
 
 	/* Run job */
-	conf = buildConf(clustering, clusteringCount);
+	conf = buildConf(clustering, clusteringCount,
+		PPCTestData.numberOfUsers, PPCTestData.numberOfItems);
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */

@@ -26,12 +26,12 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
+import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
@@ -267,14 +267,14 @@ public class RM2Job extends AbstractJob {
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);
 
-	job.setReducerClass(Reducer.class);
+	job.setReducerClass(RM2Reducer.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job,
 		new Path(directory + "/tmp"));
 
-	job.setOutputKeyClass(IntPairWritable.class);
-	job.setOutputValueClass(IntDoubleOrPrefWritable.class);
+	job.setOutputKeyClass(NullWritable.class);
+	job.setOutputValueClass(VectorWritable.class);
 
 	job.setPartitionerClass(IntPairKeyPartitioner.class);
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);

@@ -68,6 +68,7 @@ public abstract class HadoopIntegrationTest {
 	conf.set("cassandraPartitioner", cassandraPartitioner);
 	conf.set("cassandraTableIn", cassandraTableIn);
 	conf.set("cassandraTableOut", cassandraTableOut);
+	conf.setFloat("lambda", 0.5f);
 
 	return conf;
     }
@@ -140,11 +141,16 @@ public abstract class HadoopIntegrationTest {
      * 
      * @param clustering
      *            clustering path
+     * @param clusteringCount
+     *            clusteringCount path
+     * @param numberOfItems
      * @return conf
      */
-    protected Configuration buildConf(Path clustering, Path clusteringCount) {
+    protected Configuration buildConf(Path clustering, Path clusteringCount,
+	    int numberOfUsers, int numberOfItems) {
 
-	Configuration conf = buildConf();
+	Configuration conf = buildConf(null, null, numberOfUsers,
+		numberOfItems, 0, 0);
 
 	if (clustering != null) {
 	    conf.set("clustering", clustering.toString());
