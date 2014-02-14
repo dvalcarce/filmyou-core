@@ -33,6 +33,7 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
 
+import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
@@ -254,23 +255,28 @@ public class RM2Job extends AbstractJob {
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
 		CqlPagingInputFormat.class, ScoreByClusterMapper.class);
-	// MultipleInputs.addInputPath(job, userSum,
-	// SequenceFileInputFormat.class, Mapper.class);
+	MultipleInputs.addInputPath(job, userSum,
+		SequenceFileInputFormat.class, UserSumByClusterMapper.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
-	job.setMapOutputValueClass(PreferenceWritable.class);
+	job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);
 
 	job.setReducerClass(Reducer.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, new Path("tmp"));
+	SequenceFileOutputFormat.setOutputPath(job,
+		new Path(directory + "/tmp"));
 
 	job.setOutputKeyClass(IntPairWritable.class);
-	job.setOutputValueClass(PreferenceWritable.class);
+	job.setOutputValueClass(IntDoubleOrPrefWritable.class);
+
+	job.setPartitionerClass(IntPairKeyPartitioner.class);
+	job.setSortComparatorClass(IntPairWritable.Comparator.class);
+	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
 	Configuration jobConf = job.getConfiguration();
 	CassandraSetup.updateConfForInput(getConf(), jobConf);
-	// CassandraSetup.updateConfForOutput(getConf(), jobConf);
+	CassandraSetup.updateConfForOutput(getConf(), jobConf);
 
 	DistributedCache.addCacheFile(clustering.toUri(),
 		job.getConfiguration());

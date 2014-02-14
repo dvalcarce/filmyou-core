@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +17,9 @@
 package es.udc.fi.dc.irlab.rm;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.mapreduce.Partitioner;
@@ -30,35 +29,29 @@ import org.apache.mahout.common.IntPairWritable;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
 /**
- * Emit &lt;(k, 0), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
- * is a user from the cluster k.
+ * Emit &lt;(k, 1), (j, sum_i A_{i,j})> from &lt;j, sum_i A_{i,j}> where j is a
+ * user from the cluster k.
  */
-public class ScoreByClusterMapper extends
-	ByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+public class UserSumByClusterMapper extends
+	ByClusterMapper<IntWritable, DoubleWritable> {
 
     @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
+    protected void map(IntWritable key, DoubleWritable column, Context context)
 	    throws IOException, InterruptedException {
-
-	int movie = keys.get("movie").getInt();
-	int user = keys.get("user").getInt();
-	float score = columns.get("score").getFloat();
 
 	Configuration conf = context.getConfiguration();
 
 	Reader[] readers = MapFileOutputFormat.getReaders(clustering, conf);
 	Partitioner<IntWritable, IntWritable> partitioner = new HashPartitioner<IntWritable, IntWritable>();
 
-	IntWritable key = new IntWritable(user);
 	IntWritable cluster = new IntWritable();
 
 	if (MapFileOutputFormat.getEntry(readers, partitioner, key, cluster) == null) {
-	    throw new RuntimeException("User " + user + " not found");
+	    throw new RuntimeException("User " + key + " not found");
 	}
 
-	context.write(new IntPairWritable(cluster.get(), 0),
-		new IntDoubleOrPrefWritable(user, movie, score));
+	context.write(new IntPairWritable(cluster.get(), 1),
+		new IntDoubleOrPrefWritable(key.get(), column.get()));
 
     }
 }

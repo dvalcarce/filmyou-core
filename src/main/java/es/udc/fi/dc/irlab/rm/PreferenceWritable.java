@@ -31,7 +31,7 @@ import com.google.common.primitives.Ints;
  * 
  */
 public final class PreferenceWritable implements
-	WritableComparable<PreferenceWritable>, Cloneable {
+	WritableComparable<PreferenceWritable> {
 
     private int userID;
     private int itemID;
@@ -92,11 +92,6 @@ public final class PreferenceWritable implements
     @Override
     public String toString() {
 	return String.format("%d\t%d\t%f", userID, itemID, score);
-    }
-
-    @Override
-    public PreferenceWritable clone() {
-	return new PreferenceWritable(userID, itemID, score);
     }
 
     @Override
