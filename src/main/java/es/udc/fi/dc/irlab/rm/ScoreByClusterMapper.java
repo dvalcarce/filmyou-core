@@ -34,7 +34,7 @@ import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
  * is a user from the cluster k.
  */
 public class ScoreByClusterMapper extends
-	ByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+	AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
     @Override
     protected void map(Map<String, ByteBuffer> keys,

@@ -44,10 +44,10 @@ public class PPCDriverTest extends HadoopIntegrationTest {
 	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
-	Path H = DataInitialization.createDoubleMatrix(conf, PPCTestData.H_init,
-		baseDirectory, "H");
-	Path W = DataInitialization.createDoubleMatrix(conf, PPCTestData.W_init,
-		baseDirectory, "W");
+	Path H = DataInitialization.createDoubleMatrix(conf,
+		PPCTestData.H_init, baseDirectory, "H");
+	Path W = DataInitialization.createDoubleMatrix(conf,
+		PPCTestData.W_init, baseDirectory, "W");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,

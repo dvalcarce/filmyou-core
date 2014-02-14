@@ -33,7 +33,7 @@ import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
  * user from the cluster k.
  */
 public class UserSumByClusterMapper extends
-	ByClusterMapper<IntWritable, DoubleWritable> {
+	AbstractByClusterMapper<IntWritable, DoubleWritable> {
 
     @Override
     protected void map(IntWritable key, DoubleWritable column, Context context)

@@ -44,6 +44,9 @@ import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
  */
 public class RM2Job extends AbstractJob {
 
+    public static final String totalSumName = "rm.totalSum";
+    public static final String lambdaName = "lambda";
+
     private String directory;
 
     /**
@@ -230,7 +233,7 @@ public class RM2Job extends AbstractJob {
 	job.setOutputValueClass(DoubleWritable.class);
 
 	Configuration jobConf = job.getConfiguration();
-	jobConf.set("rm.totalSum", String.valueOf(totalSum));
+	jobConf.set(totalSumName, String.valueOf(totalSum));
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -278,9 +281,8 @@ public class RM2Job extends AbstractJob {
 	CassandraSetup.updateConfForInput(getConf(), jobConf);
 	CassandraSetup.updateConfForOutput(getConf(), jobConf);
 
-	DistributedCache.addCacheFile(clustering.toUri(),
-		job.getConfiguration());
-	DistributedCache.addCacheFile(itemColl.toUri(), job.getConfiguration());
+	DistributedCache.addCacheFile(clustering.toUri(), jobConf);
+	DistributedCache.addCacheFile(itemColl.toUri(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

@@ -28,15 +28,13 @@ import org.apache.hadoop.mapreduce.Mapper;
 public class ItemProbInCollectionMapper extends
 	Mapper<IntWritable, DoubleWritable, IntWritable, DoubleWritable> {
 
-    private static final String parameter = "rm.totalSum";
-
     @Override
     protected void map(IntWritable key, DoubleWritable value, Context context)
 	    throws IOException, InterruptedException {
 
 	double result;
 	double globalSum = Double.valueOf(context.getConfiguration().get(
-		parameter));
+		RM2Job.totalSumName));
 
 	result = value.get() / globalSum;
 

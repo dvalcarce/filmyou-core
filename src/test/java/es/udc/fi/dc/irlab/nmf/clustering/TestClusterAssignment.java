@@ -43,8 +43,8 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
-	Path H = DataInitialization.createDoubleMatrix(conf, ClusteringTestData.H,
-		baseDirectory, "H");
+	Path H = DataInitialization.createDoubleMatrix(conf,
+		ClusteringTestData.H, baseDirectory, "H");
 	Path clustering = new Path(baseDirectory + "/clustering");
 
 	/* Insert data in Cassandra */

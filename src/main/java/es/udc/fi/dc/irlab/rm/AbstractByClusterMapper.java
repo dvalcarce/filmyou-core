@@ -28,7 +28,7 @@ import org.apache.mahout.common.IntPairWritable;
 /**
  * Abstract mapper for reading clustering data in distributed cached files.
  */
-public abstract class ByClusterMapper<A, B> extends
+public abstract class AbstractByClusterMapper<A, B> extends
 	Mapper<A, B, IntPairWritable, IntDoubleOrPrefWritable> {
 
     protected Path clustering;
