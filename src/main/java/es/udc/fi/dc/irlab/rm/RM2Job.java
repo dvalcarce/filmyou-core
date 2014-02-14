@@ -65,6 +65,7 @@ public class RM2Job extends AbstractJob {
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
 	Path clustering = new Path(getConf().get("clustering"));
+	Path clusteringCount = new Path(getConf().get("clusteringCount"));
 
 	runUserSum(userSum);
 	runMovieSum(itemSum);
@@ -75,7 +76,7 @@ public class RM2Job extends AbstractJob {
 
 	runItemProbInCollection(itemSum, sum, itemColl);
 
-	runItemRecommendation(userSum, clustering, itemColl);
+	runItemRecommendation(userSum, clusteringCount, clustering, itemColl);
 
 	return 0;
     }
@@ -97,8 +98,8 @@ public class RM2Job extends AbstractJob {
 	job.setInputFormatClass(CqlPagingInputFormat.class);
 
 	job.setMapperClass(SimpleScoreByUserMapper.class);
-	job.setCombinerClass(SumReducer.class);
-	job.setReducerClass(SumReducer.class);
+	job.setCombinerClass(DoubleSumReducer.class);
+	job.setReducerClass(DoubleSumReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(DoubleWritable.class);
@@ -136,8 +137,8 @@ public class RM2Job extends AbstractJob {
 	job.setInputFormatClass(CqlPagingInputFormat.class);
 
 	job.setMapperClass(SimpleScoreByMovieMapper.class);
-	job.setCombinerClass(SumReducer.class);
-	job.setReducerClass(SumReducer.class);
+	job.setCombinerClass(DoubleSumReducer.class);
+	job.setReducerClass(DoubleSumReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(DoubleWritable.class);
@@ -177,8 +178,8 @@ public class RM2Job extends AbstractJob {
 	SequenceFileInputFormat.addInputPath(job, itemSum);
 
 	job.setMapperClass(NullMapper.class);
-	job.setCombinerClass(SumReducer.class);
-	job.setReducerClass(SumReducer.class);
+	job.setCombinerClass(DoubleSumReducer.class);
+	job.setReducerClass(DoubleSumReducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(DoubleWritable.class);
@@ -243,23 +244,25 @@ public class RM2Job extends AbstractJob {
     }
 
     /**
-     * Calculates the item recomendation scores.
+     * Calculates the item recommendation scores.
      * 
      * @throws InterruptedException
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    protected void runItemRecommendation(Path userSum, Path clustering,
-	    Path itemColl) throws ClassNotFoundException, IOException,
-	    InterruptedException {
+    protected void runItemRecommendation(Path userSum, Path clusteringCount,
+	    Path clustering, Path itemColl) throws ClassNotFoundException,
+	    IOException, InterruptedException {
 
 	Job job = new Job(getConf(), "Job RM2-5");
 	job.setJarByClass(this.getClass());
 
-	MultipleInputs.addInputPath(job, new Path("unused"),
-		CqlPagingInputFormat.class, ScoreByClusterMapper.class);
+	MultipleInputs.addInputPath(job, clusteringCount,
+		SequenceFileInputFormat.class, CountClusterMapper.class);
 	MultipleInputs.addInputPath(job, userSum,
 		SequenceFileInputFormat.class, UserSumByClusterMapper.class);
+	MultipleInputs.addInputPath(job, new Path("unused"),
+		CqlPagingInputFormat.class, ScoreByClusterMapper.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);

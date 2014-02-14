@@ -73,6 +73,16 @@ public final class IntDoubleOrPrefWritable implements Writable {
 	this.isPref = false;
     }
 
+    /**
+     * Constructor for a IntDoublePairWritable (skipping value info).
+     * 
+     * @param key
+     */
+    public IntDoubleOrPrefWritable(int key) {
+	this.key = key;
+	this.isPref = false;
+    }
+
     public int getUserID() {
 	return userID;
     }

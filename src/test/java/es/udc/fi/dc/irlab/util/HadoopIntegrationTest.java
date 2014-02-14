@@ -118,13 +118,17 @@ public abstract class HadoopIntegrationTest {
      * @return conf
      */
     protected Configuration buildConf(Path H, Path clustering,
-	    int numberOfUsers, int numberOfClusters) {
+	    Path clusteringCount, int numberOfUsers, int numberOfClusters) {
 
 	Configuration conf = buildConf(H, null, numberOfUsers, 0,
 		numberOfClusters, 0);
 
 	if (clustering != null) {
 	    conf.set("clustering", clustering.toString());
+	}
+
+	if (clusteringCount != null) {
+	    conf.set("clusteringCount", clusteringCount.toString());
 	}
 
 	return conf;
@@ -138,12 +142,16 @@ public abstract class HadoopIntegrationTest {
      *            clustering path
      * @return conf
      */
-    protected Configuration buildConf(Path clustering) {
+    protected Configuration buildConf(Path clustering, Path clusteringCount) {
 
 	Configuration conf = buildConf();
 
 	if (clustering != null) {
 	    conf.set("clustering", clustering.toString());
+	}
+
+	if (clusteringCount != null) {
+	    conf.set("clusteringCount", clusteringCount.toString());
 	}
 
 	return conf;

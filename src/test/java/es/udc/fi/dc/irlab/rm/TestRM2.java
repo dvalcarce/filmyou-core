@@ -1,4 +1,5 @@
 /**
+s
  * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,6 +49,9 @@ public class TestRM2 extends HadoopIntegrationTest {
 	Path itemColl = new Path(directory + "/itemColl");
 	Path clustering = DataInitialization.createMapIntVector(conf,
 		ClusteringTestData.clustering, baseDirectory, "clustering");
+	Path clusteringCount = DataInitialization.createMapIntVector(conf,
+		ClusteringTestData.clusteringCount, baseDirectory,
+		"clusteringCount");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -56,7 +60,7 @@ public class TestRM2 extends HadoopIntegrationTest {
 		cassandraTableIn);
 
 	/* Run job */
-	conf = buildConf(clustering);
+	conf = buildConf(clustering, clusteringCount);
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */
@@ -70,5 +74,4 @@ public class TestRM2 extends HadoopIntegrationTest {
 
 	HDFSUtils.removeData(conf, baseDirectory);
     }
-
 }

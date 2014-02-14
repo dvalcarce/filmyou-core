@@ -22,6 +22,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.map.InverseMapper;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
@@ -38,6 +39,7 @@ public class ClusterAssignmentJob extends AbstractJob {
 
     protected Path H;
     protected Path clustering;
+    protected Path clusteringCount;
 
     @Override
     public int run(String[] args) throws Exception {
@@ -48,9 +50,12 @@ public class ClusterAssignmentJob extends AbstractJob {
 	/* Prepare paths */
 	H = new Path(getConf().get("H"));
 	clustering = new Path(getConf().get("clustering"));
+	clusteringCount = new Path(getConf().get("clusteringCount"));
 
-	/* Launch job */
+	/* Launch jobs */
 	findClustersJob(H, clustering);
+
+	countClusters(clustering, clusteringCount);
 
 	return 0;
     }
@@ -78,6 +83,45 @@ public class ClusterAssignmentJob extends AbstractJob {
 	job.setMapperClass(FindClusterMapper.class);
 
 	job.setNumReduceTasks(0);
+
+	job.setOutputFormatClass(MapFileOutputFormat.class);
+	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setOutputKeyClass(IntWritable.class);
+	job.setOutputValueClass(IntWritable.class);
+
+	boolean succeeded = job.waitForCompletion(true);
+	if (!succeeded) {
+	    throw new RuntimeException(job.getJobName() + " failed!");
+	}
+
+    }
+
+    /**
+     * Count the number of elements in each cluster.
+     * 
+     * @param inputPath
+     *            Clustering assignments
+     * @param outputPath
+     *            Number of elements in each cluster
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    protected void countClusters(Path inputPath, Path outputPath)
+	    throws IOException, ClassNotFoundException, InterruptedException {
+
+	Job job = new Job(getConf(), "CountClustersJob");
+	job.setJarByClass(this.getClass());
+
+	job.setInputFormatClass(SequenceFileInputFormat.class);
+	SequenceFileInputFormat.addInputPath(job, inputPath);
+
+	job.setMapperClass(InverseMapper.class);
+	job.setReducerClass(CountReducer.class);
+
+	job.setMapOutputKeyClass(IntWritable.class);
+	job.setMapOutputValueClass(IntWritable.class);
 
 	job.setOutputFormatClass(MapFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);

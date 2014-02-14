@@ -87,12 +87,9 @@ public class ClusteringTestData {
 	    { 0.5900940280931691, 1.531576462964527e-12, 0.3742406721491912,
 		    4.535761621239282e-06, 0.03566076399448684 } };
 
-    // public static final int[][] clustering = new int[][] {
-    // { 3, 11, 13, 17, 20, 23, 30 }, { 1, 9, 12, 15, 26, 27, 28 },
-    // { 5, 6, 7, 8, 19, 21, 25 }, { 2, 4, 10, 14, 18, 22, 29 },
-    // { 16, 24 } };
-
     public static final int[] clustering = new int[] { 2, 4, 1, 4, 3, 3, 3, 3,
 	    2, 4, 1, 2, 1, 4, 2, 5, 1, 4, 3, 1, 3, 4, 1, 5, 3, 2, 2, 2, 4, 1 };
+
+    public static final int[] clusteringCount = new int[] { 7, 7, 7, 7, 2 };
 
 }

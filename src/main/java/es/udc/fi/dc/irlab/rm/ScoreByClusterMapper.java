@@ -30,10 +30,11 @@ import org.apache.mahout.common.IntPairWritable;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
 /**
- * Emit &lt;(k, 0), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
+ * Emit &lt;(k, 2), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
  * is a user from the cluster k.
  */
-public class ScoreByClusterMapper extends
+public class ScoreByClusterMapper
+	extends
 	AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
     @Override
@@ -57,7 +58,7 @@ public class ScoreByClusterMapper extends
 	    throw new RuntimeException("User " + user + " not found");
 	}
 
-	context.write(new IntPairWritable(cluster.get(), 0),
+	context.write(new IntPairWritable(cluster.get(), 2),
 		new IntDoubleOrPrefWritable(user, movie, score));
 
     }

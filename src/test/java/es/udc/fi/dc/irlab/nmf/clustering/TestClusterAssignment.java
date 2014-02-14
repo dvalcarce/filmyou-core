@@ -46,6 +46,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	Path H = DataInitialization.createDoubleMatrix(conf,
 		ClusteringTestData.H, baseDirectory, "H");
 	Path clustering = new Path(baseDirectory + "/clustering");
+	Path clusteringCount = new Path(baseDirectory + "/clusteringCount");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -54,12 +55,15 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 		cassandraTableIn);
 
 	/* Run job */
-	conf = buildConf(H, clustering, numberOfUsers, numberOfClusters);
+	conf = buildConf(H, clustering, clusteringCount, numberOfUsers,
+		numberOfClusters);
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
 
 	/* Run asserts */
 	compareMapIntVectorData(conf, ClusteringTestData.clustering,
 		baseDirectory, clustering);
+	compareMapIntVectorData(conf, ClusteringTestData.clusteringCount,
+		baseDirectory, clusteringCount);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

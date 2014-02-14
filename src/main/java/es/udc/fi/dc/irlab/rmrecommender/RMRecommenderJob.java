@@ -59,6 +59,8 @@ public class RMRecommenderJob extends AbstractJob {
 	addOption("H", "h", "Initial H matrix", false);
 	addOption("W", "w", "Initial W matrix", false);
 	addOption("clustering", "cluster", "Clustering results", "clustering");
+	addOption("clusteringCount", "clusterCount", "Clustering sizes",
+		"clusteringCount");
 	addOption("lambda", "l",
 		"Lambda parameter for Jelinek-Mercer smoothing", "0.5");
     }
