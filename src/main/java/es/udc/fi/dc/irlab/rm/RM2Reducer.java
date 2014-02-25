@@ -223,29 +223,8 @@ public class RM2Reducer
 
 			sum += probItemGivenUser(recommendedItem, neighbour)
 				* probItemGivenUser(item, neighbour);
-
-			if (userId == 3 && recommendedItem == 1) {
-			    System.out.println(String.format(
-				    "p(%d|%d) = %f",
-				    recommendedItem + 1,
-				    neighbour + 1,
-				    probItemGivenUser(recommendedItem,
-					    neighbour)));
-			    System.out.println(String.format("p(%d|%d) = %f",
-				    item + 1, neighbour + 1,
-				    probItemGivenUser(item, neighbour)));
-			    System.out.println();
-			}
-
 		    }
 		    logResult += Math.log(sum);
-
-		    if (userId == 3 && recommendedItem == 1) {
-			System.out.println(String.format("sum = %f", sum));
-			System.out.println(String.format("result = %f",
-				logResult));
-		    }
-
 		}
 
 		// n = #items rated by user
@@ -253,9 +232,7 @@ public class RM2Reducer
 
 		logResult += (n - 1) * Math.log(numberOfItems) - n
 			* Math.log(numberOfUsersInCluster);
-		if (userId == 3 && recommendedItem == 1) {
-		    System.out.println(String.format("result = %f", logResult));
-		}
+
 		try {
 		    writePreference(context, userId, recommendedItem,
 			    logResult, cluster);
@@ -286,17 +263,6 @@ public class RM2Reducer
 	double rating = preferences.get(user, item);
 	double sum = clusterUserSum.get(user);
 
-	// if (item == 2) {
-	// System.out.println(String.format("Pml(%d|%d) = %f", item + 1,
-	// user + 1, (rating / sum)));
-	// System.out.println(String.format("P(%d|C) = %f", item + 1,
-	// itemCollMap.get(item)));
-	// System.out.println(String.format("P(%d|%d) = %f", item + 1,
-	// user + 1, (1 - lambda) * (rating / sum) + lambda
-	// * itemCollMap.get(item)));
-	// System.out.println();
-	// }
-
 	return (1 - lambda) * (rating / sum) + lambda * itemCollMap.get(item);
     }
 
@@ -325,21 +291,7 @@ public class RM2Reducer
 	List<ByteBuffer> value = new LinkedList<ByteBuffer>();
 	value.add(ByteBufferUtil.bytes(cluster));
 
-	try {
-	    context.write(keys, value);
-	} catch (Exception e) {
-
-	    int n = userItems.get(userId).size();
-
-	    double first = (n - 1) * Math.log(numberOfItems) - n
-		    * Math.log(numberOfUsersInCluster);
-	    System.out.println("(" + (userId + 1) + ", " + (itemId + 1) + "): "
-		    + score);
-	    System.out.println("p(i|C) = " + itemCollMap.get(itemId));
-	    System.out.println("log([1]) = " + first);
-
-	    throw e;
-	}
+	context.write(keys, value);
 
     }
 
