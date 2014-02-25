@@ -59,11 +59,11 @@ public class CassandraUtils {
 
     public void shutdownSessions() {
 	if (blank_session != null) {
-	    blank_session.shutdown();
+	    blank_session.close();
 	}
 
 	if (keyspace_session != null) {
-	    keyspace_session.shutdown();
+	    keyspace_session.close();
 	}
     }
 
@@ -127,7 +127,41 @@ public class CassandraUtils {
 	}
 
 	shutdownSessions();
-	getCluster().shutdown();
+	getCluster().close();
+
+    }
+
+    public void initializeTable(String keyspace, String table)
+	    throws InterruptedException {
+
+	Session session = getSession(null);
+	createKeyspaceIfNeeded(session, keyspace);
+
+	session = getSession(keyspace);
+
+	// Drop table if already exists
+	if (session.getCluster().getMetadata().getKeyspace(keyspace)
+		.getTable(table) != null) {
+	    String cqlStatement = String.format("DROP TABLE %s", table);
+
+	    session.execute(cqlStatement);
+	}
+
+	// Wait for table deletion
+	while (session.getCluster().getMetadata().getKeyspace(keyspace)
+		.getTable(table) != null) {
+	    Thread.sleep(1000);
+	}
+
+	String cqlStatement = String.format("CREATE TABLE %s" + "(user int,"
+		+ "relevance float," + "movie int, cluster int,"
+		+ "PRIMARY KEY (user, relevance, movie))"
+		+ "WITH CLUSTERING ORDER BY" + "(relevance DESC, movie ASC);",
+		table);
+	session.execute(cqlStatement);
+
+	shutdownSessions();
+	getCluster().close();
 
     }
 

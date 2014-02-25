@@ -58,6 +58,8 @@ public class TestRM2 extends HadoopIntegrationTest {
 		cassandraPartitioner);
 	cassandraUtils.insertData(RMTestData.A, cassandraKeyspace,
 		cassandraTableIn);
+	cassandraUtils = new CassandraUtils(cassandraHost, cassandraPartitioner);
+	cassandraUtils.initializeTable(cassandraKeyspace, cassandraTableOut);
 
 	/* Run job */
 	conf = buildConf(clustering, clusteringCount, RMTestData.numberOfUsers,
