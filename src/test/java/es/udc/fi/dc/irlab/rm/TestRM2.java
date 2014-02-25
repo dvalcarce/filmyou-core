@@ -21,10 +21,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.testdata.ClusteringTestData;
-import es.udc.fi.dc.irlab.nmf.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
+import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
+import es.udc.fi.dc.irlab.testdata.RMTestData;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
@@ -60,8 +60,8 @@ public class TestRM2 extends HadoopIntegrationTest {
 		cassandraTableIn);
 
 	/* Run job */
-	conf = buildConf(clustering, clusteringCount,
-		PPCTestData.numberOfUsers, PPCTestData.numberOfItems);
+	conf = buildConf(clustering, clusteringCount, RMTestData.numberOfUsers,
+		RMTestData.numberOfItems);
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */
@@ -72,7 +72,10 @@ public class TestRM2 extends HadoopIntegrationTest {
 	compareScalarData(conf, RMTestData.totalSum, baseDirectory, totalSum);
 	compareMapDoubleVectorData(conf, RMTestData.itemColl, baseDirectory,
 		itemColl);
+	compareCassandraData(conf, RMTestData.recommendations,
+		RMTestData.numberOfUsers);
 
 	HDFSUtils.removeData(conf, baseDirectory);
     }
+
 }

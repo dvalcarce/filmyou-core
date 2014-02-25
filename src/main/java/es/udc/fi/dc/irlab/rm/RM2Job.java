@@ -17,7 +17,10 @@
 package es.udc.fi.dc.irlab.rm;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
+import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -31,7 +34,6 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
-import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
@@ -269,12 +271,9 @@ public class RM2Job extends AbstractJob {
 
 	job.setReducerClass(RM2Reducer.class);
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job,
-		new Path(directory + "/tmp"));
-
-	job.setOutputKeyClass(NullWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
+	job.setOutputFormatClass(CqlOutputFormat.class);
+	job.setOutputKeyClass(Map.class);
+	job.setOutputValueClass(List.class);
 
 	job.setPartitionerClass(IntPairKeyPartitioner.class);
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);

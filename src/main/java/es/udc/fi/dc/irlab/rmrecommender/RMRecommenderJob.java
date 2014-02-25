@@ -56,6 +56,8 @@ public class RMRecommenderJob extends AbstractJob {
 	addOption("cassandraPartitioner", "partitioner",
 		"Cassandra Partitioner",
 		"org.apache.cassandra.dht.Murmur3Partitioner");
+	addOption("cassandraTTL", "ttl", "Cassandra TLL for data input",
+		"86400");
 	addOption("H", "h", "Initial H matrix", false);
 	addOption("W", "w", "Initial W matrix", false);
 	addOption("clustering", "cluster", "Clustering results", "clustering");

@@ -17,6 +17,7 @@
 package es.udc.fi.dc.irlab.nmf.util;
 
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 
 public class CassandraUtils {
@@ -56,7 +57,7 @@ public class CassandraUtils {
 	return keyspace_session;
     }
 
-    private void shutdownSessions() {
+    public void shutdownSessions() {
 	if (blank_session != null) {
 	    blank_session.shutdown();
 	}
@@ -127,6 +128,18 @@ public class CassandraUtils {
 
 	shutdownSessions();
 	getCluster().shutdown();
+
+    }
+
+    public ResultSet selectData(int user, String keyspace, String table)
+	    throws InterruptedException {
+
+	Session session = getSession(keyspace);
+
+	String cqlStatement = String.format(
+		"SELECT user, movie, relevance FROM %s WHERE user = %d;",
+		table, user);
+	return session.execute(cqlStatement);
 
     }
 

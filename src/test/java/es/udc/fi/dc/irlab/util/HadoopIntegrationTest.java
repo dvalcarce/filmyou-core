@@ -35,6 +35,11 @@ import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
+
+import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
+
 /**
  * Integration test class utility
  * 
@@ -52,6 +57,7 @@ public abstract class HadoopIntegrationTest {
     protected String cassandraKeyspace = "recommendertest";
     protected String cassandraTableIn = "ratings";
     protected String cassandraTableOut = "recommendations";
+    protected String cassandraTTL = "6000";
 
     /**
      * Build basic configuration
@@ -68,6 +74,7 @@ public abstract class HadoopIntegrationTest {
 	conf.set("cassandraPartitioner", cassandraPartitioner);
 	conf.set("cassandraTableIn", cassandraTableIn);
 	conf.set("cassandraTableOut", cassandraTableOut);
+	conf.set("cassandraTTL", cassandraTTL);
 	conf.setFloat("lambda", 0.5f);
 
 	return conf;
@@ -356,4 +363,34 @@ public abstract class HadoopIntegrationTest {
 
     }
 
+    protected void compareCassandraData(Configuration conf, double[][] data,
+	    int numberOfUsers) throws InterruptedException {
+
+	ResultSet result;
+	String keyspace = conf.get("cassandraKeyspace");
+	String table = conf.get("cassandraTableOut");
+	CassandraUtils cassandra = new CassandraUtils(
+		conf.get("cassandraHost"), conf.get("cassandraPartitioner"));
+
+	int i = 0;
+	for (int user = 1; user <= numberOfUsers; user++) {
+	    result = cassandra.selectData(user, keyspace, table);
+	    for (Row row : result) {
+		try {
+		    assertEquals((int) data[i][0], row.getInt(0));
+		    assertEquals((int) data[i][1], row.getInt(1));
+		    assertEquals(data[i][2], row.getFloat(2), accuracy);
+		} catch (AssertionError e) {
+		    System.out.println("row: " + row);
+		    System.out.println(String.format("data[%d]: %f, %f, %f", i,
+			    data[i][0], data[i][1], data[i][2]));
+		    throw e;
+		}
+		i++;
+	    }
+	}
+
+	cassandra.shutdownSessions();
+
+    }
 }

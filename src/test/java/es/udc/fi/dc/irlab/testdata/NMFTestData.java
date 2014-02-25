@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.testdata;
+package es.udc.fi.dc.irlab.testdata;
 
 /**
  * Contains data for NMF testing purposes.

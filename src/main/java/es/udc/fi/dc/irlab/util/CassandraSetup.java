@@ -85,8 +85,9 @@ public class CassandraSetup {
 	ConfigHelper.setOutputPartitioner(jobConf, partitioner);
 	ConfigHelper.setOutputColumnFamily(jobConf, keyspace, tableOut);
 
-	String query = "UPDATE " + keyspace + "." + tableOut + " USING TTL "
-		+ ttl + " SET score = ? ";
+	String query = String.format(
+		"UPDATE %s.%s USING TTL %s SET cluster = ?", keyspace,
+		tableOut, ttl);
 	CqlConfigHelper.setOutputCql(jobConf, query);
 
 	return jobConf;
