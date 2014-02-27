@@ -151,8 +151,10 @@ public class RM2Reducer
     }
 
     /**
-     * Build itemCollMap for all items in the cluster
+     * Build itemCollMap for all items in the cluster.
      * 
+     * @param context
+     * @param numberOfClusterItems
      * @throws IOException
      */
     private void buildItemCollMap(Context context, int numberOfClusterItems)
@@ -186,12 +188,16 @@ public class RM2Reducer
     /**
      * Build recommendations using RM2 (conditional sampling) recommender.
      * 
+     * @param context
+     *            context
      * @param userId
      *            user ID
      * @param items
      *            items rated by the user
      * @param unratedItems
      *            items rated by the cluster, but not by the user
+     * @param cluster
+     *            cluster ID
      */
     private void buildRecommendations(final Context context, final int userId,
 	    final TIntSet items, final TIntSet unratedItems, final int cluster) {
@@ -267,7 +273,7 @@ public class RM2Reducer
     }
 
     /**
-     * Write preference to Cassandra
+     * Write preference to Cassandra.
      * 
      * @param context
      *            reduce context
