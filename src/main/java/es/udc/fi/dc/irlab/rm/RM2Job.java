@@ -23,7 +23,6 @@ import java.util.Map;
 import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -48,6 +47,7 @@ public class RM2Job extends AbstractJob {
 
     public static final String totalSumName = "rm.totalSum";
     public static final String lambdaName = "lambda";
+    public static final String itemCollName = "rm.itemColl";
 
     private String directory;
 
@@ -58,22 +58,25 @@ public class RM2Job extends AbstractJob {
      */
     @Override
     public int run(String[] args) throws Exception {
-	directory = getConf().get("directory") + "/rm2";
+	Configuration conf = getConf();
+	String baseDirectory = conf.get("directory");
+	directory = baseDirectory + "/rm2";
 
-	HDFSUtils.removeData(getConf(), directory);
+	HDFSUtils.removeData(conf, directory);
 
 	Path userSum = new Path(directory + "/userSum");
 	Path itemSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
-	Path clustering = new Path(getConf().get("clustering"));
-	Path clusteringCount = new Path(getConf().get("clusteringCount"));
+	Path clustering = new Path(baseDirectory + "/" + conf.get("clustering"));
+	Path clusteringCount = new Path(baseDirectory + "/"
+		+ conf.get("clusteringCount"));
 
 	runUserSum(userSum);
 	runMovieSum(itemSum);
 	runTotalSum(itemSum, totalSum);
 
-	double sum = HDFSUtils.getDoubleFromSequenceFile(getConf(), totalSum,
+	double sum = HDFSUtils.getDoubleFromSequenceFile(conf, totalSum,
 		directory);
 
 	runItemProbInCollection(itemSum, sum, itemColl);
@@ -235,8 +238,8 @@ public class RM2Job extends AbstractJob {
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(DoubleWritable.class);
 
-	Configuration jobConf = job.getConfiguration();
-	jobConf.set(totalSumName, String.valueOf(totalSum));
+	Configuration conf = job.getConfiguration();
+	conf.set(totalSumName, String.valueOf(totalSum));
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -279,12 +282,11 @@ public class RM2Job extends AbstractJob {
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
-	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConfForInput(getConf(), jobConf);
-	CassandraSetup.updateConfForOutput(getConf(), jobConf);
+	Configuration conf = job.getConfiguration();
+	CassandraSetup.updateConfForInput(getConf(), conf);
+	CassandraSetup.updateConfForOutput(getConf(), conf);
 
-	DistributedCache.addCacheFile(clustering.toUri(), jobConf);
-	DistributedCache.addCacheFile(itemColl.toUri(), jobConf);
+	conf.set(itemCollName, itemColl.toString());
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

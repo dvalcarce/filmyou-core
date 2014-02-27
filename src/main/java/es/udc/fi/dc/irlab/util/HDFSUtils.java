@@ -87,4 +87,32 @@ public class HDFSUtils {
 	throw new IOException();
 
     }
+
+    /**
+     * Create a file which merges all the files in the directory provided.
+     * 
+     * @param conf
+     *            Configuration file
+     * @param pathToMerge
+     *            directory to be merged
+     * @param directory
+     *            destiny directory
+     * @param name
+     *            name of the merged file
+     * @return
+     * @throws IOException
+     */
+    public static Path mergeFile(Configuration conf, Path pathToMerge,
+	    String directory, String name) throws IOException {
+
+	FileSystem fs = FileSystem.get(conf);
+
+	Path mergedFile = new Path(directory + "/" + name);
+	FileUtil.copyMerge(fs, pathToMerge, fs, mergedFile, false, conf, null);
+	conf.set(name, mergedFile.toString());
+
+	return mergedFile;
+
+    }
+
 }

@@ -26,8 +26,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.mahout.math.DenseVector;
+import org.apache.mahout.math.Matrix;
+import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
@@ -166,4 +169,39 @@ public class DataInitialization {
 	return parent;
 
     }
+
+    /**
+     * Create a SequenceFile&lt;NullWritable, MatrixWritable> from Matrix data.
+     * 
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            Matrix data
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createMapNullMatrix(Configuration conf, Matrix data,
+	    String baseDirectory, String filename) throws IOException {
+
+	String uri = baseDirectory + "/" + filename;
+	FileSystem fs = FileSystem.get(URI.create(uri), conf);
+	Path path = new Path(uri);
+
+	SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+		NullWritable.class, MatrixWritable.class);
+
+	try {
+	    writer.append(NullWritable.get(), new MatrixWritable(data));
+	} finally {
+	    IOUtils.closeStream(writer);
+	}
+
+	return path;
+
+    }
+
 }

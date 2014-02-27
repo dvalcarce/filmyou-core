@@ -18,6 +18,7 @@ package es.udc.fi.dc.irlab.nmf.clustering;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -43,14 +44,16 @@ public class ClusterAssignmentJob extends AbstractJob {
 
     @Override
     public int run(String[] args) throws Exception {
-	directory = getConf().get("directory") + "/clusterAssignment";
-
-	HDFSUtils.removeData(getConf(), directory);
+	Configuration conf = getConf();
 
 	/* Prepare paths */
-	H = new Path(getConf().get("H"));
-	clustering = new Path(getConf().get("clustering"));
-	clusteringCount = new Path(getConf().get("clusteringCount"));
+	String directory = conf.get("directory");
+	H = new Path(conf.get("H"));
+	clustering = new Path(directory + "/" + conf.get("clustering"));
+	clusteringCount = new Path(directory + "/"
+		+ conf.get("clusteringCount"));
+	HDFSUtils.removeData(conf, clustering.toString());
+	HDFSUtils.removeData(conf, clusteringCount.toString());
 
 	/* Launch jobs */
 	findClustersJob(H, clustering);

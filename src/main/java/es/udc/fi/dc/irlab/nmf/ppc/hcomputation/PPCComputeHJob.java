@@ -20,7 +20,6 @@ import java.io.IOException;
 
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -107,7 +106,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
     protected void runJob1(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "PPC_H1");
+	Job job = new Job(getConf(), "PPC_H1-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
@@ -154,7 +153,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
     protected void runJob2(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "PPC_H2");
+	Job job = new Job(getConf(), "PPC_H2-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -193,7 +192,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
     protected void runJob3(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "PPC_H3");
+	Job job = new Job(getConf(), "PPC_H3-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -225,16 +224,16 @@ public class PPCComputeHJob extends MatrixComputationJob {
      *            H path
      * @param outputPath
      *            Y path
-     * @param cachePath
+     * @param cPath
      *            C path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob4(Path inputPath, Path outputPath, Path cachePath)
+    protected void runJob4(Path inputPath, Path outputPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "PPC_H4");
+	Job job = new Job(getConf(), "PPC_H4-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -251,8 +250,10 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
 
-	DistributedCache
-		.addCacheFile(cachePath.toUri(), job.getConfiguration());
+	Configuration conf = job.getConfiguration();
+	Path mergedPath = HDFSUtils.mergeFile(conf, cPath, directory,
+		"C-merged");
+	conf.set(cname, mergedPath.toString());
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -280,7 +281,7 @@ public class PPCComputeHJob extends MatrixComputationJob {
 	    Path outputPath) throws IOException, ClassNotFoundException,
 	    InterruptedException {
 
-	Job job = new Job(getConf(), "PPC_H5");
+	Job job = new Job(getConf(), "PPC_H5-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, inputPathH,

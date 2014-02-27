@@ -74,7 +74,7 @@ public class RMRecommenderJob extends AbstractJob {
      *            command line arguments
      * @throws IOException
      */
-    protected void parseInput(String[] args) throws IOException {
+    protected Configuration parseInput(String[] args) throws IOException {
 	/* Add options */
 	loadDefaultSetup();
 
@@ -90,9 +90,11 @@ public class RMRecommenderJob extends AbstractJob {
 	for (Entry<String, List<String>> entry : parsedArgs.entrySet()) {
 	    String key = entry.getKey();
 	    for (String value : entry.getValue()) {
-		conf.set(key, value);
+		conf.set(key.substring(2), value);
 	    }
 	}
+
+	return conf;
     }
 
     /**
@@ -108,17 +110,23 @@ public class RMRecommenderJob extends AbstractJob {
 
     @Override
     public int run(String[] args) throws Exception {
-	parseInput(args);
+	Configuration conf = parseInput(args);
 
-	if (ToolRunner.run(getConf(), new PPCDriver(), args) < 0) {
+	if (ToolRunner.run(conf, new PPCDriver(), args) < 0) {
 	    throw new RuntimeException("PPCJob failed!");
 	}
 
-	if (ToolRunner.run(getConf(), new ClusterAssignmentJob(), args) < 0) {
+	if (conf.get("H") == null) {
+	    String directory = conf.get("directory");
+	    conf.set("H", directory + "/H");
+	    conf.set("W", directory + "/W");
+	}
+
+	if (ToolRunner.run(conf, new ClusterAssignmentJob(), args) < 0) {
 	    throw new RuntimeException("ClusterAssignmentJob failed!");
 	}
 
-	if (ToolRunner.run(new Configuration(), new RM2Job(), args) < 0) {
+	if (ToolRunner.run(conf, new RM2Job(), args) < 0) {
 	    throw new RuntimeException("RMJob failed!");
 	}
 

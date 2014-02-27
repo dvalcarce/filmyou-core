@@ -82,15 +82,16 @@ public abstract class AbstractNMFDriver extends AbstractJob {
      */
     @Override
     public int run(String[] args) throws Exception {
-	numberOfUsers = getConf().getInt("numberOfUsers", 0);
-	numberOfItems = getConf().getInt("numberOfItems", 0);
-	numberOfClusters = getConf().getInt("numberOfClusters", 0);
-	numberOfIterations = getConf().getInt("numberOfIterations", 0);
+	Configuration conf = getConf();
 
-	baseDirectory = getConf().get("directory");
+	numberOfUsers = conf.getInt("numberOfUsers", 0);
+	numberOfItems = conf.getInt("numberOfItems", 0);
+	numberOfClusters = conf.getInt("numberOfClusters", 0);
+	numberOfIterations = conf.getInt("numberOfIterations", 0);
+
+	baseDirectory = conf.get("directory");
 
 	/* Matrix initialisation */
-	Configuration conf = getConf();
 	if (conf.get("H") != null) {
 	    H = new Path(conf.get("H"));
 	    W = new Path(conf.get("W"));
@@ -99,7 +100,7 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 	}
 	H2 = new Path(baseDirectory + "/H2");
 	W2 = new Path(baseDirectory + "/W2");
-	FileSystem fs = H.getFileSystem(getConf());
+	FileSystem fs = H.getFileSystem(conf);
 
 	/* Run algorithm */
 	for (int i = 0; i < numberOfIterations; i++) {
@@ -111,8 +112,9 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 		    new Class[] { Path.class, Path.class, Path.class,
 			    Path.class }).newInstance(H, W, H2, W2);
 
-	    ToolRunner.run(getConf(), wJob, args);
-	    ToolRunner.run(getConf(), hJob, args);
+	    conf.setInt("iteration", i + 1);
+	    ToolRunner.run(conf, hJob, args);
+	    ToolRunner.run(conf, wJob, args);
 
 	    fs.delete(H, true);
 	    fs.delete(W, true);

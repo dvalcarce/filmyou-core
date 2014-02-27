@@ -16,17 +16,21 @@
 
 package es.udc.fi.dc.irlab.rm;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Partitioner;
+import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.mahout.common.IntPairWritable;
 
+import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
+
 /**
- * Abstract mapper for reading clustering data in distributed cached files.
+ * Abstract mapper for reading clustering data as a MapFile in HDFS.
  * 
  * @param <A>
  *            Mapper input key class
@@ -41,14 +45,23 @@ public abstract class AbstractByClusterMapper<A, B> extends
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
 	Configuration conf = context.getConfiguration();
-	Path[] localFiles = DistributedCache.getLocalCacheFiles(conf);
+	clustering = new Path(conf.get("clustering"));
+    }
 
-	if (localFiles.length != 2) {
-	    throw new FileNotFoundException(getClass()
-		    + ": Missing distributed cache files.");
+    protected int getCluster(IntWritable key, Context context)
+	    throws IOException {
+	Configuration conf = context.getConfiguration();
+
+	Reader[] readers = MapFileOutputFormat.getReaders(clustering, conf);
+	Partitioner<IntWritable, IntWritable> partitioner = new HashPartitioner<IntWritable, IntWritable>();
+
+	IntWritable cluster = new IntWritable();
+
+	if (MapFileOutputFormat.getEntry(readers, partitioner, key, cluster) == null) {
+	    throw new RuntimeException("Key " + key.get() + " not found");
 	}
 
-	clustering = localFiles[0];
+	return cluster.get();
     }
 
 }

@@ -20,9 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -33,6 +31,8 @@ import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
+
+import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 
 /**
  * Emit &lt;i, y_i> from &lt;i, w_i> where y_i = w_i·C.
@@ -46,19 +46,10 @@ public class W4Mapper extends
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
 	Configuration conf = context.getConfiguration();
-	Path[] localFiles = DistributedCache.getLocalCacheFiles(conf);
-	if (localFiles.length == 0) {
-	    throw new FileNotFoundException(getClass()
-		    + ": Distributed cache file not found.");
-	}
-	Path directory = localFiles[0];
-	FileSystem fs = FileSystem.get(directory.toUri(), conf);
-	Path matrixFile = new Path(directory.toString() + "/C");
-
-	FileUtil.copyMerge(fs, directory, fs, matrixFile, false, conf, null);
-
-	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
-		matrixFile, conf)) {
+	FileSystem fs = FileSystem.get(conf);
+	Path mergedC = new Path(conf.get(MatrixComputationJob.cname));
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, mergedC,
+		conf)) {
 
 	    NullWritable key = NullWritable.get();
 	    MatrixWritable val = new MatrixWritable();
@@ -67,7 +58,7 @@ public class W4Mapper extends
 		C = val.get();
 	    } else {
 		throw new FileNotFoundException(getClass()
-			+ ": Invalid distributed cache file.");
+			+ ": Invalid C file.");
 	    }
 
 	}

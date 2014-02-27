@@ -19,20 +19,20 @@ package es.udc.fi.dc.irlab.nmf.hcomputation;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.mahout.math.DenseMatrix;
 import org.apache.mahout.math.DenseVector;
 import org.apache.mahout.math.Matrix;
-import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
+
+import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
+import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class TestH4Mapper {
 
@@ -43,47 +43,17 @@ public class TestH4Mapper {
 	mapDriver = new MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
     }
 
-    private Path createCacheFile(String dirname, String filename)
-	    throws IOException {
-
-	Path dirPath = new Path(dirname);
+    @Test
+    public void testMap() throws IOException {
+	String baseDirectory = "TestH4Mapper";
 	Configuration conf = new Configuration();
-	Path filePath = new Path(dirname + "/" + filename);
 
-	FileSystem fs = dirPath.getFileSystem(conf);
-	fs.mkdirs(dirPath);
-	fs.create(filePath);
+	HDFSUtils.removeData(conf, baseDirectory);
 
 	Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
 		{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
-	NullWritable key = NullWritable.get();
-	MatrixWritable value = new MatrixWritable(matrix);
-
-	try (SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf,
-		filePath, key.getClass(), value.getClass())) {
-
-	    writer.append(key, value);
-
-	}
-
-	return dirPath;
-
-    }
-
-    private void cleanCacheFiles(String dirname) throws IOException {
-	Path dirPath = new Path(dirname);
-	Configuration conf = new Configuration();
-	FileSystem fs = dirPath.getFileSystem(conf);
-
-	fs.delete(dirPath, true);
-    }
-
-    @Test
-    public void testMap() throws IOException {
-	String dir = "TestH4Mapper";
-	String file = "file0001";
-
-	cleanCacheFiles(dir);
+	Path cPath = DataInitialization.createMapNullMatrix(conf, matrix,
+		baseDirectory, "C-merged");
 
 	IntWritable inputKey = new IntWritable(1);
 	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
@@ -93,15 +63,16 @@ public class TestH4Mapper {
 	Vector outputVector = new DenseVector(new double[] { 14.0, 32.0, 50.0 });
 	VectorWritable outputValue = new VectorWritable(outputVector);
 
-	Path path = createCacheFile(dir, file);
+	mapDriver.getConfiguration().set(MatrixComputationJob.cname,
+		cPath.toString());
 
 	mapDriver.withMapper(new H4Mapper());
+
 	mapDriver.withInput(inputKey, inputValue);
-	mapDriver.withCacheFile(path.toUri());
 	mapDriver.withOutput(outputKey, outputValue);
 	mapDriver.runTest();
 
-	cleanCacheFiles(dir);
+	HDFSUtils.removeData(conf, baseDirectory);
     }
 
 }

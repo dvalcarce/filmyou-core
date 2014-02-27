@@ -16,17 +16,19 @@
 
 package es.udc.fi.dc.irlab.nmf;
 
-import java.io.IOException;
-import java.net.URI;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.mahout.common.AbstractJob;
 
+/**
+ * Abstraction of a matrix computation job for NMF or PPC.
+ * 
+ */
 public abstract class MatrixComputationJob extends AbstractJob {
 
+    public static final String cname = "mergedC";
+
     protected String directory;
+    protected int iteration;
 
     protected Path H;
     protected Path W;
@@ -37,22 +39,21 @@ public abstract class MatrixComputationJob extends AbstractJob {
     protected Path C;
     protected Path Y;
 
+    /**
+     * MatrixComputationJob constructor.
+     * 
+     * @param H
+     * @param W
+     * @param H2
+     * @param W2
+     */
     public MatrixComputationJob(Path H, Path W, Path H2, Path W2) {
+	super();
 	this.H = H;
 	this.W = W;
 	this.H2 = H2;
 	this.W2 = W2;
-    }
-
-    /**
-     * Delete directory.
-     * 
-     * @throws IOException
-     */
-    protected void cleanPreviousData(String path) throws IOException {
-	Configuration conf = getConf();
-	FileSystem fs = FileSystem.get(URI.create(path), conf);
-	fs.delete(new Path(path), true);
+	iteration = getConf().getInt("iteration", -1);
     }
 
 }

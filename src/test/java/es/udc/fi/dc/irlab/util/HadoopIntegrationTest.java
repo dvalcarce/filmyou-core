@@ -49,15 +49,25 @@ public abstract class HadoopIntegrationTest {
     protected static final double accuracy = 0.0001;
 
     protected String baseDirectory = "integrationTest";
-
-    protected int cassandraPort = Integer.parseInt(System
-	    .getenv("CASSANDRA_PORT"));
-    protected String cassandraHost = System.getenv("CASSANDRA_HOST");
+    protected int cassandraPort;
+    protected String cassandraHost;
     protected String cassandraPartitioner = "org.apache.cassandra.dht.Murmur3Partitioner";
     protected String cassandraKeyspace = "recommendertest";
     protected String cassandraTableIn = "ratings";
     protected String cassandraTableOut = "recommendations";
     protected String cassandraTTL = "6000";
+
+    public HadoopIntegrationTest() {
+	try {
+	    cassandraPort = Integer.parseInt(System.getenv("CASSANDRA_PORT"));
+	} catch (NumberFormatException e) {
+	    cassandraPort = 9160;
+	}
+
+	if ((cassandraHost = System.getenv("CASSANDRA_HOST")) == null) {
+	    cassandraHost = "localhost";
+	}
+    }
 
     /**
      * Build basic configuration
@@ -125,8 +135,8 @@ public abstract class HadoopIntegrationTest {
      * @param numberOfClusters
      * @return conf
      */
-    protected Configuration buildConf(Path H, Path clustering,
-	    Path clusteringCount, int numberOfUsers, int numberOfClusters) {
+    protected Configuration buildConf(Path H, String clustering,
+	    String clusteringCount, int numberOfUsers, int numberOfClusters) {
 
 	Configuration conf = buildConf(H, null, numberOfUsers, 0,
 		numberOfClusters, 0);
@@ -317,8 +327,14 @@ public abstract class HadoopIntegrationTest {
 	for (int i = 1; i <= data.length; i++) {
 	    key = new IntWritable(i);
 
-	    if (MapFileOutputFormat.getEntry(readers, partitioner, key, val) == null) {
-		fail(String.format("data %d not found", i));
+	    try {
+		if (MapFileOutputFormat
+			.getEntry(readers, partitioner, key, val) == null) {
+		    fail(String.format("data %d not found", i));
+		}
+	    } catch (Exception e) {
+		System.out.println(key);
+		throw e;
 	    }
 
 	    assertEquals(data[i - 1], val.get());
@@ -376,16 +392,9 @@ public abstract class HadoopIntegrationTest {
 	for (int user = 1; user <= numberOfUsers; user++) {
 	    result = cassandra.selectData(user, keyspace, table);
 	    for (Row row : result) {
-		try {
-		    assertEquals((int) data[i][0], row.getInt(0));
-		    assertEquals((int) data[i][1], row.getInt(1));
-		    assertEquals(data[i][2], row.getFloat(2), accuracy);
-		} catch (AssertionError e) {
-		    System.out.println("row: " + row);
-		    System.out.println(String.format("data[%d]: %f, %f, %f", i,
-			    data[i][0], data[i][1], data[i][2]));
-		    throw e;
-		}
+		assertEquals((int) data[i][0], row.getInt(0));
+		assertEquals((int) data[i][1], row.getInt(1));
+		assertEquals(data[i][2], row.getFloat(2), accuracy);
 		i++;
 	    }
 	}

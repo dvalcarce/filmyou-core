@@ -26,7 +26,6 @@ import gnu.trove.procedure.TIntProcedure;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -37,7 +36,6 @@ import java.util.Map;
 
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -77,18 +75,11 @@ public class RM2Reducer
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
 	Configuration conf = context.getConfiguration();
-	Path[] localFiles = DistributedCache.getLocalCacheFiles(conf);
 
-	if (localFiles.length != 2) {
-	    throw new FileNotFoundException(getClass()
-		    + ": Missing distributed cache files.");
-	}
-
-	itemColl = localFiles[1];
+	itemColl = new Path(conf.get(RM2Job.itemCollName));
 	lambda = Double.valueOf(conf.get(RM2Job.lambdaName));
 	numberOfItems = Integer.valueOf(conf.get("numberOfItems"));
 	numberOfUsers = Integer.valueOf(conf.get("numberOfUsers"));
-
     }
 
     @Override

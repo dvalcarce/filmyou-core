@@ -20,14 +20,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.MapFile.Reader;
-import org.apache.hadoop.mapreduce.Partitioner;
-import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.mahout.common.IntPairWritable;
-
-import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
 /**
  * Emit &lt;(k, 2), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
@@ -45,21 +39,11 @@ public class ScoreByClusterMapper
 	int movie = keys.get("movie").getInt();
 	int user = keys.get("user").getInt();
 	float score = columns.get("score").getFloat();
-
-	Configuration conf = context.getConfiguration();
-
-	Reader[] readers = MapFileOutputFormat.getReaders(clustering, conf);
-	Partitioner<IntWritable, IntWritable> partitioner = new HashPartitioner<IntWritable, IntWritable>();
-
 	IntWritable key = new IntWritable(user);
-	IntWritable cluster = new IntWritable();
 
-	if (MapFileOutputFormat.getEntry(readers, partitioner, key, cluster) == null) {
-	    throw new RuntimeException("User " + user + " not found");
-	}
-
-	context.write(new IntPairWritable(cluster.get(), 2),
+	context.write(new IntPairWritable(getCluster(key, context), 2),
 		new IntDoubleOrPrefWritable(user, movie, score));
 
     }
+
 }
