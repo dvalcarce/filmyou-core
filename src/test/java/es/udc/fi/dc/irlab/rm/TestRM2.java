@@ -62,8 +62,8 @@ public class TestRM2 extends HadoopIntegrationTest {
 	cassandraUtils.initializeTable(cassandraKeyspace, cassandraTableOut);
 
 	/* Run job */
-	conf = buildConf(clustering, clusteringCount, RMTestData.numberOfUsers,
-		RMTestData.numberOfItems);
+	conf = buildConf("clustering", "clusteringCount",
+		RMTestData.numberOfUsers, RMTestData.numberOfItems);
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */

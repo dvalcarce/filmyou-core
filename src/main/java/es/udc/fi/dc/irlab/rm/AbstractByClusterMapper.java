@@ -45,7 +45,8 @@ public abstract class AbstractByClusterMapper<A, B> extends
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
 	Configuration conf = context.getConfiguration();
-	clustering = new Path(conf.get("clustering"));
+	clustering = new Path(conf.get("directory") + "/"
+		+ conf.get("clustering"));
     }
 
     protected int getCluster(IntWritable key, Context context)

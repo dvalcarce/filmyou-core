@@ -130,7 +130,9 @@ public abstract class HadoopIntegrationTest {
      * @param H
      *            H matrix path
      * @param clustering
-     *            clustering path
+     *            clustering filename
+     * @param clusteringCount
+     *            clusteringCount filename
      * @param numberOfUsers
      * @param numberOfClusters
      * @return conf
@@ -142,11 +144,11 @@ public abstract class HadoopIntegrationTest {
 		numberOfClusters, 0);
 
 	if (clustering != null) {
-	    conf.set("clustering", clustering.toString());
+	    conf.set("clustering", clustering);
 	}
 
 	if (clusteringCount != null) {
-	    conf.set("clusteringCount", clusteringCount.toString());
+	    conf.set("clusteringCount", clusteringCount);
 	}
 
 	return conf;
@@ -157,24 +159,24 @@ public abstract class HadoopIntegrationTest {
      * Build configuration object for RM2 Assignment job.
      * 
      * @param clustering
-     *            clustering path
+     *            clustering filename
      * @param clusteringCount
-     *            clusteringCount path
+     *            clusteringCount filename
      * @param numberOfItems
      * @return conf
      */
-    protected Configuration buildConf(Path clustering, Path clusteringCount,
-	    int numberOfUsers, int numberOfItems) {
+    protected Configuration buildConf(String clustering,
+	    String clusteringCount, int numberOfUsers, int numberOfItems) {
 
 	Configuration conf = buildConf(null, null, numberOfUsers,
 		numberOfItems, 0, 0);
 
 	if (clustering != null) {
-	    conf.set("clustering", clustering.toString());
+	    conf.set("clustering", clustering);
 	}
 
 	if (clusteringCount != null) {
-	    conf.set("clusteringCount", clusteringCount.toString());
+	    conf.set("clusteringCount", clusteringCount);
 	}
 
 	return conf;
