@@ -29,11 +29,9 @@ import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.lib.db.DBConfiguration;
-import org.apache.hadoop.mapreduce.lib.db.DBOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -51,6 +49,7 @@ import org.apache.mahout.cf.taste.hadoop.preparation.PreparePreferenceMatrixJob;
 import org.apache.mahout.cf.taste.hadoop.similarity.item.ItemSimilarityJob;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.common.iterator.sequencefile.PathType;
 import org.apache.mahout.math.VarIntWritable;
 import org.apache.mahout.math.VarLongWritable;
@@ -423,14 +422,9 @@ public class BaselineRecommenderJob extends AbstractJob {
 	} else {
 	    // MySQL settings
 	    aggregateAndRecommend
-		    .setReducerClass(BaselineAggregateAndRecommendMySQLReducer.class);
-	    aggregateAndRecommend.setOutputKeyClass(MySQLRecord.class);
-	    aggregateAndRecommend.setOutputValueClass(NullWritable.class);
-
-	    DBConfiguration.configureDB(conf, "com.mysql.jdbc.Driver",
-		    "jdbc:mysql://localhost/" + keyspace, "root", "");
-	    DBOutputFormat.setOutput(aggregateAndRecommend, tableOut, "user",
-		    "movie", "score");
+		    .setReducerClass(BaselineAggregateAndRecommendHDFSReducer.class);
+	    aggregateAndRecommend.setOutputKeyClass(IntPairWritable.class);
+	    aggregateAndRecommend.setOutputValueClass(FloatWritable.class);
 	}
 
 	if (itemsFile != null) {
