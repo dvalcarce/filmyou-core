@@ -50,6 +50,8 @@ import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class PPCComputeHJob extends MatrixComputationJob {
 
+    public static final int normalizationFrequency = 12;
+
     /**
      * ComputeHJob constructor.
      * 

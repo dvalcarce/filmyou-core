@@ -38,6 +38,8 @@ public class PPCHReducer extends
     protected void reduce(IntPairWritable key, Iterable<VectorWritable> values,
 	    Context context) throws IOException, InterruptedException {
 
+	Vector result;
+
 	Iterator<VectorWritable> it = values.iterator();
 	Vector vectorH = it.next().get();
 	Vector vectorX = it.next().get();
@@ -60,8 +62,13 @@ public class PPCHReducer extends
 	});
 
 	// H = H .* XY
+	result = vectorH.times(vectorXY);
+	if (context.getConfiguration().getInt("iteration", -1)
+		% PPCComputeHJob.normalizationFrequency == 0) {
+	    result.normalize(1);
+	}
 	context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		vectorH.times(vectorXY)));
+		result));
 
     }
 

@@ -47,9 +47,9 @@ public class TestRM2 extends HadoopIntegrationTest {
 	Path movieSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
-	Path clustering = DataInitialization.createMapIntVector(conf,
+	DataInitialization.createMapIntVector(conf,
 		ClusteringTestData.clustering, baseDirectory, "clustering");
-	Path clusteringCount = DataInitialization.createMapIntVector(conf,
+	DataInitialization.createMapIntVector(conf,
 		ClusteringTestData.clusteringCount, baseDirectory,
 		"clusteringCount");
 

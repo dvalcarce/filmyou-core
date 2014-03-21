@@ -97,7 +97,7 @@ public class RM2Job extends AbstractJob {
     protected void runUserSum(Path userSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job RM2-1");
+	Job job = new Job(getConf(), "RM2-1");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(CqlPagingInputFormat.class);
@@ -136,7 +136,7 @@ public class RM2Job extends AbstractJob {
     protected void runMovieSum(Path itemSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job RM2-2");
+	Job job = new Job(getConf(), "RM2-2");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(CqlPagingInputFormat.class);
@@ -176,7 +176,7 @@ public class RM2Job extends AbstractJob {
     protected void runTotalSum(Path itemSum, Path totalSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job RM2-3");
+	Job job = new Job(getConf(), "RM2-3");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -219,7 +219,7 @@ public class RM2Job extends AbstractJob {
 	    Path itemColl) throws ClassNotFoundException, IOException,
 	    InterruptedException {
 
-	Job job = new Job(getConf(), "Job RM2-4");
+	Job job = new Job(getConf(), "RM2-4");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -259,7 +259,7 @@ public class RM2Job extends AbstractJob {
 	    Path clustering, Path itemColl) throws ClassNotFoundException,
 	    IOException, InterruptedException {
 
-	Job job = new Job(getConf(), "Job RM2-5");
+	Job job = new Job(getConf(), "RM2-5");
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, clusteringCount,
