@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,8 @@
 package es.udc.fi.dc.irlab.baselinerecommender;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
 
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.cf.taste.hadoop.TasteHadoopUtils;
 import org.apache.mahout.math.VarIntWritable;
@@ -27,20 +26,19 @@ import org.apache.mahout.math.VarLongWritable;
 
 /**
  * Initial stage of the baseline recommendation algorithm. Modified because of
- * Cassandra integration.
+ * MySQL integration.
  */
-public final class BaselineItemIDIndexMapper
-	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, VarIntWritable, VarLongWritable> {
+public final class BaselineItemIDIndexMySQLMapper extends
+	Mapper<LongWritable, MySQLRecord, VarIntWritable, VarLongWritable> {
 
     @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
+    protected void map(LongWritable key, MySQLRecord value, Context context)
 	    throws IOException, InterruptedException {
 
-	long itemID = keys.get("movie").getInt();
-	int index = TasteHadoopUtils.idToIndex(itemID);
-	context.write(new VarIntWritable(index), new VarLongWritable(itemID));
+	int index = TasteHadoopUtils.idToIndex(value.item);
+	context.write(new VarIntWritable(index),
+		new VarLongWritable(value.item));
+
     }
 
 }

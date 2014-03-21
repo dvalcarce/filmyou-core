@@ -29,8 +29,11 @@ import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.lib.db.DBConfiguration;
+import org.apache.hadoop.mapreduce.lib.db.DBOutputFormat;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -82,6 +85,7 @@ public class BaselineRecommenderJob extends AbstractJob {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
+	System.out.println("running!");
 	ToolRunner.run(new Configuration(), new BaselineRecommenderJob(), args);
     }
 
@@ -97,6 +101,7 @@ public class BaselineRecommenderJob extends AbstractJob {
     private String tableIn;
     private String tableOut;
     private String ttl;
+    private String db;
 
     /**
      * Set heap size to 1024 MB.
@@ -176,7 +181,8 @@ public class BaselineRecommenderJob extends AbstractJob {
 	addOption("tableIn", "tin", "Cassandra input column family", "ratings");
 	addOption("tableOut", "tout", "Cassandra output column family",
 		"recommendations");
-	addOption("ttl", "ttl", "Cassandra data TTL", "604800");
+	addOption("ttl", "ttl", "Cassandra TTL", "604800");
+	addOption("db", "db", "Type of BD", "cassandra");
     }
 
     /**
@@ -200,6 +206,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	tableIn = getOption("tableIn");
 	tableOut = getOption("tableOut");
 	ttl = getOption("ttl");
+	db = getOption("db");
 	booleanData = Boolean.valueOf(getOption("booleanData"));
 
 	int maxPrefsPerUser = Integer.parseInt(getOption("maxPrefsPerUser"));
@@ -232,7 +239,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 			    String.valueOf(minPrefsPerUser), "--booleanData",
 			    String.valueOf(booleanData), "--tempDir",
 			    getTempPath().toString(), "--keyspace", keyspace,
-			    "--table", tableIn });
+			    "--table", tableIn, "--db", db });
 
 	    numberOfUsers = HadoopUtil.readInt(new Path(prepPath,
 		    PreparePreferenceMatrixJob.NUM_USERS), getConf());
@@ -287,7 +294,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 			ItemSimilarityJob.MostSimilarItemPairsReducer.class,
 			EntityEntityWritable.class, DoubleWritable.class,
 			TextOutputFormat.class);
-
+		outputSimilarityMatrix.setNumReduceTasks(32);
 		Configuration mostSimilarItemsConf = outputSimilarityMatrix
 			.getConfiguration();
 		mostSimilarItemsConf.set(
@@ -298,7 +305,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 		mostSimilarItemsConf.setInt(
 			ItemSimilarityJob.MAX_SIMILARITIES_PER_ITEM,
 			maxSimilaritiesPerItem);
-		outputSimilarityMatrix.setNumReduceTasks(5);
+		outputSimilarityMatrix.setNumReduceTasks(32);
 		outputSimilarityMatrix.waitForCompletion(true);
 	    }
 	}
@@ -330,7 +337,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	    partialMultiplyConf.setBoolean("mapred.compress.map.output", true);
 	    partialMultiplyConf.set("mapred.output.dir",
 		    partialMultiplyPath.toString());
-	    partialMultiply.setNumReduceTasks(5);
+	    partialMultiply.setNumReduceTasks(32);
 
 	    if (usersFile != null) {
 		partialMultiplyConf.set(USERS_FILE, usersFile);
@@ -378,38 +385,53 @@ public class BaselineRecommenderJob extends AbstractJob {
 		"aggregateAndRecommend");
 
 	aggregateAndRecommend.setMapperClass(PartialMultiplyMapper.class);
-	aggregateAndRecommend
-		.setReducerClass(BaselineAggregateAndRecommendReducer.class);
+
 	aggregateAndRecommend.setJarByClass(BaselineRecommenderJob.class);
 
 	aggregateAndRecommend.setMapOutputKeyClass(VarLongWritable.class);
 	aggregateAndRecommend
 		.setMapOutputValueClass(PrefAndSimilarityColumnWritable.class);
-	aggregateAndRecommend.setOutputKeyClass(Map.class);
-	aggregateAndRecommend.setOutputValueClass(List.class);
 
 	aggregateAndRecommend
 		.setInputFormatClass(SequenceFileInputFormat.class);
 	aggregateAndRecommend.setOutputFormatClass(CqlOutputFormat.class);
 
-	// Only 1 reducer writes data to Cassandra
-	aggregateAndRecommend.setNumReduceTasks(1);
+	// Only 1 reducer writes data to persistent data storage
+	aggregateAndRecommend.setNumReduceTasks(32);
 
 	Configuration conf = aggregateAndRecommend.getConfiguration();
 	conf.set("mapred.input.dir", aggregateAndRecommendInput);
 
-	// Cassandra settings
-	String port = "9160";
-	String host = "127.0.0.1";
-	ConfigHelper.setOutputRpcPort(conf, port);
-	ConfigHelper.setOutputInitialAddress(conf, host);
-	ConfigHelper.setOutputPartitioner(conf,
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-	ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
+	if (db.equals("cassandra")) {
+	    // Cassandra settings
+	    aggregateAndRecommend
+		    .setReducerClass(BaselineAggregateAndRecommendReducer.class);
+	    aggregateAndRecommend.setOutputKeyClass(Map.class);
+	    aggregateAndRecommend.setOutputValueClass(List.class);
 
-	String query = "UPDATE " + keyspace + "." + tableOut + " USING TTL "
-		+ ttl + " SET score = ? ";
-	CqlConfigHelper.setOutputCql(conf, query);
+	    String port = "9160";
+	    String host = "127.0.0.1";
+	    ConfigHelper.setOutputRpcPort(conf, port);
+	    ConfigHelper.setOutputInitialAddress(conf, host);
+	    ConfigHelper.setOutputPartitioner(conf,
+		    "org.apache.cassandra.dht.Murmur3Partitioner");
+	    ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
+
+	    String query = "UPDATE " + keyspace + "." + tableOut
+		    + " USING TTL " + ttl + " SET dumb = ? ";
+	    CqlConfigHelper.setOutputCql(conf, query);
+	} else {
+	    // MySQL settings
+	    aggregateAndRecommend
+		    .setReducerClass(BaselineAggregateAndRecommendMySQLReducer.class);
+	    aggregateAndRecommend.setOutputKeyClass(MySQLRecord.class);
+	    aggregateAndRecommend.setOutputValueClass(NullWritable.class);
+
+	    DBConfiguration.configureDB(conf, "com.mysql.jdbc.Driver",
+		    "jdbc:mysql://localhost/" + keyspace, "root", "");
+	    DBOutputFormat.setOutput(aggregateAndRecommend, tableOut, "user",
+		    "movie", "score");
+	}
 
 	if (itemsFile != null) {
 	    conf.set(ITEMS_FILE, itemsFile);

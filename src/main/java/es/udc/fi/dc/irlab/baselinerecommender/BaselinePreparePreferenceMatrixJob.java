@@ -25,6 +25,8 @@ import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.db.DBConfiguration;
+import org.apache.hadoop.mapreduce.lib.db.DBInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.cf.taste.hadoop.EntityPrefWritable;
@@ -34,6 +36,7 @@ import org.apache.mahout.cf.taste.hadoop.item.RecommenderJob;
 import org.apache.mahout.cf.taste.hadoop.item.ToUserVectorsReducer;
 import org.apache.mahout.cf.taste.hadoop.preparation.PreparePreferenceMatrixJob;
 import org.apache.mahout.cf.taste.hadoop.preparation.ToItemVectorsMapper;
+import org.apache.mahout.cf.taste.hadoop.preparation.ToItemVectorsReducer;
 import org.apache.mahout.common.HadoopUtil;
 import org.apache.mahout.math.VarIntWritable;
 import org.apache.mahout.math.VarLongWritable;
@@ -59,8 +62,8 @@ public class BaselinePreparePreferenceMatrixJob extends
     boolean booleanData;
     float ratingShift;
     String keyspace;
-
     String table;
+    String db;
 
     /**
      * Convert user preferences into a vector per user.
@@ -76,7 +79,6 @@ public class BaselinePreparePreferenceMatrixJob extends
 	Job toUserVectors = new Job(new Configuration(getConf()),
 		"toUserVectors");
 
-	toUserVectors.setMapperClass(BaselineToItemPrefsMapper.class);
 	toUserVectors.setReducerClass(ToUserVectorsReducer.class);
 	toUserVectors.setJarByClass(BaselinePreparePreferenceMatrixJob.class);
 
@@ -87,22 +89,42 @@ public class BaselinePreparePreferenceMatrixJob extends
 	toUserVectors.setOutputKeyClass(VarLongWritable.class);
 	toUserVectors.setOutputValueClass(VectorWritable.class);
 
-	toUserVectors.setInputFormatClass(CqlPagingInputFormat.class);
 	toUserVectors.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-	toUserVectors.setNumReduceTasks(5);
+	toUserVectors.setNumReduceTasks(32);
 
 	Configuration conf = toUserVectors.getConfiguration();
 	conf.set("mapred.output.dir", getOutputPath(USER_VECTORS).toString());
 
-	// Cassandra settings
-	String port = "9160";
-	String host = "127.0.0.1";
-	ConfigHelper.setInputRpcPort(conf, port);
-	ConfigHelper.setInputInitialAddress(conf, host);
-	ConfigHelper.setInputPartitioner(conf,
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-	ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
+	if (db.equals("cassandra")) {
+	    // Cassandra settings
+	    toUserVectors.setMapperClass(BaselineToItemPrefsMapper.class);
+	    toUserVectors.setInputFormatClass(CqlPagingInputFormat.class);
+
+	    String port = "9160";
+	    String host = "127.0.0.1";
+	    ConfigHelper.setInputRpcPort(conf, port);
+	    ConfigHelper.setInputInitialAddress(conf, host);
+	    ConfigHelper.setInputPartitioner(conf,
+		    "org.apache.cassandra.dht.Murmur3Partitioner");
+	    ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
+	} else {
+	    // MySQL settings
+	    Class.forName("com.mysql.jdbc.Driver");
+
+	    toUserVectors.setMapperClass(BaselineToItemPrefsMySQLMapper.class);
+	    toUserVectors.setInputFormatClass(DBInputFormat.class);
+
+	    String[] fields = { "user", "movie", "score" };
+
+	    DBConfiguration.configureDB(conf, "com.mysql.jdbc.Driver",
+		    "jdbc:mysql://localhost:3306/" + keyspace, "root", "");
+	    // DBInputFormat.setInput(toUserVectors, MySQLRecord.class, table,
+	    // null, null, fields);
+	    DBInputFormat.setInput(toUserVectors, MySQLRecord.class,
+		    "SELECT user, movie, score FROM " + table,
+		    "SELECT COUNT(*) FROM " + table);
+	}
 
 	toUserVectors.getConfiguration().setBoolean(
 		RecommenderJob.BOOLEAN_DATA, booleanData);
@@ -125,17 +147,10 @@ public class BaselinePreparePreferenceMatrixJob extends
 	Job toItemVectors = prepareJob(getOutputPath(USER_VECTORS),
 		getOutputPath(RATING_MATRIX), ToItemVectorsMapper.class,
 		IntWritable.class, VectorWritable.class,
-		BaselineToItemVectorsReducer.class, IntWritable.class,
+		ToItemVectorsReducer.class, IntWritable.class,
 		VectorWritable.class);
-	toItemVectors.setCombinerClass(BaselineToItemVectorsReducer.class);
-
-	/* configure sampling regarding the uservectors */
-	if (hasOption("maxPrefsPerUser")) {
-	    int samplingSize = Integer.parseInt(getOption("maxPrefsPerUser"));
-	    toItemVectors.getConfiguration().setInt(
-		    ToItemVectorsMapper.SAMPLE_SIZE, samplingSize);
-	}
-
+	toItemVectors.setCombinerClass(ToItemVectorsReducer.class);
+	toItemVectors.setNumReduceTasks(32);
 	succeeded = toItemVectors.waitForCompletion(true);
 	if (!succeeded) {
 	    return -1;
@@ -162,7 +177,6 @@ public class BaselinePreparePreferenceMatrixJob extends
 
 	Job itemIDIndex = new Job(new Configuration(getConf()), "itemIDIndex");
 
-	itemIDIndex.setMapperClass(BaselineItemIDIndexMapper.class);
 	itemIDIndex.setReducerClass(ItemIDIndexReducer.class);
 	itemIDIndex.setJarByClass(BaselinePreparePreferenceMatrixJob.class);
 
@@ -171,30 +185,49 @@ public class BaselinePreparePreferenceMatrixJob extends
 	itemIDIndex.setOutputKeyClass(VarIntWritable.class);
 	itemIDIndex.setOutputValueClass(VarLongWritable.class);
 
-	itemIDIndex.setInputFormatClass(CqlPagingInputFormat.class);
 	itemIDIndex.setOutputFormatClass(SequenceFileOutputFormat.class);
 
 	itemIDIndex.setCombinerClass(ItemIDIndexReducer.class);
 
-	itemIDIndex.setNumReduceTasks(5);
+	itemIDIndex.setNumReduceTasks(32);
 
 	Configuration conf = itemIDIndex.getConfiguration();
 	conf.set("mapred.output.dir", getOutputPath(ITEMID_INDEX).toString());
 
-	// Cassandra settings
-	String port = "9160";
-	String host = "127.0.0.1";
-	ConfigHelper.setInputRpcPort(conf, port);
-	ConfigHelper.setInputInitialAddress(conf, host);
-	ConfigHelper.setInputPartitioner(conf,
-		"org.apache.cassandra.dht.Murmur3Partitioner");
-	ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
+	if (db.equals("cassandra")) {
+	    // Cassandra settings
+	    itemIDIndex.setMapperClass(BaselineItemIDIndexMapper.class);
+	    itemIDIndex.setInputFormatClass(CqlPagingInputFormat.class);
+
+	    String port = "9160";
+	    String host = "127.0.0.1";
+	    ConfigHelper.setInputRpcPort(conf, port);
+	    ConfigHelper.setInputInitialAddress(conf, host);
+	    ConfigHelper.setInputPartitioner(conf,
+		    "org.apache.cassandra.dht.Murmur3Partitioner");
+	    ConfigHelper.setInputColumnFamily(conf, keyspace, table, true);
+	} else {
+	    // MySQL settings
+	    itemIDIndex.setMapperClass(BaselineItemIDIndexMySQLMapper.class);
+	    itemIDIndex.setInputFormatClass(DBInputFormat.class);
+
+	    String[] fields = { "user", "movie", "score" };
+
+	    DBConfiguration.configureDB(conf, "com.mysql.jdbc.Driver",
+		    "jdbc:mysql://localhost/" + keyspace, "root", "");
+	    // DBInputFormat.setInput(toUserVectors, MySQLRecord.class, table,
+	    // null, null, fields);
+	    DBInputFormat.setInput(itemIDIndex, MySQLRecord.class,
+		    "SELECT user, movie, score FROM " + table,
+		    "SELECT COUNT(*) FROM " + table);
+	}
 
 	boolean succeeded = itemIDIndex.waitForCompletion(true);
 	if (!succeeded) {
 	    return -1;
 	}
 	return 0;
+
     }
 
     /**
@@ -214,6 +247,7 @@ public class BaselinePreparePreferenceMatrixJob extends
 		Boolean.FALSE.toString());
 	addOption("keyspace", "k", "Cassandra Keyspace", true);
 	addOption("table", "t", "Cassandra column family", true);
+	addOption("db", "db", "Type of BD", true);
     }
 
     /**
@@ -234,6 +268,7 @@ public class BaselinePreparePreferenceMatrixJob extends
 	ratingShift = Float.parseFloat(getOption("ratingShift"));
 	keyspace = getOption("keyspace");
 	table = getOption("table");
+	db = getOption("db");
 
 	if (getMinimum() < 0) {
 	    return -1;
@@ -245,4 +280,5 @@ public class BaselinePreparePreferenceMatrixJob extends
 
 	return 0;
     }
+
 }

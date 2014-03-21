@@ -17,16 +17,12 @@
 package es.udc.fi.dc.irlab.baselinerecommender;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.mahout.cf.taste.hadoop.MutableRecommendedItem;
 import org.apache.mahout.cf.taste.hadoop.TasteHadoopUtils;
@@ -51,9 +47,9 @@ import org.slf4j.LoggerFactory;
  * Final stage of the baseline recommendation algorithm.
  * 
  */
-public class BaselineAggregateAndRecommendReducer
+public class BaselineAggregateAndRecommendMySQLReducer
 	extends
-	Reducer<VarLongWritable, PrefAndSimilarityColumnWritable, Map<String, ByteBuffer>, List<ByteBuffer>> {
+	Reducer<VarLongWritable, PrefAndSimilarityColumnWritable, MySQLRecord, NullWritable> {
     private static final Logger log = LoggerFactory
 	    .getLogger(AggregateAndRecommendReducer.class);
 
@@ -227,15 +223,9 @@ public class BaselineAggregateAndRecommendReducer
 	List<RecommendedItem> topItems = topKItems.getTopItems();
 	if (!topItems.isEmpty()) {
 	    for (RecommendedItem item : topItems) {
-		Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
-		keys.put("user", ByteBufferUtil.bytes((int) userID.get()));
-		keys.put("movie", ByteBufferUtil.bytes((int) item.getItemID()));
-		keys.put("score", ByteBufferUtil.bytes(item.getValue()));
-
-		List<ByteBuffer> value = new LinkedList<ByteBuffer>();
-		value.add(ByteBufferUtil.bytes(0));
-
-		context.write(keys, value);
+		MySQLRecord record = new MySQLRecord((int) userID.get(),
+			(int) item.getItemID(), item.getValue());
+		context.write(record, NullWritable.get());
 	    }
 	}
     }
