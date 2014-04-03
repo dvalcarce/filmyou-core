@@ -25,8 +25,6 @@ import org.apache.mahout.common.AbstractJob;
  */
 public abstract class MatrixComputationJob extends AbstractJob {
 
-    public static final String cname = "mergedC";
-
     protected String directory;
     protected int iteration;
 
@@ -43,9 +41,13 @@ public abstract class MatrixComputationJob extends AbstractJob {
      * MatrixComputationJob constructor.
      * 
      * @param H
+     *            matrix path
      * @param W
+     *            matrix path
      * @param H2
+     *            matrix path
      * @param W2
+     *            matrix path
      */
     public MatrixComputationJob(Path H, Path W, Path H2, Path W2) {
 	super();
@@ -53,7 +55,6 @@ public abstract class MatrixComputationJob extends AbstractJob {
 	this.W = W;
 	this.H2 = H2;
 	this.W2 = W2;
-	iteration = getConf().getInt("iteration", -1);
     }
 
 }

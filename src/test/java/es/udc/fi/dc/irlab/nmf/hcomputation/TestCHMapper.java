@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 
@@ -30,11 +30,10 @@ import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
-import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
+import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 
-public class TestW4Mapper {
+public class TestCHMapper {
 
     private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
 
@@ -45,7 +44,7 @@ public class TestW4Mapper {
 
     @Test
     public void testMap() throws IOException {
-	String baseDirectory = "TestW4Mapper";
+	String baseDirectory = "TestCHMapper";
 	Configuration conf = new Configuration();
 
 	HDFSUtils.removeData(conf, baseDirectory);
@@ -60,13 +59,11 @@ public class TestW4Mapper {
 	VectorWritable inputValue = new VectorWritable(inputVector);
 
 	IntWritable outputKey = new IntWritable(1);
-	Vector outputVector = new DenseVector(new double[] { 30.0, 36.0, 42.0 });
+	Vector outputVector = new DenseVector(new double[] { 14.0, 32.0, 50.0 });
 	VectorWritable outputValue = new VectorWritable(outputVector);
 
-	mapDriver.getConfiguration().set(MatrixComputationJob.cname,
-		cPath.toString());
-
-	mapDriver.withMapper(new W4Mapper());
+	mapDriver.withMapper(new CHMapper());
+	mapDriver.withCacheFile(cPath.toString());
 
 	mapDriver.withInput(inputKey, inputValue);
 	mapDriver.withOutput(outputKey, outputValue);

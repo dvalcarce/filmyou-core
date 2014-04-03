@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,43 +22,48 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
-import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.DenseVector;
+import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestW1bMapper {
+public class TestCrossProductMapper {
 
-    private MapDriver<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> mapDriver;
+    private MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable> mapDriver;
 
     @Before
     public void setup() {
-	mapDriver = new MapDriver<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable>();
+	mapDriver = new MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable>();
     }
 
     @Test
-    public void testMapSimpleData() throws IOException, ClassNotFoundException {
-
+    public void testMap() throws IOException {
 	IntWritable inputKey = new IntWritable(1);
 	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
 	VectorWritable inputValue = new VectorWritable(inputVector);
 
-	IntPairWritable outputKey = new IntPairWritable(1, 0);
-	Vector outputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
+	NullWritable outputKey = NullWritable.get();
+	double[][] outputRows = { { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 },
+		{ 3.0, 6.0, 9.0 } };
 
-	mapDriver.withMapper(new W1bMapper()).withInput(inputKey, inputValue);
+	mapDriver.withMapper(new CrossProductMapper());
+	mapDriver.withInput(inputKey, inputValue);
 
-	List<Pair<IntPairWritable, VectorOrPrefWritable>> list = mapDriver
-		.run();
-	Pair<IntPairWritable, VectorOrPrefWritable> result = list.get(0);
-	assertEquals(outputKey, result.getFirst());
-	assertEquals(outputVector, result.getSecond().getVector());
+	List<Pair<NullWritable, MatrixWritable>> list = mapDriver.run();
+	Pair<NullWritable, MatrixWritable> pair = list.get(0);
 
+	assertEquals(outputKey, pair.getFirst());
+
+	int i = 0;
+	for (Vector row : pair.getSecond().get()) {
+	    assertEquals(new DenseVector(outputRows[i]), row);
+	    i++;
+	}
     }
 
 }

@@ -14,26 +14,29 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.common.IntPairWritable;
+import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
+import es.udc.fi.dc.irlab.nmf.util.DistributedMatrixMapper;
+
 /**
- * Emit &lt;(i, 2), y_i> from Y matrix ({y_i}).
+ * Emit &lt;j, y_j> from &lt;j, h_j> where y_j = C·h_j
+ * 
  */
-public class YRowMapper extends
-	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
+public class CHMapper extends DistributedMatrixMapper {
 
     @Override
     protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
 
-	context.write(new IntPairWritable(key.get(), 2), value);
+	Vector vector = value.get();
+
+	context.write(key, new VectorWritable(C.times(vector)));
 
     }
 

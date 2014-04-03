@@ -84,7 +84,6 @@ public class BaselineRecommenderJob extends AbstractJob {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-	System.out.println("running!");
 	ToolRunner.run(new Configuration(), new BaselineRecommenderJob(), args);
     }
 

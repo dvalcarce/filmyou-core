@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -25,10 +25,10 @@ import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixWritable;
 
 /**
- * Emit &lt;i, sum_i(w_i^T w_i)> from &lt;NULL, w_i^T w_i>.
+ * Emit &lt;i, sum_i(matrix_i)> from &lt;NULL, matrix_i>.
  * 
  */
-public class H3Reducer extends
+public class SumMatrixReducer extends
 	Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
 
     @Override

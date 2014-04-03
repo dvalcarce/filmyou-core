@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.util;
+package es.udc.fi.dc.irlab.util;
 
 import java.io.IOException;
 import java.net.URI;
@@ -25,7 +25,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.mahout.math.DenseVector;
@@ -131,7 +130,7 @@ public class DataInitialization {
     }
 
     /**
-     * Create a MapFile&lt;IntWritable, IntWritable> from int[] data.
+     * Create a SequenceFile&lt;IntWritable, IntWritable> from int[] data.
      * 
      * @param conf
      *            Configuration file
@@ -144,7 +143,7 @@ public class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createMapIntVector(Configuration conf, int[] data,
+    public static Path createIntIntFileParent(Configuration conf, int[] data,
 	    String baseDirectory, String filename) throws IOException {
 
 	String parentUri = baseDirectory + "/" + filename;
@@ -153,14 +152,12 @@ public class DataInitialization {
 	Path path = new Path(uri);
 	Path parent = new Path(parentUri);
 
-	MapFile.Writer writer = null;
+	SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+		IntWritable.class, IntWritable.class);
 
 	try {
-	    writer = new MapFile.Writer(conf, fs, path.toString(),
-		    IntWritable.class, IntWritable.class);
-
-	    for (int i = 1; i <= data.length; i++) {
-		writer.append(new IntWritable(i), new IntWritable(data[i - 1]));
+	    for (int i = 0; i < data.length; i++) {
+		writer.append(new IntWritable(i + 1), new IntWritable(data[i]));
 	    }
 	} finally {
 	    IOUtils.closeStream(writer);

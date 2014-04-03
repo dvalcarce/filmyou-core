@@ -28,7 +28,6 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
 import es.udc.fi.dc.irlab.util.HDFSUtils;
-import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
 /**
  * Assign each user to a cluster after NMF/PPC execution.
@@ -87,7 +86,7 @@ public class ClusterAssignmentJob extends AbstractJob {
 
 	job.setNumReduceTasks(0);
 
-	job.setOutputFormatClass(MapFileOutputFormat.class);
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
 
 	job.setOutputKeyClass(IntWritable.class);
@@ -126,7 +125,7 @@ public class ClusterAssignmentJob extends AbstractJob {
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(IntWritable.class);
 
-	job.setOutputFormatClass(MapFileOutputFormat.class);
+	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
 
 	job.setOutputKeyClass(IntWritable.class);

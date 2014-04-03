@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -27,49 +27,29 @@ import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 
 /**
- * Emits <j, h_j^(new)> from <j, {h_j, x_j, y_j}>.
- * 
- * h_j^(new) = h_j .* (x_j + d_j) ./ (y_j + e_j)
+ * Emit &lt;j, a_j · x_j / y_j> from &lt;j, {a_j, x_j, y_j}>.
  */
-public class PPCHReducer extends
+public class HComputationReducer extends
 	Reducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
 
     @Override
     protected void reduce(IntPairWritable key, Iterable<VectorWritable> values,
 	    Context context) throws IOException, InterruptedException {
 
-	Vector result;
-
 	Iterator<VectorWritable> it = values.iterator();
-	Vector vectorH = it.next().get();
+	Vector vectorA = it.next().get();
 	Vector vectorX = it.next().get();
 	Vector vectorY = it.next().get();
 
-	double d_j = vectorH.dot(vectorY);
-	double e_j = vectorH.dot(vectorX);
-
-	// X = X + d_j
-	vectorX = vectorX.plus(d_j);
-
-	// Y = Y + e_j
-	vectorY = vectorY.plus(e_j);
-
-	// XY = X ./ Y
+	// Performs (X ./ Y)
 	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
 	    public double apply(double a, double b) {
 		return a / b;
 	    }
 	});
 
-	// H = H .* XY
-	result = vectorH.times(vectorXY);
-	if (context.getConfiguration().getInt("iteration", -1)
-		% PPCComputeHJob.normalizationFrequency == 0) {
-	    result.normalize(1);
-	}
 	context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		result));
+		vectorA.times(vectorXY)));
 
     }
-
 }

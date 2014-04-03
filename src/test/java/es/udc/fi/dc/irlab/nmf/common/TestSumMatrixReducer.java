@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,7 +33,9 @@ import org.apache.mahout.math.Vector;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestW3Reducer {
+import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
+
+public class TestSumMatrixReducer {
     private ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable> reduceDriver;
 
     @Before
@@ -57,7 +59,7 @@ public class TestW3Reducer {
 	double[][] outputRows = new double[][] { { 6.0, 7.0, 8.0 },
 		{ 4.0, 6.0, 8.0 }, { 6.0, 10.0, 14.0 } };
 
-	reduceDriver.withReducer(new W3Reducer());
+	reduceDriver.withReducer(new SumMatrixReducer());
 	reduceDriver.withInput(inputKey, inputValues);
 
 	List<Pair<NullWritable, MatrixWritable>> list = reduceDriver.run();

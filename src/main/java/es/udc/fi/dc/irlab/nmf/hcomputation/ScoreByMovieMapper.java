@@ -20,16 +20,17 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
-import org.apache.mahout.common.IntPairWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.mahout.math.VectorWritable;
+
+import es.udc.fi.dc.irlab.nmf.util.JoinVectorMapper;
 
 /**
- * Emit &lt;(i, 1), (j, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ * Emit &lt;j, A_{i,j}w_i^T)> from Cassandra ratings ({A_{i,j}}) and from H
+ * matrix (w_i) obtained by DistributedCache.
  */
-public class ScoreByMovieMapper
-	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
+public class ScoreByMovieMapper extends
+	JoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
     @Override
     protected void map(Map<String, ByteBuffer> keys,
@@ -39,8 +40,11 @@ public class ScoreByMovieMapper
 	int movie = keys.get("movie").getInt();
 	int user = keys.get("user").getInt();
 	float score = columns.get("score").getFloat();
-	context.write(new IntPairWritable(movie, 1), new VectorOrPrefWritable(
-		user, score));
+
+	if (score > 0) {
+	    context.write(new IntWritable((int) user), new VectorWritable(
+		    getCache(movie).times(score)));
+	}
 
     }
 

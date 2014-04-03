@@ -328,17 +328,9 @@ public abstract class HadoopIntegrationTest {
 
 	for (int i = 1; i <= data.length; i++) {
 	    key = new IntWritable(i);
-
-	    try {
-		if (MapFileOutputFormat
-			.getEntry(readers, partitioner, key, val) == null) {
-		    fail(String.format("data %d not found", i));
-		}
-	    } catch (Exception e) {
-		System.out.println(key);
-		throw e;
+	    if (MapFileOutputFormat.getEntry(readers, partitioner, key, val) == null) {
+		fail(String.format("data %d not found", i));
 	    }
-
 	    assertEquals(data[i - 1], val.get());
 	}
 

@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -34,6 +35,10 @@ import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
+import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
+import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
+import es.udc.fi.dc.irlab.nmf.common.SumVectorReducer;
+import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
@@ -61,9 +66,13 @@ public class ComputeWJob extends MatrixComputationJob {
      */
     @Override
     public int run(String[] args) throws Exception {
-	directory = getConf().get("directory") + "/wcomputation";
+	Configuration conf = getConf();
 
-	HDFSUtils.removeData(getConf(), directory);
+	iteration = conf.getInt("iteration", -1);
+	directory = conf.get("directory") + "/wcomputation";
+
+	HDFSUtils.createFolder(conf, directory);
+	HDFSUtils.removeData(conf, directory);
 
 	this.out1 = new Path(directory + "/wout1");
 	this.X = new Path(directory + "/X");
@@ -99,7 +108,7 @@ public class ComputeWJob extends MatrixComputationJob {
 	MultipleInputs.addInputPath(job, new Path("unused"),
 		CqlPagingInputFormat.class, ScoreByUserMapper.class);
 	MultipleInputs.addInputPath(job, inputPath,
-		SequenceFileInputFormat.class, W1bMapper.class);
+		SequenceFileInputFormat.class, HSecondaryMapper.class);
 
 	job.setReducerClass(W1Reducer.class);
 
@@ -147,7 +156,7 @@ public class ComputeWJob extends MatrixComputationJob {
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
 	job.setMapperClass(Mapper.class);
-	job.setReducerClass(XRowReducer.class);
+	job.setReducerClass(SumVectorReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -185,11 +194,13 @@ public class ComputeWJob extends MatrixComputationJob {
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
-	job.setMapperClass(W3Mapper.class);
-	job.setReducerClass(W3Reducer.class);
+	job.setMapperClass(CrossProductMapper.class);
+	job.setReducerClass(SumMatrixReducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(MatrixWritable.class);
+
+	job.setNumReduceTasks(1);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
@@ -226,7 +237,7 @@ public class ComputeWJob extends MatrixComputationJob {
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
-	job.setMapperClass(W4Mapper.class);
+	job.setMapperClass(WCMapper.class);
 	job.setNumReduceTasks(0);
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -240,7 +251,7 @@ public class ComputeWJob extends MatrixComputationJob {
 	Configuration conf = job.getConfiguration();
 	Path mergedPath = HDFSUtils.mergeFile(conf, cPath, directory,
 		"C-merged");
-	conf.set(cname, mergedPath.toString());
+	DistributedCache.addCacheFile(mergedPath.toUri(), conf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -272,15 +283,12 @@ public class ComputeWJob extends MatrixComputationJob {
 	job.setJarByClass(ComputeWJob.class);
 
 	MultipleInputs.addInputPath(job, inputPathW,
-		SequenceFileInputFormat.class, WRowMapper.class);
-	MultipleInputs.addInputPath(job, inputPathX,
-		SequenceFileInputFormat.class, XRowMapper.class);
-	MultipleInputs.addInputPath(job, inputPathY,
-		SequenceFileInputFormat.class, YRowMapper.class);
+		SequenceFileInputFormat.class, Vector0Mapper.class);
 
-	job.setReducerClass(W5Reducer.class);
+	job.setMapperClass(WComputationMapper.class);
+	job.setNumReduceTasks(0);
 
-	job.setMapOutputKeyClass(IntPairWritable.class);
+	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
@@ -289,9 +297,13 @@ public class ComputeWJob extends MatrixComputationJob {
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
 
-	job.setPartitionerClass(IntPairKeyPartitioner.class);
-	job.setSortComparatorClass(IntPairWritable.Comparator.class);
-	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
+	Configuration conf = job.getConfiguration();
+	Path xPath = HDFSUtils.mergeFile(conf, inputPathX, directory,
+		"x-merged");
+	DistributedCache.addCacheFile(xPath.toUri(), conf);
+	Path yPath = HDFSUtils.mergeFile(conf, inputPathY, directory,
+		"y-merged");
+	DistributedCache.addCacheFile(yPath.toUri(), conf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

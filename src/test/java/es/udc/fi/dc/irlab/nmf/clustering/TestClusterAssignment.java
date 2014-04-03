@@ -22,9 +22,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
-import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
+import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
@@ -57,9 +57,6 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	/* Run job */
 	conf = buildConf(H, "clustering", "clusteringCount", numberOfUsers,
 		numberOfClusters);
-
-	System.out.println(conf.get("clustering"));
-	System.out.println(conf.get("directory"));
 
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
 

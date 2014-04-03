@@ -19,28 +19,28 @@ package es.udc.fi.dc.irlab.nmf.wcomputation;
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.math.Matrix;
-import org.apache.mahout.math.MatrixWritable;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit &lt;NULL, h_j h_j^T> from &lt;j, h_j>.
- * 
+ * Emit &lt;(j, 0), h_j> from H matrix ({h_j}).
  */
-public class W3Mapper extends
-	Mapper<IntWritable, VectorWritable, NullWritable, MatrixWritable> {
+public class HSecondaryMapper
+	extends
+	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
     protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
+
+	int user = key.get();
 	Vector vector = value.get();
+	context.write(new IntPairWritable(user, 0), new VectorOrPrefWritable(
+		vector));
 
-	Matrix matrix = vector.cross(vector);
-
-	context.write(NullWritable.get(), new MatrixWritable(matrix));
     }
 
 }

@@ -17,31 +17,34 @@
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.mahout.math.DenseMatrix;
+import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
+import es.udc.fi.dc.irlab.nmf.util.DistributedMatrixMapper;
+
 /**
- * Emit &lt;i, x_i> from &lt;j, {A_{i,j}h_j^T}> where x_i = sum_i(A_{i,j}h_j^T).
+ * Emit &lt;i, y_i> from &lt;i, w_i> where y_i = w_i·C.
  * 
  */
-public class XRowReducer extends
-	Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class WCMapper extends DistributedMatrixMapper {
 
     @Override
-    protected void reduce(IntWritable key, Iterable<VectorWritable> values,
-	    Context context) throws IOException, InterruptedException {
-	Iterator<VectorWritable> it = values.iterator();
-	Vector output = it.next().get();
+    protected void map(IntWritable key, VectorWritable value, Context context)
+	    throws IOException, InterruptedException {
 
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
+	Vector vector = value.get();
+	Matrix mVector = new DenseMatrix(1, vector.size());
+
+	for (int j = 0; j < vector.size(); j++) {
+	    mVector.set(0, j, vector.get(j));
 	}
-	context.write(new IntWritable((int) key.get()), new VectorWritable(
-		output));
+
+	context.write(key, new VectorWritable(mVector.times(C).viewRow(0)));
+
     }
 
 }

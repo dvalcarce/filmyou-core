@@ -20,6 +20,7 @@ import java.io.IOException;
 
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -28,17 +29,24 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
+import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
+import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
+import es.udc.fi.dc.irlab.nmf.common.SumVectorReducer;
+import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
+import es.udc.fi.dc.irlab.nmf.common.Vector1Mapper;
+import es.udc.fi.dc.irlab.nmf.common.Vector2Mapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class ComputeHJob extends MatrixComputationJob {
+
+    protected static String prefix = "NMF";
 
     /**
      * ComputeHJob constructor.
@@ -61,9 +69,13 @@ public class ComputeHJob extends MatrixComputationJob {
      */
     @Override
     public int run(String[] args) throws Exception {
-	directory = getConf().get("directory") + "/hcomputation";
+	Configuration conf = getConf();
 
-	HDFSUtils.removeData(getConf(), directory);
+	iteration = conf.getInt("iteration", -1);
+	directory = conf.get("directory") + "/hcomputation";
+
+	HDFSUtils.removeData(conf, directory);
+	HDFSUtils.createFolder(conf, directory);
 
 	this.out1 = new Path(directory + "/hout1");
 	this.X = new Path(directory + "/X");
@@ -93,18 +105,16 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob1(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "H1-it" + iteration);
+	Job job = new Job(getConf(), prefix + "H1-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, new Path("unused"),
 		CqlPagingInputFormat.class, ScoreByMovieMapper.class);
-	MultipleInputs.addInputPath(job, inputPath,
-		SequenceFileInputFormat.class, H1bMapper.class);
 
-	job.setReducerClass(H1Reducer.class);
+	job.setNumReduceTasks(0);
 
-	job.setMapOutputKeyClass(IntPairWritable.class);
-	job.setMapOutputValueClass(VectorOrPrefWritable.class);
+	job.setMapOutputKeyClass(IntWritable.class);
+	job.setMapOutputValueClass(VectorWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
@@ -112,12 +122,18 @@ public class ComputeHJob extends MatrixComputationJob {
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
 
-	job.setPartitionerClass(IntPairKeyPartitioner.class);
-	job.setSortComparatorClass(IntPairWritable.Comparator.class);
-	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
+	Configuration conf = job.getConfiguration();
 
-	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConfForInput(getConf(), jobConf);
+	Path distributedPath;
+	try {
+	    distributedPath = HDFSUtils.mergeFile(conf, inputPath, directory,
+		    "W-merged");
+	} catch (IllegalArgumentException e) {
+	    distributedPath = inputPath;
+	}
+	DistributedCache.addCacheFile(distributedPath.toUri(), conf);
+
+	CassandraSetup.updateConfForInput(getConf(), conf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -140,14 +156,14 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob2(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "H2-it" + iteration);
+	Job job = new Job(getConf(), prefix + "H2-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
 	job.setMapperClass(Mapper.class);
-	job.setReducerClass(XColumnReducer.class);
+	job.setReducerClass(SumVectorReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -179,20 +195,22 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob3(Path inputPath, Path outputPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "H3-it" + iteration);
+	Job job = new Job(getConf(), prefix + "H3-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
-	job.setMapperClass(H3Mapper.class);
-	job.setReducerClass(H3Reducer.class);
+	job.setMapperClass(CrossProductMapper.class);
+	job.setReducerClass(SumMatrixReducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(MatrixWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+	job.setNumReduceTasks(1);
 
 	job.setOutputKeyClass(NullWritable.class);
 	job.setOutputValueClass(MatrixWritable.class);
@@ -220,13 +238,13 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob4(Path inputPath, Path outputPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "H4-it" + iteration);
+	Job job = new Job(getConf(), prefix + "H4-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, inputPath);
 
-	job.setMapperClass(H4Mapper.class);
+	job.setMapperClass(CHMapper.class);
 	job.setNumReduceTasks(0);
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
@@ -240,7 +258,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	Configuration conf = job.getConfiguration();
 	Path mergedPath = HDFSUtils.mergeFile(conf, cPath, directory,
 		"C-merged");
-	conf.set(cname, mergedPath.toString());
+	DistributedCache.addCacheFile(mergedPath.toUri(), conf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -268,17 +286,17 @@ public class ComputeHJob extends MatrixComputationJob {
 	    Path outputPath) throws IOException, ClassNotFoundException,
 	    InterruptedException {
 
-	Job job = new Job(getConf(), "H5-it" + iteration);
+	Job job = new Job(getConf(), prefix + "H5-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, inputPathH,
-		SequenceFileInputFormat.class, HColumnMapper.class);
+		SequenceFileInputFormat.class, Vector0Mapper.class);
 	MultipleInputs.addInputPath(job, inputPathX,
-		SequenceFileInputFormat.class, XColumnMapper.class);
+		SequenceFileInputFormat.class, Vector1Mapper.class);
 	MultipleInputs.addInputPath(job, inputPathY,
-		SequenceFileInputFormat.class, YColumnMapper.class);
+		SequenceFileInputFormat.class, Vector2Mapper.class);
 
-	job.setReducerClass(HReducer.class);
+	job.setReducerClass(HComputationReducer.class);
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);

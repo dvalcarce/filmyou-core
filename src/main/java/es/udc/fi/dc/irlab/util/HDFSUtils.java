@@ -108,10 +108,31 @@ public class HDFSUtils {
 	FileSystem fs = FileSystem.get(conf);
 
 	Path mergedFile = new Path(directory + "/" + name);
-	FileUtil.copyMerge(fs, pathToMerge, fs, mergedFile, false, conf, null);
+	if (!FileUtil.copyMerge(fs, pathToMerge, fs, mergedFile, false, conf,
+		null)) {
+	    throw new IllegalArgumentException(pathToMerge + " is a folder!");
+	}
 	conf.set(name, mergedFile.toString());
 
 	return mergedFile;
+
+    }
+
+    /**
+     * Create a folder and all non-existent parents.
+     * 
+     * @param conf
+     *            Configuration
+     * @param folder
+     *            folder to create
+     * @throws IOException
+     */
+    public static void createFolder(Configuration conf, String folder)
+	    throws IOException {
+
+	FileSystem fs = FileSystem.get(conf);
+
+	fs.mkdirs(new Path(folder));
 
     }
 

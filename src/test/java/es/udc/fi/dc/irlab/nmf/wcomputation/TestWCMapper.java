@@ -16,54 +16,60 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
-import static org.junit.Assert.assertEquals;
-
 import java.io.IOException;
-import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
-import org.apache.hadoop.mrunit.types.Pair;
+import org.apache.mahout.math.DenseMatrix;
 import org.apache.mahout.math.DenseVector;
-import org.apache.mahout.math.MatrixWritable;
+import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-public class TestW3Mapper {
+import es.udc.fi.dc.irlab.util.DataInitialization;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
 
-    private MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable> mapDriver;
+public class TestWCMapper {
+
+    private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
 
     @Before
     public void setup() {
-	mapDriver = new MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable>();
+	mapDriver = new MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
     }
 
     @Test
     public void testMap() throws IOException {
+	String baseDirectory = "TestWCMapper";
+	Configuration conf = new Configuration();
+
+	HDFSUtils.removeData(conf, baseDirectory);
+
+	Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
+		{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
+	Path cPath = DataInitialization.createMapNullMatrix(conf, matrix,
+		baseDirectory, "C-merged");
+
 	IntWritable inputKey = new IntWritable(1);
 	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
 	VectorWritable inputValue = new VectorWritable(inputVector);
 
-	NullWritable outputKey = NullWritable.get();
-	double[][] outputRows = { { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 },
-		{ 3.0, 6.0, 9.0 } };
+	IntWritable outputKey = new IntWritable(1);
+	Vector outputVector = new DenseVector(new double[] { 30.0, 36.0, 42.0 });
+	VectorWritable outputValue = new VectorWritable(outputVector);
 
-	mapDriver.withMapper(new W3Mapper());
+	mapDriver.withMapper(new WCMapper());
+	mapDriver.withCacheFile(cPath.toString());
+
 	mapDriver.withInput(inputKey, inputValue);
+	mapDriver.withOutput(outputKey, outputValue);
+	mapDriver.runTest();
 
-	List<Pair<NullWritable, MatrixWritable>> list = mapDriver.run();
-	Pair<NullWritable, MatrixWritable> pair = list.get(0);
-
-	assertEquals(outputKey, pair.getFirst());
-
-	int i = 0;
-	for (Vector row : pair.getSecond().get()) {
-	    assertEquals(new DenseVector(outputRows[i]), row);
-	    i++;
-	}
+	HDFSUtils.removeData(conf, baseDirectory);
     }
 
 }

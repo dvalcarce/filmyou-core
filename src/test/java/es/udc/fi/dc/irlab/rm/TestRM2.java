@@ -22,9 +22,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
-import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.RMTestData;
+import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
@@ -47,9 +47,9 @@ public class TestRM2 extends HadoopIntegrationTest {
 	Path movieSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
-	DataInitialization.createMapIntVector(conf,
+	DataInitialization.createIntIntFileParent(conf,
 		ClusteringTestData.clustering, baseDirectory, "clustering");
-	DataInitialization.createMapIntVector(conf,
+	DataInitialization.createIntIntFileParent(conf,
 		ClusteringTestData.clusteringCount, baseDirectory,
 		"clusteringCount");
 

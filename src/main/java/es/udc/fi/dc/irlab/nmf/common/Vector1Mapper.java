@@ -14,34 +14,27 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.mahout.math.Vector;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit &lt;j,x_j> from &lt;j, {A_{i,j}w_i^T}> where x_j = sum_i(A_{i,j}w_i^T).
- * 
+ * Emit &lt;(j, 1), x_j> from X matrix ({x_j}).
  */
-public class XColumnReducer extends
-	Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class Vector1Mapper extends
+	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
 
     @Override
-    protected void reduce(IntWritable key, Iterable<VectorWritable> values,
-	    Context context) throws IOException, InterruptedException {
-	Iterator<VectorWritable> it = values.iterator();
-	Vector output = it.next().get();
+    protected void map(IntWritable key, VectorWritable value, Context context)
+	    throws IOException, InterruptedException {
 
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
-	}
-	context.write(new IntWritable((int) key.get()), new VectorWritable(
-		output));
+	context.write(new IntPairWritable(key.get(), 1), value);
+
     }
 
 }

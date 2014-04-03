@@ -19,13 +19,16 @@ package es.udc.fi.dc.irlab.rm;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.map.TIntDoubleMap;
+import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntDoubleHashMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.procedure.TIntProcedure;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -36,10 +39,13 @@ import java.util.Map;
 
 import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapFile.Reader;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
@@ -71,12 +77,33 @@ public class RM2Reducer
     private TIntSet clusterUsers;
     private TIntObjectMap<TIntSet> userItems;
     private TIntDoubleMap itemCollMap;
+    private TIntIntMap clusterCount;
 
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
 	Configuration conf = context.getConfiguration();
 
-	itemColl = new Path(conf.get(RM2Job.itemCollName));
+	Path paths[] = DistributedCache.getLocalCacheFiles(conf);
+
+	if (paths == null || paths.length != 3) {
+	    throw new FileNotFoundException();
+	}
+
+	clusterCount = new TIntIntHashMap(Integer.parseInt(conf
+		.get("numberOfClusters")));
+
+	// Read cluster count
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(
+		FileSystem.getLocal(conf), paths[1], conf)) {
+	    IntWritable key = new IntWritable();
+	    IntWritable val = new IntWritable();
+
+	    while (reader.next(key, val)) {
+		clusterCount.put(key.get(), val.get());
+	    }
+	}
+
+	itemColl = paths[2];
 	lambda = Double.valueOf(conf.get(RM2Job.lambdaName));
 	numberOfItems = Integer.valueOf(conf.get("numberOfItems"));
 	numberOfUsers = Integer.valueOf(conf.get("numberOfUsers"));
@@ -95,8 +122,7 @@ public class RM2Reducer
 	Iterator<IntDoubleOrPrefWritable> it = values.iterator();
 
 	// Read the number of users in the cluster
-	entry = it.next();
-	numberOfUsersInCluster = entry.getKey();
+	numberOfUsersInCluster = clusterCount.get(key.getFirst());
 
 	// Initialize collections
 	clusterUserSum = new RandomAccessSparseVector(numberOfUsers,

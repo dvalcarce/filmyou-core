@@ -33,7 +33,7 @@ public class UserSumByClusterMapper extends
     protected void map(IntWritable key, DoubleWritable column, Context context)
 	    throws IOException, InterruptedException {
 
-	context.write(new IntPairWritable(getCluster(key, context), 1),
+	context.write(new IntPairWritable(getCluster(key.get()), 0),
 		new IntDoubleOrPrefWritable(key.get(), column.get()));
 
     }

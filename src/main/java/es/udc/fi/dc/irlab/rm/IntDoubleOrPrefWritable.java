@@ -74,7 +74,7 @@ public final class IntDoubleOrPrefWritable implements Writable {
     }
 
     /**
-     * Constructor for a IntDoublePairWritable (skipping value info).
+     * Constructor for a IntWritable (skipping value info).
      * 
      * @param key
      */

@@ -14,32 +14,26 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
-import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit &lt;(j, 0), h_j> from H matrix ({h_j}).
+ * Emit &lt;(j, 2), y_j> from Y matrix ({y_j}).
  */
-public class W1bMapper
-	extends
-	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> {
+public class Vector2Mapper extends
+	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
 
     @Override
     protected void map(IntWritable key, VectorWritable value, Context context)
 	    throws IOException, InterruptedException {
 
-	int user = key.get();
-	Vector vector = value.get();
-	context.write(new IntPairWritable(user, 0), new VectorOrPrefWritable(
-		vector));
+	context.write(new IntPairWritable(key.get(), 2), value);
 
     }
 

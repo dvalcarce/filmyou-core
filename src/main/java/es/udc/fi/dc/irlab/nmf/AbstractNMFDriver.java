@@ -25,7 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 
-import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
+import es.udc.fi.dc.irlab.util.DataInitialization;
 
 /**
  * Abstract NMF algorithm driver.

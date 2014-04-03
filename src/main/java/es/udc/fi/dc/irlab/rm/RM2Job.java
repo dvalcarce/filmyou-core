@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
@@ -47,7 +48,6 @@ public class RM2Job extends AbstractJob {
 
     public static final String totalSumName = "rm.totalSum";
     public static final String lambdaName = "lambda";
-    public static final String itemCollName = "rm.itemColl";
 
     private String directory;
 
@@ -262,8 +262,6 @@ public class RM2Job extends AbstractJob {
 	Job job = new Job(getConf(), "RM2-5");
 	job.setJarByClass(this.getClass());
 
-	MultipleInputs.addInputPath(job, clusteringCount,
-		SequenceFileInputFormat.class, CountClusterMapper.class);
 	MultipleInputs.addInputPath(job, userSum,
 		SequenceFileInputFormat.class, UserSumByClusterMapper.class);
 	MultipleInputs.addInputPath(job, new Path("unused"),
@@ -286,7 +284,16 @@ public class RM2Job extends AbstractJob {
 	CassandraSetup.updateConfForInput(getConf(), conf);
 	CassandraSetup.updateConfForOutput(getConf(), conf);
 
-	conf.set(itemCollName, itemColl.toString());
+	// Distributed cache
+	Path mergedClustering = HDFSUtils.mergeFile(conf, clustering,
+		directory, "clustering-merged");
+	DistributedCache.addCacheFile(mergedClustering.toUri(), conf);
+
+	Path mergedClusteringCount = HDFSUtils.mergeFile(conf, clusteringCount,
+		directory, "clustering-count-merged");
+	DistributedCache.addCacheFile(mergedClusteringCount.toUri(), conf);
+
+	DistributedCache.addCacheFile(itemColl.toUri(), conf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

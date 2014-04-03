@@ -38,7 +38,7 @@ public class FindClusterMapper extends
 	Vector vector = value.get();
 	int cluster = vector.maxValueIndex();
 
-	// Cluster index start at 1
+	// Cluster indexes start at 1
 	cluster++;
 
 	context.write(user, new IntWritable(cluster));

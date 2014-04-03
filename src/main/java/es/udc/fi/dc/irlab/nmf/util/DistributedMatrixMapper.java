@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,43 +14,50 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.util;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.math.DenseMatrix;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixWritable;
-import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
-
 /**
- * Emit &lt;i, y_i> from &lt;i, w_i> where y_i = w_i·C.
+ * Load matrix from DistributedCache in the setup phase.
  * 
  */
-public class W4Mapper extends
+public abstract class DistributedMatrixMapper extends
 	Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-    private Matrix C;
+    protected Matrix C;
+    private Path[] paths;
 
+    /**
+     * Load matrix from DistributedCache.
+     */
     @Override
-    public void setup(Context context) throws IOException, InterruptedException {
-	Configuration conf = context.getConfiguration();
-	FileSystem fs = FileSystem.get(conf);
-	Path mergedC = new Path(conf.get(MatrixComputationJob.cname));
-	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, mergedC,
-		conf)) {
+    protected void setup(Context context) throws IOException,
+	    InterruptedException {
 
+	Configuration conf = context.getConfiguration();
+
+	paths = DistributedCache.getLocalCacheFiles(conf);
+
+	if (paths == null || paths.length < 1) {
+	    throw new FileNotFoundException();
+	}
+
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(
+		FileSystem.getLocal(conf), paths[0], conf)) {
 	    NullWritable key = NullWritable.get();
 	    MatrixWritable val = new MatrixWritable();
 
@@ -60,22 +67,8 @@ public class W4Mapper extends
 		throw new FileNotFoundException(getClass()
 			+ ": Invalid C file.");
 	    }
-
-	}
-    }
-
-    @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
-	    throws IOException, InterruptedException {
-
-	Vector vector = value.get();
-	Matrix mVector = new DenseMatrix(1, vector.size());
-
-	for (int j = 0; j < vector.size(); j++) {
-	    mVector.set(0, j, vector.get(j));
 	}
 
-	context.write(key, new VectorWritable(mVector.times(C).viewRow(0)));
-
     }
+
 }

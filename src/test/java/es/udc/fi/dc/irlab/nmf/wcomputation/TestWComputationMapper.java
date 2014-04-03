@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
 
@@ -22,19 +22,16 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
-import org.apache.mahout.math.DenseMatrix;
 import org.apache.mahout.math.DenseVector;
-import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
-import es.udc.fi.dc.irlab.nmf.util.DataInitialization;
+import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 
-public class TestH4Mapper {
+public class TestWComputationMapper {
 
     private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
 
@@ -44,35 +41,35 @@ public class TestH4Mapper {
     }
 
     @Test
-    public void testMap() throws IOException {
-	String baseDirectory = "TestH4Mapper";
+    public void testReducer() throws IOException {
+	String baseDirectory = "TestWComputationMapper";
 	Configuration conf = new Configuration();
 
 	HDFSUtils.removeData(conf, baseDirectory);
-
-	Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
-		{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
-	Path cPath = DataInitialization.createMapNullMatrix(conf, matrix,
-		baseDirectory, "C-merged");
-
 	IntWritable inputKey = new IntWritable(1);
-	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
-	VectorWritable inputValue = new VectorWritable(inputVector);
+	VectorWritable inputValue = new VectorWritable(new DenseVector(
+		new double[] { 1.0, 2.0, 3.0 }));
 
 	IntWritable outputKey = new IntWritable(1);
-	Vector outputVector = new DenseVector(new double[] { 14.0, 32.0, 50.0 });
-	VectorWritable outputValue = new VectorWritable(outputVector);
+	Vector outputVector = new DenseVector(new double[] { 3.0, 4.0, 15.0 });
 
-	mapDriver.getConfiguration().set(MatrixComputationJob.cname,
-		cPath.toString());
+	Path xPath = DataInitialization.createDoubleMatrix(conf,
+		new double[][] { { 3.0, 10.0, 20.0 } }, baseDirectory,
+		"x-merged");
 
-	mapDriver.withMapper(new H4Mapper());
+	Path yPath = DataInitialization
+		.createDoubleMatrix(conf, new double[][] { { 1.0, 5.0, 4.0 } },
+			baseDirectory, "y-merged");
 
+	mapDriver.withCacheFile(xPath.toString());
+	mapDriver.withCacheFile(yPath.toString());
+
+	mapDriver.withMapper(new WComputationMapper());
 	mapDriver.withInput(inputKey, inputValue);
-	mapDriver.withOutput(outputKey, outputValue);
+	mapDriver.withOutput(outputKey, new VectorWritable(outputVector));
+
 	mapDriver.runTest();
 
 	HDFSUtils.removeData(conf, baseDirectory);
     }
-
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import java.io.IOException;
 
@@ -24,9 +24,9 @@ import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit &lt;(j, 0), h_j> from H matrix ({h_j}).
+ * Emit &lt;(i, 0), w_i> from H matrix ({w_i}).
  */
-public class HColumnMapper extends
+public class Vector0Mapper extends
 	Mapper<IntWritable, VectorWritable, IntPairWritable, VectorWritable> {
 
     @Override

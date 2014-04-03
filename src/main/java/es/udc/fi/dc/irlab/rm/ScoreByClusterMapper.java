@@ -41,7 +41,7 @@ public class ScoreByClusterMapper
 	float score = columns.get("score").getFloat();
 	IntWritable key = new IntWritable(user);
 
-	context.write(new IntPairWritable(getCluster(key, context), 2),
+	context.write(new IntPairWritable(getCluster(key.get()), 1),
 		new IntDoubleOrPrefWritable(user, movie, score));
 
     }
