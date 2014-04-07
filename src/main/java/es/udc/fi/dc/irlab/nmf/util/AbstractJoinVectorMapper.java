@@ -37,7 +37,7 @@ import org.apache.mahout.math.VectorWritable;
  * 
  */
 
-public abstract class JoinVectorMapper<A, B> extends
+public abstract class AbstractJoinVectorMapper<A, B> extends
 	Mapper<A, B, IntWritable, VectorWritable> {
 
     private Path[] paths;
@@ -72,7 +72,7 @@ public abstract class JoinVectorMapper<A, B> extends
     }
 
     /**
-     * Get cached Vector of the given key.
+     * Get cached Vector of the given key. Used for replication join.
      * 
      * @param key
      *            integer key

@@ -63,7 +63,7 @@ public class TestHComputation extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareMatrixData(conf, NMFTestData.H_one, baseDirectory, H2);
+	compareIntVectorData(conf, NMFTestData.H_one, baseDirectory, H2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

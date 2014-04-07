@@ -64,6 +64,8 @@ public class PPCHComputationReducer extends
 
 	// H = H .* XY
 	result = vectorH.times(vectorXY);
+
+	// Enforce the constraints
 	if (context.getConfiguration().getInt("iteration", -1)
 		% PPCComputeHJob.normalizationFrequency == 0) {
 	    result.normalize(1);

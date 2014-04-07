@@ -15,12 +15,12 @@
 		<dependency>
 			<groupId>org.apache.mahout</groupId>
 			<artifactId>mahout-core</artifactId>
-			<version>0.9</version>
+			<version>0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.mahout</groupId>
 			<artifactId>mahout-math</artifactId>
-			<version>0.9</version>
+			<version>0.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.cassandra</groupId>
@@ -90,6 +90,9 @@
 				<configuration>
 					<source>1.7</source>
 					<target>1.7</target>
+					<excludes>
+						<exclude>src/main/java/es/udc/fi/dc/irlab/baselinerecommender/*.java</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -109,14 +112,6 @@
 						</configuration>
 					</execution>
 				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>${project.groupId}</groupId>
-						<artifactId>filmyou-core</artifactId>
-						<version>${project.version}</version>
-						<classifier>tests</classifier>
-					</dependency>
-				</dependencies>
 			</plugin>
 		</plugins>
 	</build>

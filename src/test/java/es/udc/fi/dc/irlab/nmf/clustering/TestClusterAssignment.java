@@ -61,9 +61,9 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
 
 	/* Run asserts */
-	compareMapIntVectorData(conf, ClusteringTestData.clustering,
+	compareIntIntData(conf, ClusteringTestData.clustering,
 		baseDirectory, clustering);
-	compareMapIntVectorData(conf, ClusteringTestData.clusteringCount,
+	compareIntIntData(conf, ClusteringTestData.clusteringCount,
 		baseDirectory, clusteringCount);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));

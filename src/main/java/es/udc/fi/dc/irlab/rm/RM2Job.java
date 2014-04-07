@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -59,6 +60,8 @@ public class RM2Job extends AbstractJob {
     @Override
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
+	inputPath = new Path(conf.get(HDFSUtils.inputPathName));
+	outputPath = new Path(conf.get(HDFSUtils.outputPathName));
 	String baseDirectory = conf.get("directory");
 	directory = baseDirectory + "/rm2";
 
@@ -262,27 +265,39 @@ public class RM2Job extends AbstractJob {
 	Job job = new Job(getConf(), "RM2-5");
 	job.setJarByClass(this.getClass());
 
+	Configuration conf = job.getConfiguration();
 	MultipleInputs.addInputPath(job, userSum,
 		SequenceFileInputFormat.class, UserSumByClusterMapper.class);
-	MultipleInputs.addInputPath(job, new Path("unused"),
-		CqlPagingInputFormat.class, ScoreByClusterMapper.class);
+
+	if (conf.getBoolean("useCassandra", true)) {
+	    MultipleInputs.addInputPath(job, new Path("unused"),
+		    CqlPagingInputFormat.class,
+		    ScoreByClusterCassandraMapper.class);
+	    CassandraSetup.updateConfForInput(getConf(), conf);
+
+	    job.setReducerClass(RM2CassandraReducer.class);
+	    job.setOutputFormatClass(CqlOutputFormat.class);
+	    job.setOutputKeyClass(Map.class);
+	    job.setOutputValueClass(List.class);
+	    CassandraSetup.updateConfForOutput(getConf(), conf);
+	} else {
+	    MultipleInputs.addInputPath(job, inputPath,
+		    SequenceFileInputFormat.class,
+		    ScoreByClusterHDFSMapper.class);
+
+	    job.setReducerClass(RM2HDFSReducer.class);
+	    job.setOutputFormatClass(SequenceFileOutputFormat.class);
+	    job.setOutputKeyClass(IntPairWritable.class);
+	    job.setOutputValueClass(FloatWritable.class);
+	    CassandraSetup.updateConfForOutput(getConf(), conf);
+	}
 
 	job.setMapOutputKeyClass(IntPairWritable.class);
 	job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);
 
-	job.setReducerClass(RM2Reducer.class);
-
-	job.setOutputFormatClass(CqlOutputFormat.class);
-	job.setOutputKeyClass(Map.class);
-	job.setOutputValueClass(List.class);
-
 	job.setPartitionerClass(IntPairKeyPartitioner.class);
 	job.setSortComparatorClass(IntPairWritable.Comparator.class);
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
-
-	Configuration conf = job.getConfiguration();
-	CassandraSetup.updateConfForInput(getConf(), conf);
-	CassandraSetup.updateConfForOutput(getConf(), conf);
 
 	// Distributed cache
 	Path mergedClustering = HDFSUtils.mergeFile(conf, clustering,

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,33 +17,30 @@
 package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
 
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.JoinVectorMapper;
+import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
 
 /**
- * Emit &lt;j, A_{i,j}w_i^T)> from Cassandra ratings ({A_{i,j}}) and from H
+ * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (<(i, j), A_{i,j}>) and from H
  * matrix (w_i) obtained by DistributedCache.
  */
-public class ScoreByMovieMapper extends
-	JoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+public class ScoreByMovieHDFSMapper extends
+	AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
 
     @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
-	    throws IOException, InterruptedException {
+    protected void map(IntPairWritable key, FloatWritable column,
+	    Context context) throws IOException, InterruptedException {
 
-	int movie = keys.get("movie").getInt();
-	int user = keys.get("user").getInt();
-	float score = columns.get("score").getFloat();
+	float score = column.get();
 
 	if (score > 0) {
-	    context.write(new IntWritable((int) user), new VectorWritable(
-		    getCache(movie).times(score)));
+	    context.write(new IntWritable(key.getSecond()), new VectorWritable(
+		    getCache(key.getFirst()).times(score)));
 	}
 
     }

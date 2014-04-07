@@ -14,31 +14,30 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.ppc;
+package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
- * Integration test for ten iterations of PPC algorithm
+ * Integration test for one iteration of HComputation (PPC)
  * 
  */
-public class PPCDriverTest extends HadoopIntegrationTest {
+public class TestHDFSPPCHComputation extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
 	int numberOfUsers = PPCTestData.numberOfUsers;
 	int numberOfItems = PPCTestData.numberOfItems;
 	int numberOfClusters = PPCTestData.numberOfClusters;
-	int numberOfIterations = 10;
+	int numberOfIterations = 1;
 
 	Configuration conf = buildConf();
 	HDFSUtils.removeData(conf, conf.get("directory"));
@@ -48,22 +47,22 @@ public class PPCDriverTest extends HadoopIntegrationTest {
 		PPCTestData.H_init, baseDirectory, "H");
 	Path W = DataInitialization.createDoubleMatrix(conf,
 		PPCTestData.W_init, baseDirectory, "W");
-
-	/* Insert data in Cassandra */
-	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
-		cassandraPartitioner);
-	cassandraUtils.insertData(PPCTestData.A, cassandraKeyspace,
-		cassandraTableIn);
+	Path H2 = new Path(baseDirectory + "/H2");
+	Path W2 = new Path(baseDirectory + "/W2");
+	Path input = DataInitialization.createIntPairDoubleFile(conf,
+		PPCTestData.A, baseDirectory, "A");
 
 	/* Run job */
 	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
 		numberOfIterations);
-	ToolRunner.run(conf, new PPCDriver(), null);
+	conf.setBoolean("useCassandra", false);
+	conf.set(HDFSUtils.inputPathName, input.toString());
+	ToolRunner.run(conf, new PPCComputeHJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareIntVectorData(conf, PPCTestData.H_ten, baseDirectory, H);
-	compareIntVectorData(conf, PPCTestData.W_ten, baseDirectory, W);
+	compareIntVectorData(conf, PPCTestData.H_one, baseDirectory, H2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }
+
 }

@@ -1,19 +1,3 @@
-/**
- * Copyright 2014 Daniel Valcarce Silva
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package es.udc.fi.dc.irlab.rm;
 
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
@@ -30,14 +14,8 @@ import gnu.trove.set.hash.TIntHashSet;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
-import org.apache.cassandra.utils.ByteBufferUtil;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
@@ -55,22 +33,14 @@ import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.SparseMatrix;
 import org.apache.mahout.math.Vector;
 
-/**
- * Emit &lt;j, i, A_{i,j}> to Cassandra from &lt;k, {|k|} U {(j, sum_i A_{i,j})}
- * U {(i, j, A_{i,j})}>.
- */
-public class RM2Reducer
-	extends
-	Reducer<IntPairWritable, IntDoubleOrPrefWritable, Map<String, ByteBuffer>, List<ByteBuffer>> {
+public abstract class AbstractRM2Reducer<A, B> extends
+	Reducer<IntPairWritable, IntDoubleOrPrefWritable, A, B> {
 
     private Path itemColl;
-
     private double lambda;
-
     private int numberOfUsersInCluster;
     private int numberOfUsers;
     private int numberOfItems;
-
     private Vector clusterUserSum;
     private Matrix preferences;
     private TIntSet clusterItems;
@@ -79,11 +49,15 @@ public class RM2Reducer
     private TIntDoubleMap itemCollMap;
     private TIntIntMap clusterCount;
 
+    public AbstractRM2Reducer() {
+	super();
+    }
+
     @Override
     public void setup(Context context) throws IOException, InterruptedException {
 	Configuration conf = context.getConfiguration();
 
-	Path paths[] = DistributedCache.getLocalCacheFiles(conf);
+	Path[] paths = DistributedCache.getLocalCacheFiles(conf);
 
 	if (paths == null || paths.length != 3) {
 	    throw new FileNotFoundException();
@@ -174,7 +148,7 @@ public class RM2Reducer
      * @param numberOfClusterItems
      * @throws IOException
      */
-    private void buildItemCollMap(Context context, int numberOfClusterItems)
+    protected void buildItemCollMap(Context context, int numberOfClusterItems)
 	    throws IOException {
 	Configuration conf = context.getConfiguration();
 	final Reader[] readers = MapFileOutputFormat.getReaders(itemColl, conf);
@@ -290,7 +264,7 @@ public class RM2Reducer
     }
 
     /**
-     * Write preference to Cassandra.
+     * Write given preference to persistence.
      * 
      * @param context
      *            reduce context
@@ -303,19 +277,8 @@ public class RM2Reducer
      * @throws IOException
      * @throws InterruptedException
      */
-    private void writePreference(Context context, int userId, int itemId,
-	    double score, int cluster) throws IOException, InterruptedException {
-
-	Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
-	keys.put("user", ByteBufferUtil.bytes(userId + 1));
-	keys.put("movie", ByteBufferUtil.bytes(itemId + 1));
-	keys.put("relevance", ByteBufferUtil.bytes((float) score));
-
-	List<ByteBuffer> value = new LinkedList<ByteBuffer>();
-	value.add(ByteBufferUtil.bytes(cluster));
-
-	context.write(keys, value);
-
-    }
+    protected abstract void writePreference(Context context, int userId,
+	    int itemId, double score, int cluster) throws IOException,
+	    InterruptedException;
 
 }

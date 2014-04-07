@@ -31,7 +31,7 @@ import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
  * Integration test for one iteration of HComputation (PPC)
  * 
  */
-public class TestPPCHComputation extends HadoopIntegrationTest {
+public class TestCassandraPPCHComputation extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -63,7 +63,7 @@ public class TestPPCHComputation extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new PPCComputeHJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareMatrixData(conf, PPCTestData.H_one, baseDirectory, H2);
+	compareIntVectorData(conf, PPCTestData.H_one, baseDirectory, H2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

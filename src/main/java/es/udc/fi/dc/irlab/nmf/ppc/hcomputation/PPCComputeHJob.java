@@ -57,31 +57,30 @@ public class PPCComputeHJob extends ComputeHJob {
     /**
      * Launch the fifth job for H computation.
      * 
-     * @param inputPathH
+     * @param hPath
      *            initial H path
-     * @param inputPathX
+     * @param xPath
      *            input X
-     * @param inputPathY
+     * @param yPath
      *            input Y
-     * @param outputPath
+     * @param hOutputPath
      *            output H path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob5(Path inputPathH, Path inputPathX, Path inputPathY,
-	    Path outputPath) throws IOException, ClassNotFoundException,
-	    InterruptedException {
+    protected void runJob5(Path hPath, Path xPath, Path yPath, Path hOutputPath)
+	    throws IOException, ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(getConf(), prefix + "H5-it" + iteration);
 	job.setJarByClass(this.getClass());
 
-	MultipleInputs.addInputPath(job, inputPathH,
-		SequenceFileInputFormat.class, Vector0Mapper.class);
-	MultipleInputs.addInputPath(job, inputPathX,
-		SequenceFileInputFormat.class, Vector1Mapper.class);
-	MultipleInputs.addInputPath(job, inputPathY,
-		SequenceFileInputFormat.class, Vector2Mapper.class);
+	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
+		Vector0Mapper.class);
+	MultipleInputs.addInputPath(job, xPath, SequenceFileInputFormat.class,
+		Vector1Mapper.class);
+	MultipleInputs.addInputPath(job, yPath, SequenceFileInputFormat.class,
+		Vector2Mapper.class);
 
 	job.setReducerClass(PPCHComputationReducer.class);
 
@@ -89,7 +88,7 @@ public class PPCComputeHJob extends ComputeHJob {
 	job.setMapOutputValueClass(VectorWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, outputPath);
+	SequenceFileOutputFormat.setOutputPath(job, hOutputPath);
 
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);

@@ -32,7 +32,7 @@ import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
  * Integration test class utility
  * 
  */
-public class TestRM2 extends HadoopIntegrationTest {
+public class TestCassandraRM2 extends HadoopIntegrationTest {
 
     @Test
     public void test() throws Exception {
@@ -67,12 +67,12 @@ public class TestRM2 extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */
-	compareDoubleVectorData(conf, RMTestData.userSum, baseDirectory,
+	compareIntDoubleData(conf, RMTestData.userSum, baseDirectory,
 		userSum);
-	compareDoubleVectorData(conf, RMTestData.movieSum, baseDirectory,
+	compareIntDoubleData(conf, RMTestData.movieSum, baseDirectory,
 		movieSum);
-	compareScalarData(conf, RMTestData.totalSum, baseDirectory, totalSum);
-	compareMapDoubleVectorData(conf, RMTestData.itemColl, baseDirectory,
+	compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
+	compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
 		itemColl);
 	compareCassandraData(conf, RMTestData.recommendations,
 		RMTestData.numberOfUsers);

@@ -44,6 +44,8 @@ public class RMRecommenderJob extends AbstractJob {
 	addOption("numberOfClusters", "k", "Number of clusters", true);
 	addOption("numberOfIterations", "i", "Number of iterations", "50");
 	addOption("directory", "d", "Working directory", "recommendation");
+	addOption("useCassandra", "useCas", "Use Cassandra instead of HDFS",
+		"true");
 	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
 	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
 	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",

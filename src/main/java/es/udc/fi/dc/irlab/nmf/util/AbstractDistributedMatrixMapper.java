@@ -35,7 +35,7 @@ import org.apache.mahout.math.VectorWritable;
  * Load matrix from DistributedCache in the setup phase.
  * 
  */
-public abstract class DistributedMatrixMapper extends
+public abstract class AbstractDistributedMatrixMapper extends
 	Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
     protected Matrix C;

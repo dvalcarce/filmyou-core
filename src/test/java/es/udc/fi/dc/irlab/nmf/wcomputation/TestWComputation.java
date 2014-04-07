@@ -63,7 +63,7 @@ public class TestWComputation extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ComputeWJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareMatrixData(conf, NMFTestData.W_one, baseDirectory, W2);
+	compareIntVectorData(conf, NMFTestData.W_one, baseDirectory, W2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

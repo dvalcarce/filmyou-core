@@ -61,8 +61,8 @@ public class NMFDriverTest extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new NMFDriver(), null);
 
 	/* Run asserts */
-	compareMatrixData(conf, NMFTestData.H_ten, baseDirectory, H);
-	compareMatrixData(conf, NMFTestData.W_ten, baseDirectory, W);
+	compareIntVectorData(conf, NMFTestData.H_ten, baseDirectory, H);
+	compareIntVectorData(conf, NMFTestData.W_ten, baseDirectory, W);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

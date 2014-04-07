@@ -14,35 +14,34 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.rm;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 
 /**
- * Emit &lt;(k, 2), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
- * is a user from the cluster k.
+ * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
-public class ScoreByClusterMapper
+public class ScoreByUserCassandraMapper
 	extends
-	AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
     protected void map(Map<String, ByteBuffer> keys,
 	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	int movie = keys.get("movie").getInt();
-	int user = keys.get("user").getInt();
 	float score = columns.get("score").getFloat();
-	IntWritable key = new IntWritable(user);
 
-	context.write(new IntPairWritable(getCluster(key.get()), 1),
-		new IntDoubleOrPrefWritable(user, movie, score));
+	if (score > 0) {
+	    context.write(new IntPairWritable(keys.get("user").getInt(), 1),
+		    new VectorOrPrefWritable(keys.get("movie").getInt(), score));
+	}
 
     }
 

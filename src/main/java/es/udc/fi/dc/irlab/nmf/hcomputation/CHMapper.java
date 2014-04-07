@@ -22,13 +22,13 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.DistributedMatrixMapper;
+import es.udc.fi.dc.irlab.nmf.util.AbstractDistributedMatrixMapper;
 
 /**
  * Emit &lt;j, y_j> from &lt;j, h_j> where y_j = C·h_j
  * 
  */
-public class CHMapper extends DistributedMatrixMapper {
+public class CHMapper extends AbstractDistributedMatrixMapper {
 
     @Override
     protected void map(IntWritable key, VectorWritable value, Context context)

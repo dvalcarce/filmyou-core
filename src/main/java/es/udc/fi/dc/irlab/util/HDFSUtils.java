@@ -31,7 +31,10 @@ import org.apache.hadoop.io.SequenceFile;
  * Utility class for HDFS.
  * 
  */
-public class HDFSUtils {
+public final class HDFSUtils {
+
+    public static final String inputPathName = "Dmapred.input.dir";
+    public static final String outputPathName = "Dmapred.output.dir";
 
     private HDFSUtils() {
 

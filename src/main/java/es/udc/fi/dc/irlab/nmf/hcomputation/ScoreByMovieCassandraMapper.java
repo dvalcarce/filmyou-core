@@ -14,37 +14,37 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Map;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.mahout.math.DenseMatrix;
-import org.apache.mahout.math.Matrix;
-import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.AbstractDistributedMatrixMapper;
+import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
 
 /**
- * Emit &lt;i, y_i> from &lt;i, w_i> where y_i = w_i·C.
- * 
+ * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings ({A_{i,j}}) and from H matrix
+ * (w_i) obtained by DistributedCache.
  */
-public class WCMapper extends AbstractDistributedMatrixMapper {
+public class ScoreByMovieCassandraMapper
+	extends
+	AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
     @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
+    protected void map(Map<String, ByteBuffer> keys,
+	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	Vector vector = value.get();
-	Matrix mVector = new DenseMatrix(1, vector.size());
+	float score = columns.get("score").getFloat();
 
-	for (int j = 0; j < vector.size(); j++) {
-	    mVector.set(0, j, vector.get(j));
+	if (score > 0) {
+	    context.write(new IntWritable(keys.get("user").getInt()),
+		    new VectorWritable(getCache(keys.get("movie").getInt())
+			    .times(score)));
 	}
 
-	context.write(key, new VectorWritable(mVector.times(C).viewRow(0)));
-
     }
-
 }

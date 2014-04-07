@@ -78,6 +78,7 @@ public abstract class HadoopIntegrationTest {
 	Configuration conf = new Configuration();
 
 	conf.set("directory", baseDirectory);
+	conf.setBoolean("useCassandra", true);
 	conf.setInt("cassandraPort", cassandraPort);
 	conf.set("cassandraHost", cassandraHost);
 	conf.set("cassandraKeyspace", cassandraKeyspace);
@@ -195,7 +196,7 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareMatrixData(Configuration conf, double[][] data,
+    protected void compareIntVectorData(Configuration conf, double[][] data,
 	    String baseDirectory, Path path) throws IOException {
 
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
@@ -241,7 +242,7 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareDoubleVectorData(Configuration conf, double[] data,
+    protected void compareIntDoubleData(Configuration conf, double[] data,
 	    String baseDirectory, Path path) throws IOException {
 
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
@@ -284,8 +285,8 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareMapDoubleVectorData(Configuration conf,
-	    double[] data, String baseDirectory, Path path) throws IOException {
+    protected void compareMapIntDoubleData(Configuration conf, double[] data,
+	    String baseDirectory, Path path) throws IOException {
 
 	Reader[] readers = MapFileOutputFormat.getReaders(path, conf);
 	Partitioner<IntWritable, DoubleWritable> partitioner = new HashPartitioner<IntWritable, DoubleWritable>();
@@ -306,8 +307,8 @@ public abstract class HadoopIntegrationTest {
     }
 
     /**
-     * Compare the data vector with the data stored on given path (as a MapFile
-     * of {@literal <IntWritable, IntWritable>}).
+     * Compare the data vector with the data stored on given path (as a
+     * SequenceFile of {@literal <IntWritable, IntWritable>}).
      * 
      * @param data
      *            data to be compared
@@ -317,22 +318,34 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareMapIntVectorData(Configuration conf, int[] data,
+    protected void compareIntIntData(Configuration conf, int[] data,
 	    String baseDirectory, Path path) throws IOException {
 
-	Reader[] readers = MapFileOutputFormat.getReaders(path, conf);
-	Partitioner<IntWritable, IntWritable> partitioner = new HashPartitioner<IntWritable, IntWritable>();
+	FileSystem fs = FileSystem.get(path.toUri(), conf);
+	Path mergedFile = new Path(baseDirectory + "/merged");
 
-	IntWritable key;
-	IntWritable val = new IntWritable();
+	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
 
-	for (int i = 1; i <= data.length; i++) {
-	    key = new IntWritable(i);
-	    if (MapFileOutputFormat.getEntry(readers, partitioner, key, val) == null) {
-		fail(String.format("data %d not found", i));
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+		mergedFile, conf)) {
+
+	    IntWritable key = new IntWritable();
+	    IntWritable val = new IntWritable();
+
+	    int count = 0;
+
+	    while (reader.next(key, val)) {
+		count++;
+		assertEquals(data[key.get() - 1], val.get());
 	    }
-	    assertEquals(data[i - 1], val.get());
+
+	    if (count != data.length) {
+		fail("Data length does not match");
+	    }
+
 	}
+
+	fs.delete(mergedFile, false);
 
     }
 
@@ -348,7 +361,7 @@ public abstract class HadoopIntegrationTest {
      *            path to the data
      * @throws IOException
      */
-    protected void compareScalarData(Configuration conf, double data,
+    protected void compareNullFloatData(Configuration conf, double data,
 	    String baseDirectory, Path path) throws IOException {
 
 	FileSystem fs = FileSystem.get(path.toUri(), conf);
@@ -373,6 +386,17 @@ public abstract class HadoopIntegrationTest {
 
     }
 
+    /**
+     * Compare Cassandra data to the given matrix.
+     * 
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            data to be compared
+     * @param numberOfUsers
+     *            number of users
+     * @throws InterruptedException
+     */
     protected void compareCassandraData(Configuration conf, double[][] data,
 	    int numberOfUsers) throws InterruptedException {
 
@@ -396,4 +420,5 @@ public abstract class HadoopIntegrationTest {
 	cassandra.shutdownSessions();
 
     }
+
 }
