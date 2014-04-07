@@ -29,7 +29,6 @@ import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
@@ -49,7 +48,6 @@ import org.apache.mahout.cf.taste.hadoop.preparation.PreparePreferenceMatrixJob;
 import org.apache.mahout.cf.taste.hadoop.similarity.item.ItemSimilarityJob;
 import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.HadoopUtil;
-import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.common.iterator.sequencefile.PathType;
 import org.apache.mahout.math.VarIntWritable;
 import org.apache.mahout.math.VarLongWritable;
@@ -99,7 +97,6 @@ public class BaselineRecommenderJob extends AbstractJob {
     private String tableIn;
     private String tableOut;
     private String ttl;
-    private String db;
 
     /**
      * Set heap size to 1024 MB.
@@ -179,8 +176,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	addOption("tableIn", "tin", "Cassandra input column family", "ratings");
 	addOption("tableOut", "tout", "Cassandra output column family",
 		"recommendations");
-	addOption("ttl", "ttl", "Cassandra TTL", "604800");
-	addOption("db", "db", "Type of BD", "cassandra");
+	addOption("ttl", "ttl", "Cassandra data TTL", "604800");
     }
 
     /**
@@ -204,7 +200,6 @@ public class BaselineRecommenderJob extends AbstractJob {
 	tableIn = getOption("tableIn");
 	tableOut = getOption("tableOut");
 	ttl = getOption("ttl");
-	db = getOption("db");
 	booleanData = Boolean.valueOf(getOption("booleanData"));
 
 	int maxPrefsPerUser = Integer.parseInt(getOption("maxPrefsPerUser"));
@@ -237,7 +232,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 			    String.valueOf(minPrefsPerUser), "--booleanData",
 			    String.valueOf(booleanData), "--tempDir",
 			    getTempPath().toString(), "--keyspace", keyspace,
-			    "--table", tableIn, "--db", db });
+			    "--table", tableIn });
 
 	    numberOfUsers = HadoopUtil.readInt(new Path(prepPath,
 		    PreparePreferenceMatrixJob.NUM_USERS), getConf());
@@ -292,7 +287,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 			ItemSimilarityJob.MostSimilarItemPairsReducer.class,
 			EntityEntityWritable.class, DoubleWritable.class,
 			TextOutputFormat.class);
-		outputSimilarityMatrix.setNumReduceTasks(32);
+
 		Configuration mostSimilarItemsConf = outputSimilarityMatrix
 			.getConfiguration();
 		mostSimilarItemsConf.set(
@@ -303,7 +298,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 		mostSimilarItemsConf.setInt(
 			ItemSimilarityJob.MAX_SIMILARITIES_PER_ITEM,
 			maxSimilaritiesPerItem);
-		outputSimilarityMatrix.setNumReduceTasks(32);
+		outputSimilarityMatrix.setNumReduceTasks(5);
 		outputSimilarityMatrix.waitForCompletion(true);
 	    }
 	}
@@ -335,7 +330,7 @@ public class BaselineRecommenderJob extends AbstractJob {
 	    partialMultiplyConf.setBoolean("mapred.compress.map.output", true);
 	    partialMultiplyConf.set("mapred.output.dir",
 		    partialMultiplyPath.toString());
-	    partialMultiply.setNumReduceTasks(32);
+	    partialMultiply.setNumReduceTasks(5);
 
 	    if (usersFile != null) {
 		partialMultiplyConf.set(USERS_FILE, usersFile);
@@ -383,48 +378,38 @@ public class BaselineRecommenderJob extends AbstractJob {
 		"aggregateAndRecommend");
 
 	aggregateAndRecommend.setMapperClass(PartialMultiplyMapper.class);
-
+	aggregateAndRecommend
+		.setReducerClass(BaselineAggregateAndRecommendReducer.class);
 	aggregateAndRecommend.setJarByClass(BaselineRecommenderJob.class);
 
 	aggregateAndRecommend.setMapOutputKeyClass(VarLongWritable.class);
 	aggregateAndRecommend
 		.setMapOutputValueClass(PrefAndSimilarityColumnWritable.class);
+	aggregateAndRecommend.setOutputKeyClass(Map.class);
+	aggregateAndRecommend.setOutputValueClass(List.class);
 
 	aggregateAndRecommend
 		.setInputFormatClass(SequenceFileInputFormat.class);
 	aggregateAndRecommend.setOutputFormatClass(CqlOutputFormat.class);
 
-	// Only 1 reducer writes data to persistent data storage
-	aggregateAndRecommend.setNumReduceTasks(32);
+	// Only 1 reducer writes data to Cassandra
+	aggregateAndRecommend.setNumReduceTasks(1);
 
 	Configuration conf = aggregateAndRecommend.getConfiguration();
 	conf.set("mapred.input.dir", aggregateAndRecommendInput);
 
-	if (db.equals("cassandra")) {
-	    // Cassandra settings
-	    aggregateAndRecommend
-		    .setReducerClass(BaselineAggregateAndRecommendReducer.class);
-	    aggregateAndRecommend.setOutputKeyClass(Map.class);
-	    aggregateAndRecommend.setOutputValueClass(List.class);
+	// Cassandra settings
+	String port = "9160";
+	String host = "127.0.0.1";
+	ConfigHelper.setOutputRpcPort(conf, port);
+	ConfigHelper.setOutputInitialAddress(conf, host);
+	ConfigHelper.setOutputPartitioner(conf,
+		"org.apache.cassandra.dht.Murmur3Partitioner");
+	ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
 
-	    String port = "9160";
-	    String host = "127.0.0.1";
-	    ConfigHelper.setOutputRpcPort(conf, port);
-	    ConfigHelper.setOutputInitialAddress(conf, host);
-	    ConfigHelper.setOutputPartitioner(conf,
-		    "org.apache.cassandra.dht.Murmur3Partitioner");
-	    ConfigHelper.setOutputColumnFamily(conf, keyspace, tableOut);
-
-	    String query = "UPDATE " + keyspace + "." + tableOut
-		    + " USING TTL " + ttl + " SET dumb = ? ";
-	    CqlConfigHelper.setOutputCql(conf, query);
-	} else {
-	    // MySQL settings
-	    aggregateAndRecommend
-		    .setReducerClass(BaselineAggregateAndRecommendHDFSReducer.class);
-	    aggregateAndRecommend.setOutputKeyClass(IntPairWritable.class);
-	    aggregateAndRecommend.setOutputValueClass(FloatWritable.class);
-	}
+	String query = "UPDATE " + keyspace + "." + tableOut + " USING TTL "
+		+ ttl + " SET score = ? ";
+	CqlConfigHelper.setOutputCql(conf, query);
 
 	if (itemsFile != null) {
 	    conf.set(ITEMS_FILE, itemsFile);
