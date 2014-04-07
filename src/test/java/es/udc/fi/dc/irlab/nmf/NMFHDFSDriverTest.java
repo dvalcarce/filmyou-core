@@ -21,7 +21,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
@@ -31,7 +30,7 @@ import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
  * Integration test for ten iterations of NMF algorithm
  * 
  */
-public class NMFDriverTest extends HadoopIntegrationTest {
+public class NMFHDFSDriverTest extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -48,16 +47,14 @@ public class NMFDriverTest extends HadoopIntegrationTest {
 		NMFTestData.H_init, baseDirectory, "H");
 	Path W = DataInitialization.createDoubleMatrix(conf,
 		NMFTestData.W_init, baseDirectory, "W");
-
-	/* Insert data in Cassandra */
-	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
-		cassandraPartitioner);
-	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
-		cassandraTableIn);
+	Path input = DataInitialization.createIntPairFloatFile(conf,
+		NMFTestData.A, baseDirectory, "A");
 
 	/* Run job */
 	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
 		numberOfIterations);
+	conf.setBoolean("useCassandra", false);
+	conf.set(HDFSUtils.inputPathName, input.toString());
 	ToolRunner.run(conf, new NMFDriver(), null);
 
 	/* Run asserts */

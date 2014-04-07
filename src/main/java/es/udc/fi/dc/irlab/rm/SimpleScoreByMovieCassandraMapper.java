@@ -25,9 +25,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * Emit <j, (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ * Emit <i, (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
-public class SimpleScoreByUserMapper
+public class SimpleScoreByMovieCassandraMapper
 	extends
 	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, DoubleWritable> {
 
@@ -36,10 +36,11 @@ public class SimpleScoreByUserMapper
 	    Map<String, ByteBuffer> columns, Context context)
 	    throws IOException, InterruptedException {
 
-	int user = keys.get("user").getInt();
 	float score = columns.get("score").getFloat();
-
-	context.write(new IntWritable(user), new DoubleWritable(score));
+	if (score > 0) {
+	    context.write(new IntWritable(keys.get("movie").getInt()),
+		    new DoubleWritable(score));
+	}
 
     }
 

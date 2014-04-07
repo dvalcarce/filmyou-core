@@ -35,6 +35,8 @@ import es.udc.fi.dc.irlab.rm.RM2Job;
  */
 public class RMRecommenderJob extends AbstractJob {
 
+    public static final String useCassandra = "useCassandra";
+
     /**
      * Load default command line arguments.
      */
@@ -44,7 +46,7 @@ public class RMRecommenderJob extends AbstractJob {
 	addOption("numberOfClusters", "k", "Number of clusters", true);
 	addOption("numberOfIterations", "i", "Number of iterations", "50");
 	addOption("directory", "d", "Working directory", "recommendation");
-	addOption("useCassandra", "useCas", "Use Cassandra instead of HDFS",
+	addOption(useCassandra, "useCas", "Use Cassandra instead of HDFS",
 		"true");
 	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
 	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");

@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
- * Integration test for one iteration of HComputation (NMF)
+ * Integration test for one iteration of WComputation (NMF)
  * 
  */
-public class TestHDFSHComputation extends HadoopIntegrationTest {
+public class TestCassandraWComputation extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
@@ -49,18 +50,20 @@ public class TestHDFSHComputation extends HadoopIntegrationTest {
 		NMFTestData.W_init, baseDirectory, "W");
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
-	Path input = DataInitialization.createIntPairFloatFile(conf,
-		NMFTestData.A, baseDirectory, "A");
+
+	/* Insert data in Cassandra */
+	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
+		cassandraPartitioner);
+	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+		cassandraTableIn);
 
 	/* Run job */
 	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
 		numberOfIterations);
-	conf.setBoolean("useCassandra", false);
-	conf.set(HDFSUtils.inputPathName, input.toString());
-	ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
+	ToolRunner.run(conf, new ComputeWJob(H, W, H2, W2), null);
 
 	/* Run asserts */
-	compareIntVectorData(conf, NMFTestData.H_one, baseDirectory, H2);
+	compareIntVectorData(conf, NMFTestData.W_one, baseDirectory, W2);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }

@@ -146,7 +146,7 @@ public final class DataInitialization {
      * @return Path of the matrix
      * @throws IOException
      */
-    public static Path createIntPairDoubleFile(Configuration conf,
+    public static Path createIntPairFloatFile(Configuration conf,
 	    double[][] data, String baseDirectory, String filename)
 	    throws IOException {
 
@@ -163,7 +163,7 @@ public final class DataInitialization {
 	    for (int i = 0; i < data.length; i++) {
 		for (int j = 0; j < data[i].length; j++) {
 		    if (data[i][j] > 0) {
-			writer.append(new IntPairWritable(i + 1, j + 1),
+			writer.append(new IntPairWritable(j + 1, i + 1),
 				new FloatWritable((float) data[i][j]));
 		    }
 		}

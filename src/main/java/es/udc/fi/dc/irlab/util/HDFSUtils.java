@@ -27,6 +27,8 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
+
 /**
  * Utility class for HDFS.
  * 
@@ -137,6 +139,34 @@ public final class HDFSUtils {
 
 	fs.mkdirs(new Path(folder));
 
+    }
+
+    /**
+     * Get the inputPath for the job of the given conf
+     * 
+     * @param conf
+     *            Job Configuration
+     * @return the path
+     */
+    public static Path getInputPath(Configuration conf) {
+	if (conf.getBoolean(RMRecommenderJob.useCassandra, true)) {
+	    return null;
+	}
+	return new Path(conf.get(HDFSUtils.inputPathName));
+    }
+
+    /**
+     * Get the outnputPath for the job of the given conf
+     * 
+     * @param conf
+     *            Job Configuration
+     * @return the path
+     */
+    public static Path getOutputPath(Configuration conf) {
+	if (conf.getBoolean(RMRecommenderJob.useCassandra, true)) {
+	    return null;
+	}
+	return new Path(conf.get(HDFSUtils.outputPathName));
     }
 
 }

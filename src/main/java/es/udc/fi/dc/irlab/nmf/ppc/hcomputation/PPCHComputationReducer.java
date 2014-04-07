@@ -40,39 +40,44 @@ public class PPCHComputationReducer extends
 
 	Vector result, vectorX, vectorH, vectorY;
 	double d_j, e_j;
+	try {
+	    Iterator<VectorWritable> it = values.iterator();
+	    vectorH = it.next().get();
+	    vectorX = it.next().get();
+	    vectorY = it.next().get();
 
-	Iterator<VectorWritable> it = values.iterator();
-	vectorH = it.next().get();
-	vectorX = it.next().get();
-	vectorY = it.next().get();
+	    d_j = vectorH.dot(vectorY);
+	    e_j = vectorH.dot(vectorX);
 
-	d_j = vectorH.dot(vectorY);
-	e_j = vectorH.dot(vectorX);
+	    // X = X + d_j
+	    vectorX = vectorX.plus(d_j);
 
-	// X = X + d_j
-	vectorX = vectorX.plus(d_j);
+	    // Y = Y + e_j
+	    vectorY = vectorY.plus(e_j);
 
-	// Y = Y + e_j
-	vectorY = vectorY.plus(e_j);
+	    // XY = X ./ Y
+	    Vector vectorXY = vectorX.assign(vectorY,
+		    new DoubleDoubleFunction() {
+			public double apply(double a, double b) {
+			    return a / b;
+			}
+		    });
 
-	// XY = X ./ Y
-	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
-	    public double apply(double a, double b) {
-		return a / b;
+	    // H = H .* XY
+	    result = vectorH.times(vectorXY);
+
+	    // Enforce the constraints
+	    if (context.getConfiguration().getInt("iteration", -1)
+		    % PPCComputeHJob.normalizationFrequency == 0) {
+		result.normalize(1);
 	    }
-	});
-
-	// H = H .* XY
-	result = vectorH.times(vectorXY);
-
-	// Enforce the constraints
-	if (context.getConfiguration().getInt("iteration", -1)
-		% PPCComputeHJob.normalizationFrequency == 0) {
-	    result.normalize(1);
+	    context.write(new IntWritable(key.getFirst()), new VectorWritable(
+		    result));
+	} catch (Exception e) {
+	    System.err.println(key.getFirst());
+	    System.err.println(key.getSecond());
+	    throw e;
 	}
-	context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		result));
-
     }
 
 }

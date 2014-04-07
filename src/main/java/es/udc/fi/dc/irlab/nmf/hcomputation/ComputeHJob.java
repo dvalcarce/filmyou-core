@@ -70,7 +70,7 @@ public class ComputeHJob extends MatrixComputationJob {
     @Override
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
-	inputPath = new Path(conf.get(HDFSUtils.inputPathName));
+	inputPath = HDFSUtils.getInputPath(conf);
 	iteration = conf.getInt("iteration", -1);
 	directory = conf.get("directory") + "/hcomputation";
 

@@ -60,11 +60,11 @@ public class RM2Job extends AbstractJob {
     @Override
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
-	inputPath = new Path(conf.get(HDFSUtils.inputPathName));
-	outputPath = new Path(conf.get(HDFSUtils.outputPathName));
+	inputPath = HDFSUtils.getInputPath(conf);
+	outputPath = HDFSUtils.getOutputPath(conf);
+
 	String baseDirectory = conf.get("directory");
 	directory = baseDirectory + "/rm2";
-
 	HDFSUtils.removeData(conf, directory);
 
 	Path userSum = new Path(directory + "/userSum");
@@ -102,10 +102,18 @@ public class RM2Job extends AbstractJob {
 
 	Job job = new Job(getConf(), "RM2-1");
 	job.setJarByClass(this.getClass());
+	Configuration conf = job.getConfiguration();
 
-	job.setInputFormatClass(CqlPagingInputFormat.class);
+	if (conf.getBoolean("useCassandra", true)) {
+	    job.setInputFormatClass(CqlPagingInputFormat.class);
+	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    job.setMapperClass(SimpleScoreByUserCassandraMapper.class);
+	} else {
+	    job.setInputFormatClass(SequenceFileInputFormat.class);
+	    SequenceFileInputFormat.addInputPath(job, inputPath);
+	    job.setMapperClass(SimpleScoreByUserHDFSMapper.class);
+	}
 
-	job.setMapperClass(SimpleScoreByUserMapper.class);
 	job.setCombinerClass(DoubleSumReducer.class);
 	job.setReducerClass(DoubleSumReducer.class);
 
@@ -117,9 +125,6 @@ public class RM2Job extends AbstractJob {
 
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(DoubleWritable.class);
-
-	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConfForInput(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -141,10 +146,18 @@ public class RM2Job extends AbstractJob {
 
 	Job job = new Job(getConf(), "RM2-2");
 	job.setJarByClass(this.getClass());
+	Configuration conf = job.getConfiguration();
 
-	job.setInputFormatClass(CqlPagingInputFormat.class);
+	if (conf.getBoolean("useCassandra", true)) {
+	    job.setInputFormatClass(CqlPagingInputFormat.class);
+	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    job.setMapperClass(SimpleScoreByMovieCassandraMapper.class);
+	} else {
+	    job.setInputFormatClass(SequenceFileInputFormat.class);
+	    SequenceFileInputFormat.addInputPath(job, inputPath);
+	    job.setMapperClass(SimpleScoreByMovieHDFSMapper.class);
+	}
 
-	job.setMapperClass(SimpleScoreByMovieMapper.class);
 	job.setCombinerClass(DoubleSumReducer.class);
 	job.setReducerClass(DoubleSumReducer.class);
 
@@ -156,9 +169,6 @@ public class RM2Job extends AbstractJob {
 
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(DoubleWritable.class);
-
-	Configuration jobConf = job.getConfiguration();
-	CassandraSetup.updateConfForInput(getConf(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -289,7 +299,7 @@ public class RM2Job extends AbstractJob {
 	    job.setOutputFormatClass(SequenceFileOutputFormat.class);
 	    job.setOutputKeyClass(IntPairWritable.class);
 	    job.setOutputValueClass(FloatWritable.class);
-	    CassandraSetup.updateConfForOutput(getConf(), conf);
+	    SequenceFileOutputFormat.setOutputPath(job, outputPath);
 	}
 
 	job.setMapOutputKeyClass(IntPairWritable.class);

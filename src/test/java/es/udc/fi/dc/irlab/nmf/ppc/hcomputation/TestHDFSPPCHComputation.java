@@ -49,7 +49,7 @@ public class TestHDFSPPCHComputation extends HadoopIntegrationTest {
 		PPCTestData.W_init, baseDirectory, "W");
 	Path H2 = new Path(baseDirectory + "/H2");
 	Path W2 = new Path(baseDirectory + "/W2");
-	Path input = DataInitialization.createIntPairDoubleFile(conf,
+	Path input = DataInitialization.createIntPairFloatFile(conf,
 		PPCTestData.A, baseDirectory, "A");
 
 	/* Run job */

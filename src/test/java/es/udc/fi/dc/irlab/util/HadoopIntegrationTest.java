@@ -20,18 +20,24 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
@@ -380,6 +386,62 @@ public abstract class HadoopIntegrationTest {
 	    } else {
 		fail("Data length does not match");
 	    }
+	}
+
+	fs.delete(mergedFile, false);
+
+    }
+
+    /**
+     * Compare the matrix data with the data stored on given path (as
+     * {@literal SequenceFile<IntPairWritable, FloatWritable>}).
+     * 
+     * @param data
+     *            data to be compared
+     * @param baseDirectory
+     *            a temporal file will be created in this folder
+     * @param path
+     *            path to the data
+     * @throws IOException
+     */
+    protected void compareIntPairFloatData(Configuration conf, double[][] data,
+	    String baseDirectory, Path path) throws IOException {
+
+	FileSystem fs = FileSystem.get(path.toUri(), conf);
+	Path mergedFile = new Path(baseDirectory + "/merged");
+
+	FileUtil.copyMerge(fs, path, fs, mergedFile, false, conf, null);
+
+	Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();
+	for (int i = 0; i < data.length; i++) {
+
+	    map.put(new ImmutablePair<Integer, Integer>((int) data[i][0],
+		    (int) data[i][1]), data[i][2]);
+
+	}
+
+	try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+		mergedFile, conf)) {
+
+	    IntPairWritable key = new IntPairWritable();
+	    FloatWritable val = new FloatWritable();
+
+	    int i, j, count = 0;
+
+	    while (reader.next(key, val)) {
+		count++;
+		i = key.getSecond();
+		j = key.getFirst();
+
+		assertEquals(
+			map.get(new ImmutablePair<Integer, Integer>(j, i)),
+			val.get(), accuracy);
+	    }
+
+	    if (count != data.length) {
+		fail("Data length does not match");
+	    }
+
 	}
 
 	fs.delete(mergedFile, false);

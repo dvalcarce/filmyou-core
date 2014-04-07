@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.ppc;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -22,50 +22,48 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
-import es.udc.fi.dc.irlab.testdata.NMFTestData;
+import es.udc.fi.dc.irlab.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
- * Integration test for one iteration of WComputation (NMF)
+ * Integration test for ten iterations of PPC algorithm
  * 
  */
-public class TestWComputation extends HadoopIntegrationTest {
+public class PPCCassandraDriverTest extends HadoopIntegrationTest {
 
     @Test
     public void integrationTest() throws Exception {
-	int numberOfUsers = NMFTestData.numberOfUsers;
-	int numberOfItems = NMFTestData.numberOfItems;
-	int numberOfClusters = NMFTestData.numberOfClusters;
-	int numberOfIterations = 1;
+	int numberOfUsers = PPCTestData.numberOfUsers;
+	int numberOfItems = PPCTestData.numberOfItems;
+	int numberOfClusters = PPCTestData.numberOfClusters;
+	int numberOfIterations = 10;
 
 	Configuration conf = buildConf();
 	HDFSUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
 	Path H = DataInitialization.createDoubleMatrix(conf,
-		NMFTestData.H_init, baseDirectory, "H");
+		PPCTestData.H_init, baseDirectory, "H");
 	Path W = DataInitialization.createDoubleMatrix(conf,
-		NMFTestData.W_init, baseDirectory, "W");
-	Path H2 = new Path(baseDirectory + "/H2");
-	Path W2 = new Path(baseDirectory + "/W2");
+		PPCTestData.W_init, baseDirectory, "W");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
 		cassandraPartitioner);
-	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+	cassandraUtils.insertData(PPCTestData.A, cassandraKeyspace,
 		cassandraTableIn);
 
 	/* Run job */
 	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
 		numberOfIterations);
-	ToolRunner.run(conf, new ComputeWJob(H, W, H2, W2), null);
+	ToolRunner.run(conf, new PPCDriver(), null);
 
 	/* Run asserts */
-	compareIntVectorData(conf, NMFTestData.W_one, baseDirectory, W2);
+	compareIntVectorData(conf, PPCTestData.H_ten, baseDirectory, H);
+	compareIntVectorData(conf, PPCTestData.W_ten, baseDirectory, W);
 
 	HDFSUtils.removeData(conf, conf.get("directory"));
     }
-
 }
