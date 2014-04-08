@@ -272,7 +272,7 @@ public class RM2Job extends AbstractJob {
 	    Path clustering, Path itemColl) throws ClassNotFoundException,
 	    IOException, InterruptedException {
 
-	Job job = new Job(new Configuration(), "RM2-5");
+	Job job = new Job(getConf(), "RM2-5");
 	job.setJarByClass(this.getClass());
 
 	Configuration conf = job.getConfiguration();
