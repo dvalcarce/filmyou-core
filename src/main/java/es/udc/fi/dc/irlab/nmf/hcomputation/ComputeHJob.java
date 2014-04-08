@@ -84,7 +84,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	this.Y = new Path(directory + File.separator + "Y");
 
 	runJob1(W, out1);
-	runJob2(out1, X);g
+	runJob2(out1, X);
 	runJob3(W, C);
 	runJob4(H, Y, C);
 	runJob5(H, X, Y, H2);
