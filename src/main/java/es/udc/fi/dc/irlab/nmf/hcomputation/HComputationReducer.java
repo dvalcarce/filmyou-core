@@ -18,6 +18,7 @@ package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -36,10 +37,16 @@ public class HComputationReducer extends
     protected void reduce(IntPairWritable key, Iterable<VectorWritable> values,
 	    Context context) throws IOException, InterruptedException {
 
+	Vector vectorX, vectorH, vectorY;
 	Iterator<VectorWritable> it = values.iterator();
-	Vector vectorA = it.next().get();
-	Vector vectorX = it.next().get();
-	Vector vectorY = it.next().get();
+	try {
+	    vectorH = it.next().get();
+	    vectorX = it.next().get();
+	    vectorY = it.next().get();
+	} catch (NoSuchElementException e) {
+	    throw new NoSuchElementException(String.format(
+		    "User %d has not rated any movie", key.getFirst()));
+	}
 
 	// Performs (X ./ Y)
 	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
@@ -49,7 +56,8 @@ public class HComputationReducer extends
 	});
 
 	context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		vectorA.times(vectorXY)));
+		vectorH.times(vectorXY)));
 
     }
+
 }

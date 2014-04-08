@@ -21,6 +21,7 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -87,6 +88,11 @@ public class WComputationMapper extends
 	Vector vectorW = value.get();
 	Vector vectorX = mapX.get(index);
 	Vector vectorY = mapY.get(index);
+
+	if (mapX == null || mapY == null) {
+	    throw new NoSuchElementException(String.format(
+		    "Item %d has not been rated by anybody", key.get()));
+	}
 
 	// Performs (X ./ Y)
 	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {

@@ -18,6 +18,7 @@ package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -40,44 +41,43 @@ public class PPCHComputationReducer extends
 
 	Vector result, vectorX, vectorH, vectorY;
 	double d_j, e_j;
+	Iterator<VectorWritable> it = values.iterator();
+
 	try {
-	    Iterator<VectorWritable> it = values.iterator();
 	    vectorH = it.next().get();
 	    vectorX = it.next().get();
 	    vectorY = it.next().get();
-
-	    d_j = vectorH.dot(vectorY);
-	    e_j = vectorH.dot(vectorX);
-
-	    // X = X + d_j
-	    vectorX = vectorX.plus(d_j);
-
-	    // Y = Y + e_j
-	    vectorY = vectorY.plus(e_j);
-
-	    // XY = X ./ Y
-	    Vector vectorXY = vectorX.assign(vectorY,
-		    new DoubleDoubleFunction() {
-			public double apply(double a, double b) {
-			    return a / b;
-			}
-		    });
-
-	    // H = H .* XY
-	    result = vectorH.times(vectorXY);
-
-	    // Enforce the constraints
-	    if (context.getConfiguration().getInt("iteration", -1)
-		    % PPCComputeHJob.normalizationFrequency == 0) {
-		result.normalize(1);
-	    }
-	    context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		    result));
-	} catch (Exception e) {
-	    System.err.println(key.getFirst());
-	    System.err.println(key.getSecond());
-	    throw e;
+	} catch (NoSuchElementException e) {
+	    throw new NoSuchElementException(String.format(
+		    "User %d has not rated any movie", key.getFirst()));
 	}
-    }
 
+	d_j = vectorH.dot(vectorY);
+	e_j = vectorH.dot(vectorX);
+
+	// X = X + d_j
+	vectorX = vectorX.plus(d_j);
+
+	// Y = Y + e_j
+	vectorY = vectorY.plus(e_j);
+
+	// XY = X ./ Y
+	Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
+	    public double apply(double a, double b) {
+		return a / b;
+	    }
+	});
+
+	// H = H .* XY
+	result = vectorH.times(vectorXY);
+
+	// Enforce the constraints
+	if (context.getConfiguration().getInt("iteration", -1)
+		% PPCComputeHJob.normalizationFrequency == 0) {
+	    result.normalize(1);
+	}
+	context.write(new IntWritable(key.getFirst()), new VectorWritable(
+		result));
+
+    }
 }
