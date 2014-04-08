@@ -76,7 +76,7 @@ public class ClusterAssignmentJob extends AbstractJob {
     protected void findClustersJob(Path inputPathH, Path outputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "FindClustersJob");
+	Job job = new Job(new Configuration(), "FindClustersJob");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -113,7 +113,7 @@ public class ClusterAssignmentJob extends AbstractJob {
     protected void countClusters(Path inputPath, Path outputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "CountClustersJob");
+	Job job = new Job(new Configuration(), "CountClustersJob");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);

@@ -106,13 +106,14 @@ public class ComputeWJob extends MatrixComputationJob {
 	Job job = new Job(new Configuration(), "W1-it" + iteration);
 	job.setJarByClass(ComputeWJob.class);
 
-	Configuration conf = job.getConfiguration();
+	Configuration conf = getConf();
+	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
 	    MultipleInputs.addInputPath(job, new Path("unused"),
 		    CqlPagingInputFormat.class,
 		    ScoreByUserCassandraMapper.class);
-	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    CassandraSetup.updateConfForInput(conf, jobConf);
 	} else {
 	    MultipleInputs.addInputPath(job, inputPath,
 		    SequenceFileInputFormat.class, ScoreByUserHDFSMapper.class);

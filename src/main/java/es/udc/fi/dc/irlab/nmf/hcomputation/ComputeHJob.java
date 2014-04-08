@@ -71,6 +71,7 @@ public class ComputeHJob extends MatrixComputationJob {
     @Override
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
+
 	inputPath = HDFSUtils.getInputPath(conf);
 	iteration = conf.getInt("iteration", -1);
 	directory = conf.get("directory") + File.separator + "hcomputation";
@@ -109,12 +110,13 @@ public class ComputeHJob extends MatrixComputationJob {
 	Job job = new Job(new Configuration(), prefix + "H1-it" + iteration);
 	job.setJarByClass(this.getClass());
 
-	Configuration conf = job.getConfiguration();
+	Configuration conf = getConf();
+	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
 	    job.setInputFormatClass(CqlPagingInputFormat.class);
 	    job.setMapperClass(ScoreByMovieCassandraMapper.class);
-	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    CassandraSetup.updateConfForInput(conf, jobConf);
 	} else {
 	    job.setInputFormatClass(SequenceFileInputFormat.class);
 	    job.setMapperClass(ScoreByMovieHDFSMapper.class);
@@ -134,12 +136,12 @@ public class ComputeHJob extends MatrixComputationJob {
 
 	Path distributedPath;
 	try {
-	    distributedPath = HDFSUtils.mergeFile(conf, wPath, directory,
+	    distributedPath = HDFSUtils.mergeFile(jobConf, wPath, directory,
 		    "W-merged");
 	} catch (IllegalArgumentException e) {
 	    distributedPath = wPath;
 	}
-	DistributedCache.addCacheFile(distributedPath.toUri(), conf);
+	DistributedCache.addCacheFile(distributedPath.toUri(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {

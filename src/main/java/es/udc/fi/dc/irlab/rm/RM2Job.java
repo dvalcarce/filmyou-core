@@ -102,11 +102,13 @@ public class RM2Job extends AbstractJob {
 
 	Job job = new Job(new Configuration(), "RM2-1");
 	job.setJarByClass(this.getClass());
-	Configuration conf = job.getConfiguration();
+
+	Configuration conf = getConf();
+	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
 	    job.setInputFormatClass(CqlPagingInputFormat.class);
-	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    CassandraSetup.updateConfForInput(conf, jobConf);
 	    job.setMapperClass(SimpleScoreByUserCassandraMapper.class);
 	} else {
 	    job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -146,11 +148,13 @@ public class RM2Job extends AbstractJob {
 
 	Job job = new Job(new Configuration(), "RM2-2");
 	job.setJarByClass(this.getClass());
-	Configuration conf = job.getConfiguration();
+
+	Configuration conf = getConf();
+	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
 	    job.setInputFormatClass(CqlPagingInputFormat.class);
-	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    CassandraSetup.updateConfForInput(conf, jobConf);
 	    job.setMapperClass(SimpleScoreByMovieCassandraMapper.class);
 	} else {
 	    job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -251,8 +255,8 @@ public class RM2Job extends AbstractJob {
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(DoubleWritable.class);
 
-	Configuration conf = job.getConfiguration();
-	conf.set(totalSumName, String.valueOf(totalSum));
+	Configuration jobConf = job.getConfiguration();
+	jobConf.set(totalSumName, String.valueOf(totalSum));
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
@@ -275,21 +279,21 @@ public class RM2Job extends AbstractJob {
 	Job job = new Job(getConf(), "RM2-5");
 	job.setJarByClass(this.getClass());
 
-	Configuration conf = job.getConfiguration();
+	Configuration jobConf = job.getConfiguration();
 	MultipleInputs.addInputPath(job, userSum,
 		SequenceFileInputFormat.class, UserSumByClusterMapper.class);
 
-	if (conf.getBoolean("useCassandra", true)) {
+	if (jobConf.getBoolean("useCassandra", true)) {
 	    MultipleInputs.addInputPath(job, new Path("unused"),
 		    CqlPagingInputFormat.class,
 		    ScoreByClusterCassandraMapper.class);
-	    CassandraSetup.updateConfForInput(getConf(), conf);
+	    CassandraSetup.updateConfForInput(getConf(), jobConf);
 
 	    job.setReducerClass(RM2CassandraReducer.class);
 	    job.setOutputFormatClass(CqlOutputFormat.class);
 	    job.setOutputKeyClass(Map.class);
 	    job.setOutputValueClass(List.class);
-	    CassandraSetup.updateConfForOutput(getConf(), conf);
+	    CassandraSetup.updateConfForOutput(getConf(), jobConf);
 	} else {
 	    MultipleInputs.addInputPath(job, inputPath,
 		    SequenceFileInputFormat.class,
@@ -310,15 +314,15 @@ public class RM2Job extends AbstractJob {
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
 	// Distributed cache
-	Path mergedClustering = HDFSUtils.mergeFile(conf, clustering,
+	Path mergedClustering = HDFSUtils.mergeFile(jobConf, clustering,
 		directory, "clustering-merged");
-	DistributedCache.addCacheFile(mergedClustering.toUri(), conf);
+	DistributedCache.addCacheFile(mergedClustering.toUri(), jobConf);
 
-	Path mergedClusteringCount = HDFSUtils.mergeFile(conf, clusteringCount,
-		directory, "clustering-count-merged");
-	DistributedCache.addCacheFile(mergedClusteringCount.toUri(), conf);
+	Path mergedClusteringCount = HDFSUtils.mergeFile(jobConf,
+		clusteringCount, directory, "clustering-count-merged");
+	DistributedCache.addCacheFile(mergedClusteringCount.toUri(), jobConf);
 
-	DistributedCache.addCacheFile(itemColl.toUri(), conf);
+	DistributedCache.addCacheFile(itemColl.toUri(), jobConf);
 
 	boolean succeeded = job.waitForCompletion(true);
 	if (!succeeded) {
