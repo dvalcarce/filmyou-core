@@ -327,7 +327,7 @@ public abstract class HadoopIntegrationTest {
     protected void compareMapIntDoubleData(Configuration conf, double[] data,
 	    String baseDirectory, Path path) throws IOException {
 
-	Reader[] readers = MapFileOutputFormat.getReaders(path, conf);
+	Reader[] readers = MapFileOutputFormat.getLocalReaders(path, conf);
 	Partitioner<IntWritable, DoubleWritable> partitioner = new HashPartitioner<IntWritable, DoubleWritable>();
 
 	IntWritable key;
