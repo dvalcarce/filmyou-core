@@ -89,7 +89,7 @@ public class WComputationMapper extends
 	Vector vectorX = mapX.get(index);
 	Vector vectorY = mapY.get(index);
 
-	if (mapX == null || mapY == null) {
+	if (vectorX == null || vectorY == null) {
 	    throw new NoSuchElementException(String.format(
 		    "Item %d has not been rated by anybody", key.get()));
 	}
