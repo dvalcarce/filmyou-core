@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.nmf.hcomputation;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
@@ -72,18 +73,18 @@ public class ComputeHJob extends MatrixComputationJob {
 	Configuration conf = getConf();
 	inputPath = HDFSUtils.getInputPath(conf);
 	iteration = conf.getInt("iteration", -1);
-	directory = conf.get("directory") + "/hcomputation";
+	directory = conf.get("directory") + File.separator + "hcomputation";
 
 	HDFSUtils.removeData(conf, directory);
 	HDFSUtils.createFolder(conf, directory);
 
-	this.out1 = new Path(directory + "/hout1");
-	this.X = new Path(directory + "/X");
-	this.C = new Path(directory + "/C");
-	this.Y = new Path(directory + "/Y");
+	this.out1 = new Path(directory + File.separator + "hout1");
+	this.X = new Path(directory + File.separator + "X");
+	this.C = new Path(directory + File.separator + "C");
+	this.Y = new Path(directory + File.separator + "Y");
 
 	runJob1(W, out1);
-	runJob2(out1, X);
+	runJob2(out1, X);g
 	runJob3(W, C);
 	runJob4(H, Y, C);
 	runJob5(H, X, Y, H2);
@@ -105,7 +106,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob1(Path wPath, Path hout1Path) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), prefix + "H1-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H1-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	Configuration conf = job.getConfiguration();
@@ -161,7 +162,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob2(Path hout1Path, Path xPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), prefix + "H2-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H2-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -200,7 +201,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob3(Path wPath, Path cPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), prefix + "H3-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H3-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -243,7 +244,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob4(Path hPath, Path yPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), prefix + "H4-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H4-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -290,7 +291,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob5(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), prefix + "H5-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H5-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,

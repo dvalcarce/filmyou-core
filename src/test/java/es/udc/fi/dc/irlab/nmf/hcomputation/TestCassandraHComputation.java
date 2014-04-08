@@ -16,6 +16,8 @@
 
 package es.udc.fi.dc.irlab.nmf.hcomputation;
 
+import java.io.File;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
@@ -48,8 +50,8 @@ public class TestCassandraHComputation extends HadoopIntegrationTest {
 		NMFTestData.H_init, baseDirectory, "H");
 	Path W = DataInitialization.createDoubleMatrix(conf,
 		NMFTestData.W_init, baseDirectory, "W");
-	Path H2 = new Path(baseDirectory + "/H2");
-	Path W2 = new Path(baseDirectory + "/W2");
+	Path H2 = new Path(baseDirectory + File.separator + "H2");
+	Path W2 = new Path(baseDirectory + File.separator + "W2");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,

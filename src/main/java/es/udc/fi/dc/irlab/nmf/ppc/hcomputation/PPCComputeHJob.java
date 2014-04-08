@@ -18,6 +18,7 @@ package es.udc.fi.dc.irlab.nmf.ppc.hcomputation;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -72,7 +73,7 @@ public class PPCComputeHJob extends ComputeHJob {
     protected void runJob5(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), prefix + "H5-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H5-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,

@@ -35,8 +35,8 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
  */
 public final class HDFSUtils {
 
-    public static final String inputPathName = "Dmapred.input.dir";
-    public static final String outputPathName = "Dmapred.output.dir";
+    public static final String inputPathName = "mapred.input.dir";
+    public static final String outputPathName = "mapred.output.dir";
 
     private HDFSUtils() {
 

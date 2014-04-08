@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Random;
@@ -65,7 +66,7 @@ public final class DataInitialization {
     public static Path createMatrix(Configuration conf, String baseDirectory,
 	    String filename, int rows, int cols) throws IOException {
 
-	String uri = baseDirectory + "/" + filename;
+	String uri = baseDirectory + File.separator + filename;
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 
@@ -107,7 +108,7 @@ public final class DataInitialization {
     public static Path createDoubleMatrix(Configuration conf, double[][] data,
 	    String baseDirectory, String filename) throws IOException {
 
-	String uri = baseDirectory + "/" + filename;
+	String uri = baseDirectory + File.separator + filename;
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 
@@ -150,8 +151,8 @@ public final class DataInitialization {
 	    double[][] data, String baseDirectory, String filename)
 	    throws IOException {
 
-	String parentUri = baseDirectory + "/" + filename;
-	String uri = parentUri + "/data";
+	String parentUri = baseDirectory + File.separator + filename;
+	String uri = parentUri + File.separator + "data";
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 	Path parent = new Path(parentUri);
@@ -193,8 +194,8 @@ public final class DataInitialization {
     public static Path createIntIntFileParent(Configuration conf, int[] data,
 	    String baseDirectory, String filename) throws IOException {
 
-	String parentUri = baseDirectory + "/" + filename;
-	String uri = parentUri + "/data";
+	String parentUri = baseDirectory + File.separator + filename;
+	String uri = parentUri + File.separator + "data";
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 	Path parent = new Path(parentUri);
@@ -231,7 +232,7 @@ public final class DataInitialization {
     public static Path createMapNullMatrix(Configuration conf, Matrix data,
 	    String baseDirectory, String filename) throws IOException {
 
-	String uri = baseDirectory + "/" + filename;
+	String uri = baseDirectory + File.separator + filename;
 	FileSystem fs = FileSystem.get(URI.create(uri), conf);
 	Path path = new Path(uri);
 

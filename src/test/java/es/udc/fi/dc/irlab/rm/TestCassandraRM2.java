@@ -16,6 +16,8 @@
 
 package es.udc.fi.dc.irlab.rm;
 
+import java.io.File;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
@@ -43,10 +45,10 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 
 	HDFSUtils.removeData(conf, baseDirectory);
 
-	Path userSum = new Path(directory + "/userSum");
-	Path movieSum = new Path(directory + "/movieSum");
-	Path totalSum = new Path(directory + "/totalSum");
-	Path itemColl = new Path(directory + "/itemColl");
+	Path userSum = new Path(directory + File.separator + "userSum");
+	Path movieSum = new Path(directory + File.separator + "movieSum");
+	Path totalSum = new Path(directory + File.separator + "totalSum");
+	Path itemColl = new Path(directory + File.separator + "itemColl");
 	DataInitialization.createIntIntFileParent(conf,
 		ClusteringTestData.clustering, baseDirectory, "clustering");
 	DataInitialization.createIntIntFileParent(conf,
@@ -67,10 +69,8 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new RM2Job(), null);
 
 	/* Run asserts */
-	compareIntDoubleData(conf, RMTestData.userSum, baseDirectory,
-		userSum);
-	compareIntDoubleData(conf, RMTestData.movieSum, baseDirectory,
-		movieSum);
+	compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);
+	compareIntDoubleData(conf, RMTestData.movieSum, baseDirectory, movieSum);
 	compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
 	compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
 		itemColl);

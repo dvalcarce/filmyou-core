@@ -16,6 +16,8 @@
 
 package es.udc.fi.dc.irlab.nmf.clustering;
 
+import java.io.File;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
@@ -45,8 +47,10 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	/* Data initialization */
 	Path H = DataInitialization.createDoubleMatrix(conf,
 		ClusteringTestData.H, baseDirectory, "H");
-	Path clustering = new Path(baseDirectory + "/clustering");
-	Path clusteringCount = new Path(baseDirectory + "/clusteringCount");
+	Path clustering = new Path(baseDirectory + File.separator
+		+ "clustering");
+	Path clusteringCount = new Path(baseDirectory + File.separator
+		+ "clusteringCount");
 
 	/* Insert data in Cassandra */
 	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
@@ -61,8 +65,8 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
 
 	/* Run asserts */
-	compareIntIntData(conf, ClusteringTestData.clustering,
-		baseDirectory, clustering);
+	compareIntIntData(conf, ClusteringTestData.clustering, baseDirectory,
+		clustering);
 	compareIntIntData(conf, ClusteringTestData.clusteringCount,
 		baseDirectory, clusteringCount);
 

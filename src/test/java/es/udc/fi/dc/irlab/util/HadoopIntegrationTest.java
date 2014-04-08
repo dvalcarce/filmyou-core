@@ -132,6 +132,39 @@ public abstract class HadoopIntegrationTest {
     }
 
     /**
+     * Build configuration object for NMF/PPC jobs.
+     * 
+     * @param H
+     *            H matrix path
+     * @param W
+     *            W matrix path
+     * @param numberOfUsers
+     * @param numberOfItems
+     * @param numberOfClusters
+     * @param numberOfIterations
+     * @param input
+     * @param output
+     * @return Configuration object
+     */
+    protected Configuration buildConf(Path H, Path W, int numberOfUsers,
+	    int numberOfItems, int numberOfClusters, int numberOfIterations,
+	    Path input, Path output) {
+
+	Configuration conf = buildConf(H, W, numberOfUsers, numberOfItems,
+		numberOfClusters, numberOfIterations);
+
+	if (input != null) {
+	    conf.set(HDFSUtils.inputPathName, input.toString());
+	}
+	if (output != null) {
+	    conf.set(HDFSUtils.outputPathName, output.toString());
+	}
+
+	return conf;
+
+    }
+
+    /**
      * Build configuration object for Clustering Assignment job.
      * 
      * @param H

@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
@@ -69,15 +70,15 @@ public class ComputeWJob extends MatrixComputationJob {
 	Configuration conf = getConf();
 	inputPath = HDFSUtils.getInputPath(conf);
 	iteration = conf.getInt("iteration", -1);
-	directory = conf.get("directory") + "/wcomputation";
+	directory = conf.get("directory") + File.separator + "wcomputation";
 
 	HDFSUtils.createFolder(conf, directory);
 	HDFSUtils.removeData(conf, directory);
 
-	this.out1 = new Path(directory + "/wout1");
-	this.X = new Path(directory + "/X");
-	this.C = new Path(directory + "/C");
-	this.Y = new Path(directory + "/Y");
+	this.out1 = new Path(directory + File.separator + "wout1");
+	this.X = new Path(directory + File.separator + "X");
+	this.C = new Path(directory + File.separator + "C");
+	this.Y = new Path(directory + File.separator + "Y");
 
 	runJob1(H, out1);
 	runJob2(out1, X);
@@ -102,7 +103,7 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob1(Path hPath, Path wout1Path) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "W1-it" + iteration);
+	Job job = new Job(new Configuration(), "W1-it" + iteration);
 	job.setJarByClass(ComputeWJob.class);
 
 	Configuration conf = job.getConfiguration();
@@ -156,7 +157,7 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob2(Path wout1Path, Path xPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "W2-it" + iteration);
+	Job job = new Job(new Configuration(), "W2-it" + iteration);
 	job.setJarByClass(ComputeWJob.class);
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -195,7 +196,7 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob3(Path wPath, Path cPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "W3-it" + iteration);
+	Job job = new Job(new Configuration(), "W3-it" + iteration);
 	job.setJarByClass(ComputeWJob.class);
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -238,7 +239,7 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob4(Path hPath, Path yPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "W4-it" + iteration);
+	Job job = new Job(new Configuration(), "W4-it" + iteration);
 	job.setJarByClass(ComputeWJob.class);
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -285,7 +286,7 @@ public class ComputeWJob extends MatrixComputationJob {
     protected void runJob5(Path wPath, Path xPath, Path yPath, Path wOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(getConf(), "W5-it" + iteration);
+	Job job = new Job(new Configuration(), "W5-it" + iteration);
 	job.setJarByClass(ComputeWJob.class);
 
 	MultipleInputs.addInputPath(job, wPath, SequenceFileInputFormat.class,
