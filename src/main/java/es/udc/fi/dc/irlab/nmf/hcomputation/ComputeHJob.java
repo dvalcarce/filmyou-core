@@ -47,7 +47,7 @@ import es.udc.fi.dc.irlab.util.HDFSUtils;
 
 public class ComputeHJob extends MatrixComputationJob {
 
-    protected static String prefix = "NMF";
+    protected String prefix = "NMF";
 
     /**
      * ComputeHJob constructor.

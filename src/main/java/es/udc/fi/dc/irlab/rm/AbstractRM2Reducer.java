@@ -151,16 +151,12 @@ public abstract class AbstractRM2Reducer<A, B> extends
     protected void buildItemCollMap(Context context, int numberOfClusterItems)
 	    throws IOException {
 	Configuration conf = context.getConfiguration();
-	final Reader[] readers = MapFileOutputFormat.getLocalReaders(itemColl, conf);
+	final Reader[] readers = MapFileOutputFormat.getLocalReaders(itemColl,
+		conf);
 	final Partitioner<IntWritable, DoubleWritable> partitioner = new HashPartitioner<IntWritable, DoubleWritable>();
 	final DoubleWritable probability = new DoubleWritable();
 
 	itemCollMap = new TIntDoubleHashMap(numberOfClusterItems);
-
-	System.err.println("readers = " + readers);
-	System.err.println("readers.length = " + readers.length);
-	System.err.println("itemColl.string = " + itemColl.toString());
-	System.err.println("itemColl.uri = " + itemColl.toUri());
 
 	clusterItems.forEach(new TIntProcedure() {
 
