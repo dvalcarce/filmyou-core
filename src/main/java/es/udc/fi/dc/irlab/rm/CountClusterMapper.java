@@ -22,6 +22,8 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.common.IntPairWritable;
 
+import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
+
 /**
  * Emit &lt;(k, 0), |k|)> from &lt;k, |k|}> where |k| = size of cluster k.
  */

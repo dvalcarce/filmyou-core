@@ -1,5 +1,6 @@
 package es.udc.fi.dc.irlab.rm;
 
+import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 import gnu.trove.iterator.TIntIterator;
 import gnu.trove.map.TIntDoubleMap;
