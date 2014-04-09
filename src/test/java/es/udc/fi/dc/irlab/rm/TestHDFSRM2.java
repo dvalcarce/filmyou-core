@@ -1,0 +1,80 @@
+/**
+ * Copyright 2014 Daniel Valcarce Silva
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package es.udc.fi.dc.irlab.rm;
+
+import java.io.File;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.ToolRunner;
+import org.junit.Test;
+
+import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
+import es.udc.fi.dc.irlab.testdata.RMTestData;
+import es.udc.fi.dc.irlab.util.DataInitialization;
+import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
+
+/**
+ * Integration test class utility
+ * 
+ */
+public class TestHDFSRM2 extends HadoopIntegrationTest {
+
+    @Test
+    public void test() throws Exception {
+	Configuration conf = buildConf();
+
+	String baseDirectory = conf.get("directory");
+	String directory = conf.get("directory") + "/rm2";
+
+	HDFSUtils.removeData(conf, baseDirectory);
+
+	Path userSum = new Path(directory + File.separator + "userSum");
+	Path movieSum = new Path(directory + File.separator + "movieSum");
+	Path totalSum = new Path(directory + File.separator + "totalSum");
+	Path itemColl = new Path(directory + File.separator + "itemColl");
+	DataInitialization.createIntIntFileParent(conf,
+		ClusteringTestData.clustering, baseDirectory, "clustering");
+	DataInitialization.createIntIntFileParent(conf,
+		ClusteringTestData.clusteringCount, baseDirectory,
+		"clusteringCount");
+	Path input = DataInitialization.createIntPairFloatFile(conf,
+		RMTestData.A, baseDirectory, "A");
+	Path output = new Path(directory + File.separator + "output");
+
+	/* Run job */
+	conf = buildConf("clustering", "clusteringCount",
+		RMTestData.numberOfUsers, RMTestData.numberOfItems);
+	conf.setBoolean("useCassandra", false);
+	conf.set(HDFSUtils.inputPathName, input.toString());
+	conf.set(HDFSUtils.outputPathName, output.toString());
+	ToolRunner.run(conf, new RM2Job(), null);
+
+	/* Run asserts */
+	compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);
+	compareIntDoubleData(conf, RMTestData.movieSum, baseDirectory, movieSum);
+	compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
+	compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
+		itemColl);
+	compareIntPairFloatData(conf, RMTestData.recommendations,
+		baseDirectory, output);
+
+	HDFSUtils.removeData(conf, baseDirectory);
+    }
+
+}
