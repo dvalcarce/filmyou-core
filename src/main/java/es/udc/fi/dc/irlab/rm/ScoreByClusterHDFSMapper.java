@@ -21,6 +21,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.mahout.common.IntPairWritable;
 
+import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
+
 /**
  * Emit &lt;(k, 2), (i, j, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>) where
  * j is a user from the cluster k.

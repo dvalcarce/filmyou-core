@@ -37,6 +37,7 @@ import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
 
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HDFSUtils;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
