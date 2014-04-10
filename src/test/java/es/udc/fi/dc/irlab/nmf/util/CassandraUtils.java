@@ -16,7 +16,9 @@
 
 package es.udc.fi.dc.irlab.nmf.util;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 
@@ -69,12 +71,11 @@ public class CassandraUtils {
 
     private void createKeyspaceIfNeeded(Session session, String keyspace) {
 	if (session.getCluster().getMetadata().getKeyspace(keyspace) == null) {
-	    String cqlStatement = String
-		    .format("CREATE KEYSPACE %s WITH REPLICATION ="
-			    + "{'class' : 'SimpleStrategy', 'replication_factor': 3};",
-			    keyspace);
-
-	    session.execute(cqlStatement);
+	    PreparedStatement statement = session.prepare("CREATE KEYSPACE "
+		    + keyspace + " WITH REPLICATION ="
+		    + "{'class' : 'SimpleStrategy', 'replication_factor': 3}");
+	    BoundStatement boundStatement = new BoundStatement(statement);
+	    session.execute(boundStatement.bind(keyspace));
 	}
     }
 
@@ -84,9 +85,7 @@ public class CassandraUtils {
 	// Drop table if already exists
 	if (session.getCluster().getMetadata().getKeyspace(keyspace)
 		.getTable(table) != null) {
-	    String cqlStatement = String.format("DROP TABLE %s", table);
-
-	    session.execute(cqlStatement);
+	    session.execute("DROP TABLE " + table);
 	}
 
 	// Wait for table deletion
@@ -96,11 +95,9 @@ public class CassandraUtils {
 	}
 
 	// Create table
-	String cqlStatement = String
-		.format("CREATE TABLE %s (" + "user int," + "movie int,"
-			+ "score float," + "PRIMARY KEY (user, movie));", table);
-
-	session.execute(cqlStatement);
+	session.execute("CREATE TABLE " + table
+		+ " (user int, movie int, score float,"
+		+ "PRIMARY KEY (user, movie))");
 
     }
 
@@ -113,16 +110,18 @@ public class CassandraUtils {
 	session = getSession(keyspace);
 	resetTable(session, keyspace, table);
 
+	PreparedStatement statement = session.prepare("INSERT INTO " + table
+		+ " (user, movie, score) VALUES (?, ?, ?)");
+	BoundStatement boundStatement = new BoundStatement(statement);
+
 	// Insert data
 	for (int i = 0; i < data.length; i++) {
 	    for (int j = 0; j < data[i].length; j++) {
 		if (data[i][j] == 0.0) {
 		    continue;
 		}
-		String cqlStatement = String
-			.format("INSERT INTO %s (user, movie, score) VALUES (%d, %d, %f);",
-				table, j + 1, i + 1, data[i][j]);
-		session.execute(cqlStatement);
+		session.execute(boundStatement.bind(j + 1, i + 1,
+			(float) data[i][j]));
 	    }
 	}
 
@@ -142,9 +141,7 @@ public class CassandraUtils {
 	// Drop table if already exists
 	if (session.getCluster().getMetadata().getKeyspace(keyspace)
 		.getTable(table) != null) {
-	    String cqlStatement = String.format("DROP TABLE %s", table);
-
-	    session.execute(cqlStatement);
+	    session.execute("DROP TABLE " + table);
 	}
 
 	// Wait for table deletion
@@ -153,12 +150,10 @@ public class CassandraUtils {
 	    Thread.sleep(1000);
 	}
 
-	String cqlStatement = String.format("CREATE TABLE %s" + "(user int,"
-		+ "relevance float," + "movie int, cluster int,"
+	session.execute("CREATE TABLE " + table
+		+ " (user int, relevance float, movie int, cluster int,"
 		+ "PRIMARY KEY (user, relevance, movie))"
-		+ "WITH CLUSTERING ORDER BY" + "(relevance DESC, movie ASC);",
-		table);
-	session.execute(cqlStatement);
+		+ "WITH CLUSTERING ORDER BY (relevance DESC, movie ASC)");
 
 	shutdownSessions();
 	getCluster().close();
@@ -170,10 +165,8 @@ public class CassandraUtils {
 
 	Session session = getSession(keyspace);
 
-	String cqlStatement = String.format(
-		"SELECT user, movie, relevance FROM %s WHERE user = %d;",
-		table, user);
-	return session.execute(cqlStatement);
+	return session.execute("SELECT user, movie, relevance FROM " + table
+		+ " WHERE user = " + user);
 
     }
 
