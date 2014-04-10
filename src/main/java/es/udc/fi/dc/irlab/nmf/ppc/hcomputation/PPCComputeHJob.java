@@ -74,7 +74,7 @@ public class PPCComputeHJob extends ComputeHJob {
     protected void runJob4(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H5-it"
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H4-it"
 		+ iteration);
 	job.setJarByClass(this.getClass());
 

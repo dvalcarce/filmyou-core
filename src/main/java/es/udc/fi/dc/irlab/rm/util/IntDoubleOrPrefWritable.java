@@ -33,8 +33,8 @@ import com.google.common.primitives.Ints;
  */
 public final class IntDoubleOrPrefWritable implements Writable {
 
-    private int userID;
-    private int itemID;
+    private int userId;
+    private int itemId;
     private float score;
     private int key;
     private double value;
@@ -55,8 +55,8 @@ public final class IntDoubleOrPrefWritable implements Writable {
      * @param score
      */
     public IntDoubleOrPrefWritable(int userID, int itemID, float score) {
-	this.userID = userID;
-	this.itemID = itemID;
+	this.userId = userID;
+	this.itemId = itemID;
 	this.score = score;
 	this.isPref = true;
     }
@@ -83,12 +83,12 @@ public final class IntDoubleOrPrefWritable implements Writable {
 	this.isPref = false;
     }
 
-    public int getUserID() {
-	return userID;
+    public int getUserId() {
+	return userId;
     }
 
-    public int getItemID() {
-	return itemID;
+    public int getItemId() {
+	return itemId;
     }
 
     public float getScore() {
@@ -111,8 +111,8 @@ public final class IntDoubleOrPrefWritable implements Writable {
     public void write(DataOutput out) throws IOException {
 	out.writeBoolean(isPref);
 	if (isPref) {
-	    out.writeInt(userID);
-	    out.writeInt(itemID);
+	    out.writeInt(userId);
+	    out.writeInt(itemId);
 	    out.writeFloat(score);
 	} else {
 	    out.writeInt(key);
@@ -124,8 +124,8 @@ public final class IntDoubleOrPrefWritable implements Writable {
     public void readFields(DataInput in) throws IOException {
 	isPref = in.readBoolean();
 	if (isPref) {
-	    userID = in.readInt();
-	    itemID = in.readInt();
+	    userId = in.readInt();
+	    itemId = in.readInt();
 	    score = in.readFloat();
 	} else {
 	    key = in.readInt();
@@ -136,7 +136,7 @@ public final class IntDoubleOrPrefWritable implements Writable {
     @Override
     public int hashCode() {
 	if (isPref) {
-	    return Ints.hashCode(userID) ^ Ints.hashCode(itemID)
+	    return Ints.hashCode(userId) ^ Ints.hashCode(itemId)
 		    ^ Floats.hashCode(score);
 	} else {
 	    return Ints.hashCode(key) ^ Doubles.hashCode(value);
@@ -151,8 +151,8 @@ public final class IntDoubleOrPrefWritable implements Writable {
 	IntDoubleOrPrefWritable other = (IntDoubleOrPrefWritable) o;
 	if (isPref == other.isPref) {
 	    if (isPref) {
-		return userID == other.getUserID()
-			&& itemID == other.getItemID()
+		return userId == other.getUserId()
+			&& itemId == other.getItemId()
 			&& score == other.getScore();
 	    }
 	    return key == other.getKey() && value == other.getValue();
@@ -164,7 +164,7 @@ public final class IntDoubleOrPrefWritable implements Writable {
     @Override
     public String toString() {
 	if (isPref) {
-	    return String.format("%d\t%d\t%f", userID, itemID, score);
+	    return String.format("%d\t%d\t%f", userId, itemId, score);
 	}
 	return String.format("%d\t%f", key, value);
     }

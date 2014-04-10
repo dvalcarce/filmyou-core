@@ -120,8 +120,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	// matrix, item collection set and item users sets
 	while (it.hasNext()) {
 	    entry = it.next();
-	    userId = entry.getUserID() - 1;
-	    itemId = entry.getItemID() - 1;
+	    userId = entry.getUserId() - 1;
+	    itemId = entry.getItemId() - 1;
 	    score = entry.getScore();
 
 	    preferences.setQuick(userId, itemId, score);
