@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Daniel Valcarce Silva
+ * Copyright 2014 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,34 +14,35 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.common;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
-import java.util.Iterator;
 
+import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.mahout.math.Vector;
+import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
+import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
+
 /**
- * Emit &lt;i,a_i> from &lt;i, {b_i}> where a_i = sum_i(b_i).
- * 
+ * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (<(i, j), A_{i,j}>) and from H
+ * matrix (w_i) obtained by DistributedCache.
  */
-public class SumVectorReducer extends
-	Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class VectorByMovieHDFSMapper extends
+	AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
 
     @Override
-    protected void reduce(IntWritable key, Iterable<VectorWritable> values,
+    protected void map(IntPairWritable key, FloatWritable column,
 	    Context context) throws IOException, InterruptedException {
-	Iterator<VectorWritable> it = values.iterator();
-	Vector output = it.next().get();
 
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
+	float score = column.get();
+
+	if (score > 0) {
+	    context.write(new IntWritable(key.getFirst()), new VectorWritable(
+		    getCache(key.getSecond()).times(score)));
 	}
-	context.write(new IntWritable((int) key.get()), new VectorWritable(
-		output));
+
     }
 
 }

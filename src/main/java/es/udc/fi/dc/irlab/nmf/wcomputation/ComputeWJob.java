@@ -38,7 +38,7 @@ import org.apache.mahout.math.VectorWritable;
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
 import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
-import es.udc.fi.dc.irlab.nmf.common.SumVectorReducer;
+import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
@@ -112,11 +112,12 @@ public class ComputeWJob extends MatrixComputationJob {
 	if (conf.getBoolean("useCassandra", true)) {
 	    MultipleInputs.addInputPath(job, new Path("unused"),
 		    CqlPagingInputFormat.class,
-		    ScoreByUserCassandraMapper.class);
+		    MovieScoreByUserCassandraMapper.class);
 	    CassandraSetup.updateConfForInput(conf, jobConf);
 	} else {
 	    MultipleInputs.addInputPath(job, inputPath,
-		    SequenceFileInputFormat.class, ScoreByUserHDFSMapper.class);
+		    SequenceFileInputFormat.class,
+		    MovieScoreByUserHDFSMapper.class);
 	}
 
 	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
@@ -165,7 +166,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	SequenceFileInputFormat.addInputPath(job, wout1Path);
 
 	job.setMapperClass(Mapper.class);
-	job.setReducerClass(SumVectorReducer.class);
+	job.setCombinerClass(VectorSumReducer.class);
+	job.setReducerClass(VectorSumReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);

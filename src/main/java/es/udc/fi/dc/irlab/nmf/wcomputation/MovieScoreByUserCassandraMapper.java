@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Daniel Valcarce Silva
+ * Copyright 2013 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,28 +17,30 @@
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.Map;
 
-import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
 
 /**
- * Emit &lt;(j, 1), (i, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>).
+ * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
-public class ScoreByUserHDFSMapper
+public class MovieScoreByUserCassandraMapper
 	extends
-	Mapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
+	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
-    protected void map(IntPairWritable keys, FloatWritable columns,
-	    Context context) throws IOException, InterruptedException {
+    protected void map(Map<String, ByteBuffer> keys,
+	    Map<String, ByteBuffer> columns, Context context)
+	    throws IOException, InterruptedException {
 
-	float score = columns.get();
+	float score = columns.get("score").getFloat();
 
 	if (score > 0) {
-	    context.write(new IntPairWritable(keys.getFirst(), 1),
-		    new VectorOrPrefWritable(keys.getSecond(), score));
+	    context.write(new IntPairWritable(keys.get("user").getInt(), 1),
+		    new VectorOrPrefWritable(keys.get("movie").getInt(), score));
 	}
 
     }

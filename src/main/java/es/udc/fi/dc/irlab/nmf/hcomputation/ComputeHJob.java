@@ -26,7 +26,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -37,7 +36,7 @@ import org.apache.mahout.math.VectorWritable;
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
 import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
-import es.udc.fi.dc.irlab.nmf.common.SumVectorReducer;
+import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.common.Vector1Mapper;
 import es.udc.fi.dc.irlab.nmf.common.Vector2Mapper;
@@ -79,16 +78,14 @@ public class ComputeHJob extends MatrixComputationJob {
 	HDFSUtils.removeData(conf, directory);
 	HDFSUtils.createFolder(conf, directory);
 
-	this.out1 = new Path(directory + File.separator + "hout1");
 	this.X = new Path(directory + File.separator + "X");
 	this.C = new Path(directory + File.separator + "C");
 	this.Y = new Path(directory + File.separator + "Y");
 
-	runJob1(W, out1);
-	runJob2(out1, X);
-	runJob3(W, C);
-	runJob4(H, Y, C);
-	runJob5(H, X, Y, H2);
+	runJob1(W, X);
+	runJob2(W, C);
+	runJob3(H, Y, C);
+	runJob4(H, X, Y, H2);
 
 	return 0;
     }
@@ -98,13 +95,13 @@ public class ComputeHJob extends MatrixComputationJob {
      * 
      * @param wPath
      *            initial W path
-     * @param hout1Path
-     *            temporal output
+     * @param xPath
+     *            X path
      * @throws IOException
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob1(Path wPath, Path hout1Path) throws IOException,
+    protected void runJob1(Path wPath, Path xPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(new Configuration(), prefix + "H1-it" + iteration);
@@ -115,21 +112,22 @@ public class ComputeHJob extends MatrixComputationJob {
 
 	if (conf.getBoolean("useCassandra", true)) {
 	    job.setInputFormatClass(CqlPagingInputFormat.class);
-	    job.setMapperClass(ScoreByMovieCassandraMapper.class);
+	    job.setMapperClass(VectorByMovieCassandraMapper.class);
 	    CassandraSetup.updateConfForInput(conf, jobConf);
 	} else {
 	    job.setInputFormatClass(SequenceFileInputFormat.class);
-	    job.setMapperClass(ScoreByMovieHDFSMapper.class);
+	    job.setMapperClass(VectorByMovieHDFSMapper.class);
 	    SequenceFileInputFormat.addInputPath(job, inputPath);
 	}
 
-	job.setNumReduceTasks(0);
+	job.setCombinerClass(VectorSumReducer.class);
+	job.setReducerClass(VectorSumReducer.class);
 
 	job.setMapOutputKeyClass(IntWritable.class);
 	job.setMapOutputValueClass(VectorWritable.class);
 
 	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, hout1Path);
+	SequenceFileOutputFormat.setOutputPath(job, xPath);
 
 	job.setOutputKeyClass(IntWritable.class);
 	job.setOutputValueClass(VectorWritable.class);
@@ -153,45 +151,6 @@ public class ComputeHJob extends MatrixComputationJob {
     /**
      * Launch the second job for H computation.
      * 
-     * @param hout1Path
-     *            output of the first job
-     * @param xPath
-     *            X path
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void runJob2(Path hout1Path, Path xPath) throws IOException,
-	    ClassNotFoundException, InterruptedException {
-
-	Job job = new Job(new Configuration(), prefix + "H2-it" + iteration);
-	job.setJarByClass(this.getClass());
-
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, hout1Path);
-
-	job.setMapperClass(Mapper.class);
-	job.setReducerClass(SumVectorReducer.class);
-
-	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(VectorWritable.class);
-
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, xPath);
-
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
-
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
-	}
-
-    }
-
-    /**
-     * Launch the third job for H computation.
-     * 
      * @param wPath
      *            W path
      * @param cPath
@@ -200,7 +159,7 @@ public class ComputeHJob extends MatrixComputationJob {
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob3(Path wPath, Path cPath) throws IOException,
+    protected void runJob2(Path wPath, Path cPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(new Configuration(), prefix + "H3-it" + iteration);
@@ -231,7 +190,7 @@ public class ComputeHJob extends MatrixComputationJob {
     }
 
     /**
-     * Launch the fourth job for H computation.
+     * Launch the third job for H computation.
      * 
      * @param hPath
      *            H path
@@ -243,7 +202,7 @@ public class ComputeHJob extends MatrixComputationJob {
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob4(Path hPath, Path yPath, Path cPath)
+    protected void runJob3(Path hPath, Path yPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(new Configuration(), prefix + "H4-it" + iteration);
@@ -276,7 +235,7 @@ public class ComputeHJob extends MatrixComputationJob {
     }
 
     /**
-     * Launch the fifth job for H computation.
+     * Launch the fourth job for H computation.
      * 
      * @param hPath
      *            initial H path
@@ -290,7 +249,7 @@ public class ComputeHJob extends MatrixComputationJob {
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob5(Path hPath, Path xPath, Path yPath, Path hOutputPath)
+    protected void runJob4(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(new Configuration(), prefix + "H5-it" + iteration);

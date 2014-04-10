@@ -14,33 +14,31 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
-import org.apache.mahout.math.VectorWritable;
-
-import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
 
 /**
- * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (<(i, j), A_{i,j}>) and from H
- * matrix (w_i) obtained by DistributedCache.
+ * Emit &lt;(j, 1), (i, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>).
  */
-public class ScoreByMovieHDFSMapper extends
-	AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
+public class MovieScoreByUserHDFSMapper
+	extends
+	Mapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
 
     @Override
-    protected void map(IntPairWritable key, FloatWritable column,
+    protected void map(IntPairWritable keys, FloatWritable columns,
 	    Context context) throws IOException, InterruptedException {
 
-	float score = column.get();
+	float score = columns.get();
 
 	if (score > 0) {
-	    context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		    getCache(key.getSecond()).times(score)));
+	    context.write(new IntPairWritable(keys.getFirst(), 1),
+		    new VectorOrPrefWritable(keys.getSecond(), score));
 	}
 
     }

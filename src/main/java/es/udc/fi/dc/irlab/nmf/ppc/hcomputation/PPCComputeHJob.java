@@ -70,7 +70,7 @@ public class PPCComputeHJob extends ComputeHJob {
      * @throws ClassNotFoundException
      * @throws InterruptedException
      */
-    protected void runJob5(Path hPath, Path xPath, Path yPath, Path hOutputPath)
+    protected void runJob4(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
 	Job job = new Job(new Configuration(), prefix + "H5-it" + iteration);

@@ -25,7 +25,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
- * Emit <i, (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ * Emit <i, A_{i,j}> from Cassandra ratings ({A_{i,j}}).
  */
 public class SimpleScoreByMovieCassandraMapper
 	extends

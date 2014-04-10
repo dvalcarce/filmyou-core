@@ -14,22 +14,24 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.wcomputation;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
-import org.apache.mahout.common.IntPairWritable;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.mahout.math.VectorWritable;
+
+import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
 
 /**
- * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
+ * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings ({A_{i,j}}) and from H matrix
+ * (w_i) obtained by DistributedCache.
  */
-public class ScoreByUserCassandraMapper
+public class VectorByMovieCassandraMapper
 	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
+	AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
     @Override
     protected void map(Map<String, ByteBuffer> keys,
@@ -39,10 +41,10 @@ public class ScoreByUserCassandraMapper
 	float score = columns.get("score").getFloat();
 
 	if (score > 0) {
-	    context.write(new IntPairWritable(keys.get("user").getInt(), 1),
-		    new VectorOrPrefWritable(keys.get("movie").getInt(), score));
+	    context.write(new IntWritable(keys.get("user").getInt()),
+		    new VectorWritable(getCache(keys.get("movie").getInt())
+			    .times(score)));
 	}
 
     }
-
 }
