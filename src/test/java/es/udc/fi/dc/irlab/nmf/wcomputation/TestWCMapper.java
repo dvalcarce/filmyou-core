@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 public class TestWCMapper {
 
@@ -47,7 +47,7 @@ public class TestWCMapper {
 	String baseDirectory = "TestWCMapper";
 	Configuration conf = new Configuration();
 
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
 
 	Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
 		{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
@@ -69,7 +69,7 @@ public class TestWCMapper {
 	mapDriver.withOutput(outputKey, outputValue);
 	mapDriver.runTest();
 
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
     }
 
 }

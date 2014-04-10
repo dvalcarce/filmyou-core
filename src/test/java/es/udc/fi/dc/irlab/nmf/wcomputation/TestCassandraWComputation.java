@@ -26,7 +26,7 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
@@ -43,7 +43,7 @@ public class TestCassandraWComputation extends HadoopIntegrationTest {
 	int numberOfIterations = 1;
 
 	Configuration conf = buildConf();
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	HadoopUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
 	Path H = DataInitialization.createDoubleMatrix(conf,
@@ -67,7 +67,7 @@ public class TestCassandraWComputation extends HadoopIntegrationTest {
 	/* Run asserts */
 	compareIntVectorData(conf, NMFTestData.W_one, baseDirectory, W2);
 
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	HadoopUtils.removeData(conf, conf.get("directory"));
     }
 
 }

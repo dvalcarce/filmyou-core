@@ -42,7 +42,7 @@ import es.udc.fi.dc.irlab.nmf.common.Vector1Mapper;
 import es.udc.fi.dc.irlab.nmf.common.Vector2Mapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 public class ComputeHJob extends MatrixComputationJob {
 
@@ -71,12 +71,12 @@ public class ComputeHJob extends MatrixComputationJob {
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
 
-	inputPath = HDFSUtils.getInputPath(conf);
+	inputPath = HadoopUtils.getInputPath(conf);
 	iteration = conf.getInt("iteration", -1);
 	directory = conf.get("directory") + File.separator + "hcomputation";
 
-	HDFSUtils.removeData(conf, directory);
-	HDFSUtils.createFolder(conf, directory);
+	HadoopUtils.removeData(conf, directory);
+	HadoopUtils.createFolder(conf, directory);
 
 	this.X = new Path(directory + File.separator + "X");
 	this.C = new Path(directory + File.separator + "C");
@@ -104,10 +104,12 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob1(Path wPath, Path xPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H1-it" + iteration);
+	Configuration conf = getConf();
+
+	Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H1-it"
+		+ iteration);
 	job.setJarByClass(this.getClass());
 
-	Configuration conf = getConf();
 	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
@@ -134,7 +136,7 @@ public class ComputeHJob extends MatrixComputationJob {
 
 	Path distributedPath;
 	try {
-	    distributedPath = HDFSUtils.mergeFile(jobConf, wPath, directory,
+	    distributedPath = HadoopUtils.mergeFile(jobConf, wPath, directory,
 		    "W-merged");
 	} catch (IllegalArgumentException e) {
 	    distributedPath = wPath;
@@ -162,7 +164,8 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob2(Path wPath, Path cPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H2-it" + iteration);
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H2-it"
+		+ iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -206,7 +209,8 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob3(Path hPath, Path yPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H3-it" + iteration);
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H3-it"
+		+ iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -224,7 +228,7 @@ public class ComputeHJob extends MatrixComputationJob {
 	job.setOutputValueClass(VectorWritable.class);
 
 	Configuration conf = job.getConfiguration();
-	Path mergedPath = HDFSUtils.mergeFile(conf, cPath, directory,
+	Path mergedPath = HadoopUtils.mergeFile(conf, cPath, directory,
 		"C-merged");
 	DistributedCache.addCacheFile(mergedPath.toUri(), conf);
 
@@ -253,7 +257,8 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob4(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H4-it" + iteration);
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H4-it"
+		+ iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,

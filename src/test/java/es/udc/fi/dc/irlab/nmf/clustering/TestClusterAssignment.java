@@ -27,7 +27,7 @@ import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
@@ -42,7 +42,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	int numberOfClusters = ClusteringTestData.numberOfClusters;
 
 	Configuration conf = buildConf();
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
 
 	/* Data initialization */
 	Path H = DataInitialization.createDoubleMatrix(conf,
@@ -70,7 +70,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 	compareIntIntData(conf, ClusteringTestData.clusteringCount,
 		baseDirectory, clusteringCount);
 
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	HadoopUtils.removeData(conf, conf.get("directory"));
     }
 
 }

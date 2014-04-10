@@ -154,10 +154,10 @@ public abstract class HadoopIntegrationTest {
 		numberOfClusters, numberOfIterations);
 
 	if (input != null) {
-	    conf.set(HDFSUtils.inputPathName, input.toString());
+	    conf.set(HadoopUtils.inputPathName, input.toString());
 	}
 	if (output != null) {
-	    conf.set(HDFSUtils.outputPathName, output.toString());
+	    conf.set(HadoopUtils.outputPathName, output.toString());
 	}
 
 	return conf;

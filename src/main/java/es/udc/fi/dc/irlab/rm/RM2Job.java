@@ -39,7 +39,7 @@ import org.apache.mahout.common.IntPairWritable;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
 /**
@@ -61,12 +61,12 @@ public class RM2Job extends AbstractJob {
     @Override
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
-	inputPath = HDFSUtils.getInputPath(conf);
-	outputPath = HDFSUtils.getOutputPath(conf);
+	inputPath = HadoopUtils.getInputPath(conf);
+	outputPath = HadoopUtils.getOutputPath(conf);
 
 	String baseDirectory = conf.get("directory");
 	directory = baseDirectory + "/rm2";
-	HDFSUtils.removeData(conf, directory);
+	HadoopUtils.removeData(conf, directory);
 
 	Path userSum = new Path(directory + "/userSum");
 	Path itemSum = new Path(directory + "/movieSum");
@@ -80,7 +80,7 @@ public class RM2Job extends AbstractJob {
 	runMovieSum(itemSum);
 	runTotalSum(itemSum, totalSum);
 
-	double sum = HDFSUtils.getDoubleFromSequenceFile(conf, totalSum,
+	double sum = HadoopUtils.getDoubleFromSequenceFile(conf, totalSum,
 		directory);
 
 	runItemProbInCollection(itemSum, sum, itemColl);
@@ -101,10 +101,11 @@ public class RM2Job extends AbstractJob {
     protected void runUserSum(Path userSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), "RM2-1");
+	Configuration conf = getConf();
+
+	Job job = new Job(HadoopUtils.sanitizeConf(conf), "RM2-1");
 	job.setJarByClass(this.getClass());
 
-	Configuration conf = getConf();
 	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
@@ -147,10 +148,11 @@ public class RM2Job extends AbstractJob {
     protected void runMovieSum(Path itemSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), "RM2-2");
+	Configuration conf = getConf();
+
+	Job job = new Job(HadoopUtils.sanitizeConf(conf), "RM2-2");
 	job.setJarByClass(this.getClass());
 
-	Configuration conf = getConf();
 	Configuration jobConf = job.getConfiguration();
 
 	if (conf.getBoolean("useCassandra", true)) {
@@ -194,7 +196,7 @@ public class RM2Job extends AbstractJob {
     protected void runTotalSum(Path itemSum, Path totalSum) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), "RM2-3");
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "RM2-3");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -237,7 +239,7 @@ public class RM2Job extends AbstractJob {
 	    Path itemColl) throws ClassNotFoundException, IOException,
 	    InterruptedException {
 
-	Job job = new Job(new Configuration(), "RM2-4");
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "RM2-4");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -277,10 +279,13 @@ public class RM2Job extends AbstractJob {
 	    Path clustering, Path itemColl) throws ClassNotFoundException,
 	    IOException, InterruptedException {
 
-	Job job = new Job(getConf(), "RM2-5");
+	Configuration conf = getConf();
+
+	Job job = new Job(HadoopUtils.sanitizeConf(conf), "RM2-5");
 	job.setJarByClass(this.getClass());
 
 	Configuration jobConf = job.getConfiguration();
+
 	MultipleInputs.addInputPath(job, userSum,
 		SequenceFileInputFormat.class, UserSumByClusterMapper.class);
 
@@ -288,13 +293,13 @@ public class RM2Job extends AbstractJob {
 	    MultipleInputs.addInputPath(job, new Path("unused"),
 		    CqlPagingInputFormat.class,
 		    ScoreByClusterCassandraMapper.class);
-	    CassandraSetup.updateConfForInput(getConf(), jobConf);
+	    CassandraSetup.updateConfForInput(conf, jobConf);
 
 	    job.setReducerClass(RM2CassandraReducer.class);
 	    job.setOutputFormatClass(CqlOutputFormat.class);
 	    job.setOutputKeyClass(Map.class);
 	    job.setOutputValueClass(List.class);
-	    CassandraSetup.updateConfForOutput(getConf(), jobConf);
+	    CassandraSetup.updateConfForOutput(conf, jobConf);
 	} else {
 	    MultipleInputs.addInputPath(job, inputPath,
 		    SequenceFileInputFormat.class,
@@ -315,11 +320,11 @@ public class RM2Job extends AbstractJob {
 	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
 
 	// Distributed cache
-	Path mergedClustering = HDFSUtils.mergeFile(jobConf, clustering,
+	Path mergedClustering = HadoopUtils.mergeFile(jobConf, clustering,
 		directory, "clustering-merged");
 	DistributedCache.addCacheFile(mergedClustering.toUri(), jobConf);
 
-	Path mergedClusteringCount = HDFSUtils.mergeFile(jobConf,
+	Path mergedClusteringCount = HadoopUtils.mergeFile(jobConf,
 		clusteringCount, directory, "clustering-count-merged");
 	DistributedCache.addCacheFile(mergedClusteringCount.toUri(), jobConf);
 

@@ -116,8 +116,10 @@ public class RMRecommenderJob extends AbstractJob {
     public int run(String[] args) throws Exception {
 	Configuration conf = parseInput(args);
 
-	if (ToolRunner.run(conf, new PPCDriver(), args) < 0) {
-	    throw new RuntimeException("PPCJob failed!");
+	if (conf.getInt("numberOfIterations", 0) > 0) {
+	    if (ToolRunner.run(conf, new PPCDriver(), args) < 0) {
+		throw new RuntimeException("PPCJob failed!");
+	    }
 	}
 
 	if (conf.get("H") == null) {

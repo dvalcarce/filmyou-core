@@ -18,6 +18,7 @@ package es.udc.fi.dc.irlab.util;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -33,12 +34,12 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
  * Utility class for HDFS.
  * 
  */
-public final class HDFSUtils {
+public final class HadoopUtils {
 
     public static final String inputPathName = "mapred.input.dir";
     public static final String outputPathName = "mapred.output.dir";
 
-    private HDFSUtils() {
+    private HadoopUtils() {
 
     }
 
@@ -152,7 +153,7 @@ public final class HDFSUtils {
 	if (conf.getBoolean(RMRecommenderJob.useCassandra, true)) {
 	    return null;
 	}
-	return new Path(conf.get(HDFSUtils.inputPathName));
+	return new Path(conf.get(HadoopUtils.inputPathName));
     }
 
     /**
@@ -166,7 +167,29 @@ public final class HDFSUtils {
 	if (conf.getBoolean(RMRecommenderJob.useCassandra, true)) {
 	    return null;
 	}
-	return new Path(conf.get(HDFSUtils.outputPathName));
+	return new Path(conf.get(HadoopUtils.outputPathName));
     }
 
+    /**
+     * Remove input/output information from Configuration object
+     * 
+     * @param conf
+     *            Configuration object
+     * @return sanitized object
+     */
+    public static Configuration sanitizeConf(Configuration conf) {
+	String key;
+	Configuration newConf = new Configuration();
+
+	for (Entry<String, String> entry : newConf) {
+	    key = entry.getKey();
+	    if (key.equals(inputPathName) || key.equals(outputPathName)) {
+		continue;
+	    }
+	    newConf.set(entry.getKey(), entry.getValue());
+	}
+
+	return newConf;
+
+    }
 }

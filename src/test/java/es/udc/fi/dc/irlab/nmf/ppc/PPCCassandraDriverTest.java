@@ -24,7 +24,7 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.PPCTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
@@ -41,7 +41,7 @@ public class PPCCassandraDriverTest extends HadoopIntegrationTest {
 	int numberOfIterations = 10;
 
 	Configuration conf = buildConf();
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	HadoopUtils.removeData(conf, conf.get("directory"));
 
 	/* Data initialization */
 	Path H = DataInitialization.createDoubleMatrix(conf,
@@ -64,6 +64,6 @@ public class PPCCassandraDriverTest extends HadoopIntegrationTest {
 	compareIntVectorData(conf, PPCTestData.H_ten, baseDirectory, H);
 	compareIntVectorData(conf, PPCTestData.W_ten, baseDirectory, W);
 
-	HDFSUtils.removeData(conf, conf.get("directory"));
+	HadoopUtils.removeData(conf, conf.get("directory"));
     }
 }

@@ -27,7 +27,7 @@ import org.apache.hadoop.mapreduce.lib.map.InverseMapper;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Assign each user to a cluster after NMF/PPC execution.
@@ -51,8 +51,8 @@ public class ClusterAssignmentJob extends AbstractJob {
 	clustering = new Path(directory + "/" + conf.get("clustering"));
 	clusteringCount = new Path(directory + "/"
 		+ conf.get("clusteringCount"));
-	HDFSUtils.removeData(conf, clustering.toString());
-	HDFSUtils.removeData(conf, clusteringCount.toString());
+	HadoopUtils.removeData(conf, clustering.toString());
+	HadoopUtils.removeData(conf, clusteringCount.toString());
 
 	/* Launch jobs */
 	findClustersJob(H, clustering);
@@ -76,7 +76,8 @@ public class ClusterAssignmentJob extends AbstractJob {
     protected void findClustersJob(Path inputPathH, Path outputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), "FindClustersJob");
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
+		"FindClustersJob");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -113,7 +114,8 @@ public class ClusterAssignmentJob extends AbstractJob {
     protected void countClusters(Path inputPath, Path outputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), "CountClustersJob");
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
+		"CountClustersJob");
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -137,5 +139,4 @@ public class ClusterAssignmentJob extends AbstractJob {
 	}
 
     }
-
 }

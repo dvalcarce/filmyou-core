@@ -22,6 +22,7 @@ import org.apache.hadoop.io.FloatWritable;
 import org.apache.mahout.common.IntPairWritable;
 
 import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Emit &lt;(k, 2), (i, j, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>) where

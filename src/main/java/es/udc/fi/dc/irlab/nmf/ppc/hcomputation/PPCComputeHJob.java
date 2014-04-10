@@ -33,6 +33,7 @@ import es.udc.fi.dc.irlab.nmf.common.Vector1Mapper;
 import es.udc.fi.dc.irlab.nmf.common.Vector2Mapper;
 import es.udc.fi.dc.irlab.nmf.hcomputation.ComputeHJob;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 public class PPCComputeHJob extends ComputeHJob {
 
@@ -73,7 +74,8 @@ public class PPCComputeHJob extends ComputeHJob {
     protected void runJob4(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H5-it" + iteration);
+	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H5-it"
+		+ iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,

@@ -29,7 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 public class TestWComputationMapper {
 
@@ -45,7 +45,7 @@ public class TestWComputationMapper {
 	String baseDirectory = "TestWComputationMapper";
 	Configuration conf = new Configuration();
 
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
 	IntWritable inputKey = new IntWritable(1);
 	VectorWritable inputValue = new VectorWritable(new DenseVector(
 		new double[] { 1.0, 2.0, 3.0 }));
@@ -70,6 +70,6 @@ public class TestWComputationMapper {
 
 	mapDriver.runTest();
 
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
     }
 }

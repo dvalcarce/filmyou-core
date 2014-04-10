@@ -27,7 +27,7 @@ import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.RMTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HDFSUtils;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 
 /**
@@ -43,7 +43,7 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 	String baseDirectory = conf.get("directory");
 	String directory = conf.get("directory") + "/rm2";
 
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
 
 	Path userSum = new Path(directory + File.separator + "userSum");
 	Path movieSum = new Path(directory + File.separator + "movieSum");
@@ -77,7 +77,7 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 	compareCassandraData(conf, RMTestData.recommendations,
 		RMTestData.numberOfUsers);
 
-	HDFSUtils.removeData(conf, baseDirectory);
+	HadoopUtils.removeData(conf, baseDirectory);
     }
 
 }
