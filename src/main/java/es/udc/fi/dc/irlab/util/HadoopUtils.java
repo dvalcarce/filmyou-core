@@ -181,15 +181,16 @@ public final class HadoopUtils {
 	String key;
 	Configuration newConf = new Configuration();
 
-	for (Entry<String, String> entry : newConf) {
+	for (Entry<String, String> entry : conf) {
 	    key = entry.getKey();
 	    if (key.equals(inputPathName) || key.equals(outputPathName)) {
 		continue;
 	    }
-	    newConf.set(entry.getKey(), entry.getValue());
+	    newConf.set(key, entry.getValue());
 	}
 
 	return newConf;
 
     }
+
 }
