@@ -37,7 +37,7 @@ import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
-import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
+import es.udc.fi.dc.irlab.nmf.common.MatrixSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
@@ -206,7 +206,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	SequenceFileInputFormat.addInputPath(job, wPath);
 
 	job.setMapperClass(CrossProductMapper.class);
-	job.setReducerClass(SumMatrixReducer.class);
+	job.setCombinerClass(MatrixSumReducer.class);
+	job.setReducerClass(MatrixSumReducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(MatrixWritable.class);

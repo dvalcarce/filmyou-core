@@ -28,7 +28,7 @@ import org.apache.mahout.math.MatrixWritable;
  * Emit &lt;i, sum_i(matrix_i)> from &lt;NULL, matrix_i>.
  * 
  */
-public class SumMatrixReducer extends
+public class MatrixSumReducer extends
 	Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
 
     @Override

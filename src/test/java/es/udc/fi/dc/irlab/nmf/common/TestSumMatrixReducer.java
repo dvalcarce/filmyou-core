@@ -33,7 +33,7 @@ import org.apache.mahout.math.Vector;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
+import es.udc.fi.dc.irlab.nmf.common.MatrixSumReducer;
 
 public class TestSumMatrixReducer {
     private ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable> reduceDriver;
@@ -59,7 +59,7 @@ public class TestSumMatrixReducer {
 	double[][] outputRows = new double[][] { { 6.0, 7.0, 8.0 },
 		{ 4.0, 6.0, 8.0 }, { 6.0, 10.0, 14.0 } };
 
-	reduceDriver.withReducer(new SumMatrixReducer());
+	reduceDriver.withReducer(new MatrixSumReducer());
 	reduceDriver.withInput(inputKey, inputValues);
 
 	List<Pair<NullWritable, MatrixWritable>> list = reduceDriver.run();

@@ -35,7 +35,7 @@ import org.apache.mahout.math.VectorWritable;
 
 import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
-import es.udc.fi.dc.irlab.nmf.common.SumMatrixReducer;
+import es.udc.fi.dc.irlab.nmf.common.MatrixSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.common.Vector1Mapper;
@@ -162,14 +162,15 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob2(Path wPath, Path cPath) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H3-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H2-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
 	SequenceFileInputFormat.addInputPath(job, wPath);
 
 	job.setMapperClass(CrossProductMapper.class);
-	job.setReducerClass(SumMatrixReducer.class);
+	job.setCombinerClass(MatrixSumReducer.class);
+	job.setReducerClass(MatrixSumReducer.class);
 
 	job.setMapOutputKeyClass(NullWritable.class);
 	job.setMapOutputValueClass(MatrixWritable.class);
@@ -205,7 +206,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob3(Path hPath, Path yPath, Path cPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H4-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H3-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -252,7 +253,7 @@ public class ComputeHJob extends MatrixComputationJob {
     protected void runJob4(Path hPath, Path xPath, Path yPath, Path hOutputPath)
 	    throws IOException, ClassNotFoundException, InterruptedException {
 
-	Job job = new Job(new Configuration(), prefix + "H5-it" + iteration);
+	Job job = new Job(new Configuration(), prefix + "H4-it" + iteration);
 	job.setJarByClass(this.getClass());
 
 	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
