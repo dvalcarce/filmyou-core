@@ -51,7 +51,7 @@ public class TestSumVectorReducer {
 	Vector outputVector = new DenseVector(new double[] { 5.0, 10.0, 15.0 });
 	VectorWritable outputValue = new VectorWritable(outputVector);
 
-	reduceDriver.withReducer(new SumVectorReducer());
+	reduceDriver.withReducer(new VectorSumReducer());
 	reduceDriver.withInput(inputKey, inputValues);
 	reduceDriver.withOutput(outputKey, outputValue);
 
