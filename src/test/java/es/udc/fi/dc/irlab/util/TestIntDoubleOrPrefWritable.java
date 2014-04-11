@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.rm.util;
+package es.udc.fi.dc.irlab.util;
 
 import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+
 /**
- * Test class for {@link es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable}.
+ * Test class for {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable}.
  * 
  */
 public class TestIntDoubleOrPrefWritable {
 
     /**
      * Test method for
-     * {@link es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable#IntDoubleOrPrefWritable(int, int, float)}
+     * {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#IntDoubleOrPrefWritable(int, int, float)}
      * .
      */
     @Test
@@ -53,7 +55,7 @@ public class TestIntDoubleOrPrefWritable {
 
     /**
      * Test method for
-     * {@link es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable#IntDoubleOrPrefWritable(int, double)}
+     * {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#IntDoubleOrPrefWritable(int, double)}
      * .
      */
     @Test
@@ -74,7 +76,7 @@ public class TestIntDoubleOrPrefWritable {
 
     /**
      * Test method for
-     * {@link es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable#IntDoubleOrPrefWritable(int)}
+     * {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#IntDoubleOrPrefWritable(int)}
      * .
      */
     @Test
@@ -94,8 +96,8 @@ public class TestIntDoubleOrPrefWritable {
 
     /**
      * Test method for
-     * {@link es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable#equals(Object)}
-     * and {@link es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable#hashCode()}
+     * {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#equals(Object)}
+     * and {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#hashCode()}
      * .
      */
     @Test

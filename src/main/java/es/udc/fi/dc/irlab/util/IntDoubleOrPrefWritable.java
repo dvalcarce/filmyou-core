@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.rm.util;
+package es.udc.fi.dc.irlab.util;
 
 import java.io.DataInput;
 import java.io.DataOutput;

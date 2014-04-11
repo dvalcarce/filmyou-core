@@ -16,7 +16,7 @@
 
 package es.udc.fi.dc.irlab.rm;
 
-import es.udc.fi.dc.irlab.rm.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 

@@ -59,20 +59,17 @@ public class WComputationMapper extends
 	    throw new FileNotFoundException();
 	}
 
+	IntWritable key = new IntWritable();
+	VectorWritable val = new VectorWritable();
+
 	try (SequenceFile.Reader reader = new SequenceFile.Reader(
 		FileSystem.getLocal(conf), paths[0], conf)) {
-	    IntWritable key = new IntWritable();
-	    VectorWritable val = new VectorWritable();
-
 	    while (reader.next(key, val)) {
 		mapX.put(key.get(), val.get());
 	    }
 	}
 	try (SequenceFile.Reader reader = new SequenceFile.Reader(
 		FileSystem.getLocal(conf), paths[1], conf)) {
-	    IntWritable key = new IntWritable();
-	    VectorWritable val = new VectorWritable();
-
 	    while (reader.next(key, val)) {
 		mapY.put(key.get(), val.get());
 	    }
