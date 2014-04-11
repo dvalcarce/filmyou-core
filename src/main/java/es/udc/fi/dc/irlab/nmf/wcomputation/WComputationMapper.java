@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -41,8 +42,8 @@ public class WComputationMapper extends
 	Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
     private Path[] paths;
-    private TIntObjectMap<Vector> mapX = new TIntObjectHashMap<Vector>();
-    private TIntObjectMap<Vector> mapY = new TIntObjectHashMap<Vector>();
+    private TIntObjectMap<Vector> mapX;
+    private TIntObjectMap<Vector> mapY;
 
     /**
      * Build HashMaps with DistributedCache data.
@@ -61,6 +62,10 @@ public class WComputationMapper extends
 
 	IntWritable key = new IntWritable();
 	VectorWritable val = new VectorWritable();
+
+	int numberOfItems = conf.getInt(RMRecommenderJob.numberOfItems, -1);
+	mapX = new TIntObjectHashMap<Vector>(numberOfItems);
+	mapY = new TIntObjectHashMap<Vector>(numberOfItems);
 
 	try (SequenceFile.Reader reader = new SequenceFile.Reader(
 		FileSystem.getLocal(conf), paths[0], conf)) {

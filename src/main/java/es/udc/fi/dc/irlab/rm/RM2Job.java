@@ -37,6 +37,7 @@ import org.apache.mahout.common.AbstractJob;
 import org.apache.mahout.common.IntPairWritable;
 
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
@@ -64,7 +65,7 @@ public class RM2Job extends AbstractJob {
 	inputPath = HadoopUtils.getInputPath(conf);
 	outputPath = HadoopUtils.getOutputPath(conf);
 
-	String baseDirectory = conf.get("directory");
+	String baseDirectory = conf.get(RMRecommenderJob.directory);
 	directory = baseDirectory + "/rm2";
 	HadoopUtils.removeData(conf, directory);
 
@@ -72,9 +73,10 @@ public class RM2Job extends AbstractJob {
 	Path itemSum = new Path(directory + "/movieSum");
 	Path totalSum = new Path(directory + "/totalSum");
 	Path itemColl = new Path(directory + "/itemColl");
-	Path clustering = new Path(baseDirectory + "/" + conf.get("clustering"));
+	Path clustering = new Path(baseDirectory + "/"
+		+ conf.get(RMRecommenderJob.clustering));
 	Path clusteringCount = new Path(baseDirectory + "/"
-		+ conf.get("clusteringCount"));
+		+ conf.get(RMRecommenderJob.clusteringCount));
 
 	runUserSum(userSum);
 	runMovieSum(itemSum);

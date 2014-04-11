@@ -36,39 +36,55 @@ import es.udc.fi.dc.irlab.rm.RM2Job;
 public class RMRecommenderJob extends AbstractJob {
 
     public static final String useCassandra = "useCassandra";
+    public static final String numberOfUsers = "numberOfUsers";
+    public static final String numberOfItems = "numberOfItems";
+    public static final String numberOfClusters = "numberOfClusters";
+    public static final String numberOfIterations = "numberOfIterations";
+    public static final String directory = "directory";
+    public static final String cassandraPort = "cassandraPort";
+    public static final String cassandraHost = "cassandraHost";
+    public static final String cassandraKeyspace = "cassandraKeyspace";
+    public static final String cassandraTableIn = "cassandraTableIn";
+    public static final String cassandraTableOut = "cassandraTableOut";
+    public static final String cassandraPartitioner = "cassandraPartitioner";
+    public static final String cassandraTTL = "cassandraTTL";
+    public static final String H = "H";
+    public static final String W = "W";
+    public static final String clustering = "clustering";
+    public static final String clusteringCount = "clusteringCount";
+    public static final String lambda = "lambda";
+    public static final String iteration = "iteration";
 
     /**
      * Load default command line arguments.
      */
     private void loadDefaultSetup() {
-	addOption("numberOfUsers", "n", "Number of users", true);
-	addOption("numberOfItems", "m", "Number of movies", true);
-	addOption("numberOfClusters", "k", "Number of clusters", true);
-	addOption("numberOfIterations", "i", "Number of iterations", "50");
-	addOption("directory", "d", "Working directory", "recommendation");
+	addOption(numberOfUsers, "n", "Number of users", true);
+	addOption(numberOfItems, "m", "Number of movies", true);
+	addOption(numberOfClusters, "k", "Number of clusters", true);
+	addOption(numberOfIterations, "i", "Number of iterations", "20");
+	addOption(directory, "d", "Working directory", "recommendation");
 	addOption(useCassandra, "useCas", "Use Cassandra instead of HDFS",
 		"true");
-	addOption("cassandraPort", "port", "Cassandra TCP port", "9160");
-	addOption("cassandraHost", "host", "Cassandra host IP", "127.0.0.1");
-	addOption("cassandraKeyspace", "keyspace", "Cassandra keyspace name",
+	addOption(cassandraPort, "port", "Cassandra TCP port", "9160");
+	addOption(cassandraHost, "host", "Cassandra host IP", "127.0.0.1");
+	addOption(cassandraKeyspace, "keyspace", "Cassandra keyspace name",
 		"recommendertest");
-	addOption("cassandraTableIn", "table",
+	addOption(cassandraTableIn, "table",
 		"Cassandra Column Family name for input data", "ratings");
-	addOption("cassandraTableOut", "table",
+	addOption(cassandraTableOut, "table",
 		"Cassandra Column Family name for output data",
 		"recommendations");
-	addOption("cassandraPartitioner", "partitioner",
-		"Cassandra Partitioner",
+	addOption(cassandraPartitioner, "partitioner", "Cassandra Partitioner",
 		"org.apache.cassandra.dht.Murmur3Partitioner");
-	addOption("cassandraTTL", "ttl", "Cassandra TLL for data input",
-		"86400");
-	addOption("H", "h", "Initial H matrix", false);
-	addOption("W", "w", "Initial W matrix", false);
-	addOption("clustering", "cluster", "Clustering results", "clustering");
-	addOption("clusteringCount", "clusterCount", "Clustering sizes",
+	addOption(cassandraTTL, "ttl", "Cassandra TLL for data input", "86400");
+	addOption(H, "h", "Initial H matrix", false);
+	addOption(W, "w", "Initial W matrix", false);
+	addOption(clustering, "cluster", "Clustering results", "clustering");
+	addOption(clusteringCount, "clusterCount", "Clustering sizes",
 		"clusteringCount");
-	addOption("lambda", "l",
-		"Lambda parameter for Jelinek-Mercer smoothing", "0.5");
+	addOption(lambda, "l", "Lambda parameter for Jelinek-Mercer smoothing",
+		"0.5");
     }
 
     /**
@@ -116,16 +132,16 @@ public class RMRecommenderJob extends AbstractJob {
     public int run(String[] args) throws Exception {
 	Configuration conf = parseInput(args);
 
-	if (conf.getInt("numberOfIterations", 0) > 0) {
+	if (conf.getInt(numberOfIterations, 0) > 0) {
 	    if (ToolRunner.run(conf, new PPCDriver(), args) < 0) {
 		throw new RuntimeException("PPCJob failed!");
 	    }
 	}
 
-	if (conf.get("H") == null) {
-	    String directory = conf.get("directory");
-	    conf.set("H", directory + "/H");
-	    conf.set("W", directory + "/W");
+	if (conf.get(RMRecommenderJob.H) == null) {
+	    String directory = conf.get(RMRecommenderJob.directory);
+	    conf.set(RMRecommenderJob.H, directory + "/H");
+	    conf.set(RMRecommenderJob.W, directory + "/W");
 	}
 
 	if (ToolRunner.run(conf, new ClusterAssignmentJob(), args) < 0) {

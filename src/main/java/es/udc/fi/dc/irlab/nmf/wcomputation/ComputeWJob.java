@@ -41,6 +41,7 @@ import es.udc.fi.dc.irlab.nmf.common.MatrixSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 
@@ -69,8 +70,9 @@ public class ComputeWJob extends MatrixComputationJob {
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
 	inputPath = HadoopUtils.getInputPath(conf);
-	iteration = conf.getInt("iteration", -1);
-	directory = conf.get("directory") + File.separator + "wcomputation";
+	iteration = conf.getInt(RMRecommenderJob.iteration, -1);
+	directory = conf.get(RMRecommenderJob.directory) + File.separator
+		+ "wcomputation";
 
 	HadoopUtils.createFolder(conf, directory);
 	HadoopUtils.removeData(conf, directory);

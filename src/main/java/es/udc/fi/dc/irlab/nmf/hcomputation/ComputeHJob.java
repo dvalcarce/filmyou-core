@@ -41,6 +41,7 @@ import es.udc.fi.dc.irlab.nmf.common.Vector1Mapper;
 import es.udc.fi.dc.irlab.nmf.common.Vector2Mapper;
 import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
 import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 
@@ -72,8 +73,9 @@ public class ComputeHJob extends MatrixComputationJob {
 	Configuration conf = getConf();
 
 	inputPath = HadoopUtils.getInputPath(conf);
-	iteration = conf.getInt("iteration", -1);
-	directory = conf.get("directory") + File.separator + "hcomputation";
+	iteration = conf.getInt(RMRecommenderJob.iteration, -1);
+	directory = conf.get(RMRecommenderJob.directory) + File.separator
+		+ "hcomputation";
 
 	HadoopUtils.removeData(conf, directory);
 	HadoopUtils.createFolder(conf, directory);

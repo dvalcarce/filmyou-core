@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.mahout.common.AbstractJob;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 
 /**
@@ -84,17 +85,18 @@ public abstract class AbstractNMFDriver extends AbstractJob {
     public int run(String[] args) throws Exception {
 	Configuration conf = getConf();
 
-	numberOfUsers = conf.getInt("numberOfUsers", 0);
-	numberOfItems = conf.getInt("numberOfItems", 0);
-	numberOfClusters = conf.getInt("numberOfClusters", 0);
-	numberOfIterations = conf.getInt("numberOfIterations", 0);
+	numberOfUsers = conf.getInt(RMRecommenderJob.numberOfUsers, 0);
+	numberOfItems = conf.getInt(RMRecommenderJob.numberOfItems, 0);
+	numberOfClusters = conf.getInt(RMRecommenderJob.numberOfClusters, 0);
+	numberOfIterations = conf
+		.getInt(RMRecommenderJob.numberOfIterations, 0);
 
-	baseDirectory = conf.get("directory");
+	baseDirectory = conf.get(RMRecommenderJob.directory);
 
 	/* Matrix initialisation */
-	if (conf.get("H") != null) {
-	    H = new Path(conf.get("H"));
-	    W = new Path(conf.get("W"));
+	if (conf.get(RMRecommenderJob.H) != null) {
+	    H = new Path(conf.get(RMRecommenderJob.H));
+	    W = new Path(conf.get(RMRecommenderJob.W));
 	} else {
 	    createInitialMatrices();
 	}
@@ -104,6 +106,7 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 
 	/* Run algorithm */
 	for (int i = 0; i < numberOfIterations; i++) {
+
 	    MatrixComputationJob hJob = hClass.getConstructor(
 		    new Class[] { Path.class, Path.class, Path.class,
 			    Path.class }).newInstance(H, W, H2, W2);
@@ -112,7 +115,7 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 		    new Class[] { Path.class, Path.class, Path.class,
 			    Path.class }).newInstance(H, W, H2, W2);
 
-	    conf.setInt("iteration", i + 1);
+	    conf.setInt(RMRecommenderJob.iteration, i + 1);
 	    ToolRunner.run(conf, hJob, args);
 	    ToolRunner.run(conf, wJob, args);
 

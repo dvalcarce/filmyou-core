@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.lib.map.InverseMapper;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
@@ -46,11 +47,12 @@ public class ClusterAssignmentJob extends AbstractJob {
 	Configuration conf = getConf();
 
 	/* Prepare paths */
-	String directory = conf.get("directory");
-	H = new Path(conf.get("H"));
-	clustering = new Path(directory + "/" + conf.get("clustering"));
+	String directory = conf.get(RMRecommenderJob.directory);
+	H = new Path(conf.get(RMRecommenderJob.H));
+	clustering = new Path(directory + "/"
+		+ conf.get(RMRecommenderJob.clustering));
 	clusteringCount = new Path(directory + "/"
-		+ conf.get("clusteringCount"));
+		+ conf.get(RMRecommenderJob.clusteringCount));
 	HadoopUtils.removeData(conf, clustering.toString());
 	HadoopUtils.removeData(conf, clusteringCount.toString());
 

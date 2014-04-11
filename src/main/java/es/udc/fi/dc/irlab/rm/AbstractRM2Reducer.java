@@ -21,6 +21,7 @@ import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.SparseMatrix;
 import org.apache.mahout.math.Vector;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 import gnu.trove.iterator.TIntIterator;
@@ -65,7 +66,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	}
 
 	clusterCount = new TIntIntHashMap(Integer.parseInt(conf
-		.get("numberOfClusters")));
+		.get(RMRecommenderJob.numberOfClusters)));
 
 	// Read cluster count
 	try (SequenceFile.Reader reader = new SequenceFile.Reader(
@@ -80,8 +81,10 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 	itemColl = paths[2];
 	lambda = Double.valueOf(conf.get(RM2Job.lambdaName));
-	numberOfItems = Integer.valueOf(conf.get("numberOfItems"));
-	numberOfUsers = Integer.valueOf(conf.get("numberOfUsers"));
+	numberOfItems = Integer.valueOf(conf
+		.get(RMRecommenderJob.numberOfItems));
+	numberOfUsers = Integer.valueOf(conf
+		.get(RMRecommenderJob.numberOfUsers));
     }
 
     @Override

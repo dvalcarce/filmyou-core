@@ -20,6 +20,8 @@ import org.apache.cassandra.hadoop.ConfigHelper;
 import org.apache.cassandra.hadoop.cql3.CqlConfigHelper;
 import org.apache.hadoop.conf.Configuration;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
+
 /**
  * Utility class for setting up configuration for Cassandra input/output.
  * 
@@ -44,11 +46,11 @@ public class CassandraSetup {
     public static Configuration updateConfForInput(Configuration myConf,
 	    Configuration jobConf) {
 
-	String host = myConf.get("cassandraHost");
-	String keyspace = myConf.get("cassandraKeyspace");
-	String tableIn = myConf.get("cassandraTableIn");
-	String port = myConf.get("cassandraPort");
-	String partitioner = myConf.get("cassandraPartitioner");
+	String host = myConf.get(RMRecommenderJob.cassandraHost);
+	String keyspace = myConf.get(RMRecommenderJob.cassandraKeyspace);
+	String tableIn = myConf.get(RMRecommenderJob.cassandraTableIn);
+	String port = myConf.get(RMRecommenderJob.cassandraPort);
+	String partitioner = myConf.get(RMRecommenderJob.cassandraPartitioner);
 
 	ConfigHelper.setInputRpcPort(jobConf, port);
 	ConfigHelper.setInputInitialAddress(jobConf, host);
@@ -73,12 +75,12 @@ public class CassandraSetup {
     public static Configuration updateConfForOutput(Configuration myConf,
 	    Configuration jobConf) {
 
-	String host = myConf.get("cassandraHost");
-	String keyspace = myConf.get("cassandraKeyspace");
-	String tableOut = myConf.get("cassandraTableOut");
-	String port = myConf.get("cassandraPort");
-	String partitioner = myConf.get("cassandraPartitioner");
-	String ttl = myConf.get("cassandraTTL");
+	String host = myConf.get(RMRecommenderJob.cassandraHost);
+	String keyspace = myConf.get(RMRecommenderJob.cassandraKeyspace);
+	String tableOut = myConf.get(RMRecommenderJob.cassandraTableOut);
+	String port = myConf.get(RMRecommenderJob.cassandraPort);
+	String partitioner = myConf.get(RMRecommenderJob.cassandraPartitioner);
+	String ttl = myConf.get(RMRecommenderJob.cassandraTTL);
 
 	ConfigHelper.setOutputRpcPort(jobConf, port);
 	ConfigHelper.setOutputInitialAddress(jobConf, host);

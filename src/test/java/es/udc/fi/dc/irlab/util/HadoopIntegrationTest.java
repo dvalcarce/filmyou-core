@@ -45,6 +45,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
 
 /**
  * Integration test class utility
@@ -83,16 +84,16 @@ public abstract class HadoopIntegrationTest {
     protected Configuration buildConf() {
 	Configuration conf = new Configuration();
 
-	conf.set("directory", baseDirectory);
-	conf.setBoolean("useCassandra", true);
-	conf.setInt("cassandraPort", cassandraPort);
-	conf.set("cassandraHost", cassandraHost);
-	conf.set("cassandraKeyspace", cassandraKeyspace);
-	conf.set("cassandraPartitioner", cassandraPartitioner);
-	conf.set("cassandraTableIn", cassandraTableIn);
-	conf.set("cassandraTableOut", cassandraTableOut);
-	conf.set("cassandraTTL", cassandraTTL);
-	conf.setFloat("lambda", 0.5f);
+	conf.set(RMRecommenderJob.directory, baseDirectory);
+	conf.setBoolean(RMRecommenderJob.useCassandra, true);
+	conf.setInt(RMRecommenderJob.cassandraPort, cassandraPort);
+	conf.set(RMRecommenderJob.cassandraHost, cassandraHost);
+	conf.set(RMRecommenderJob.cassandraKeyspace, cassandraKeyspace);
+	conf.set(RMRecommenderJob.cassandraPartitioner, cassandraPartitioner);
+	conf.set(RMRecommenderJob.cassandraTableIn, cassandraTableIn);
+	conf.set(RMRecommenderJob.cassandraTableOut, cassandraTableOut);
+	conf.set(RMRecommenderJob.cassandraTTL, cassandraTTL);
+	conf.setFloat(RMRecommenderJob.lambda, 0.5f);
 
 	return conf;
     }
@@ -115,16 +116,16 @@ public abstract class HadoopIntegrationTest {
 
 	Configuration conf = buildConf();
 
-	conf.setInt("numberOfUsers", numberOfUsers);
-	conf.setInt("numberOfItems", numberOfItems);
-	conf.setInt("numberOfClusters", numberOfClusters);
-	conf.setInt("numberOfIterations", numberOfIterations);
+	conf.setInt(RMRecommenderJob.numberOfUsers, numberOfUsers);
+	conf.setInt(RMRecommenderJob.numberOfItems, numberOfItems);
+	conf.setInt(RMRecommenderJob.numberOfClusters, numberOfClusters);
+	conf.setInt(RMRecommenderJob.numberOfIterations, numberOfIterations);
 
 	if (H != null) {
-	    conf.set("H", H.toString());
+	    conf.set(RMRecommenderJob.H, H.toString());
 	}
 	if (W != null) {
-	    conf.set("W", W.toString());
+	    conf.set(RMRecommenderJob.W, W.toString());
 	}
 
 	return conf;
@@ -184,11 +185,11 @@ public abstract class HadoopIntegrationTest {
 		numberOfClusters, 0);
 
 	if (clustering != null) {
-	    conf.set("clustering", clustering);
+	    conf.set(RMRecommenderJob.clustering, clustering);
 	}
 
 	if (clusteringCount != null) {
-	    conf.set("clusteringCount", clusteringCount);
+	    conf.set(RMRecommenderJob.clusteringCount, clusteringCount);
 	}
 
 	return conf;
@@ -212,11 +213,11 @@ public abstract class HadoopIntegrationTest {
 		numberOfItems, 0, 0);
 
 	if (clustering != null) {
-	    conf.set("clustering", clustering);
+	    conf.set(RMRecommenderJob.clustering, clustering);
 	}
 
 	if (clusteringCount != null) {
-	    conf.set("clusteringCount", clusteringCount);
+	    conf.set(RMRecommenderJob.clusteringCount, clusteringCount);
 	}
 
 	return conf;
