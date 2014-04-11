@@ -1,18 +1,5 @@
 package es.udc.fi.dc.irlab.rm;
 
-import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
-import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
-import gnu.trove.iterator.TIntIterator;
-import gnu.trove.map.TIntDoubleMap;
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntDoubleHashMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import gnu.trove.procedure.TIntProcedure;
-import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
@@ -33,6 +20,19 @@ import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.RandomAccessSparseVector;
 import org.apache.mahout.math.SparseMatrix;
 import org.apache.mahout.math.Vector;
+
+import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
+import gnu.trove.iterator.TIntIterator;
+import gnu.trove.map.TIntDoubleMap;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntDoubleHashMap;
+import gnu.trove.map.hash.TIntIntHashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.procedure.TIntProcedure;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 public abstract class AbstractRM2Reducer<A, B> extends
 	Reducer<IntPairWritable, IntDoubleOrPrefWritable, A, B> {

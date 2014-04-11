@@ -16,10 +16,6 @@
 
 package es.udc.fi.dc.irlab.rm;
 
-import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -31,6 +27,10 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.common.IntPairWritable;
+
+import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 
 /**
  * Abstract mapper for reading clustering data as a MapFile in HDFS.

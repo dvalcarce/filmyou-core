@@ -33,8 +33,6 @@ import org.apache.mahout.math.Vector;
 import org.junit.Before;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.common.MatrixSumReducer;
-
 public class TestSumMatrixReducer {
     private ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable> reduceDriver;
 

@@ -27,8 +27,8 @@ import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.RMTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Integration test class utility

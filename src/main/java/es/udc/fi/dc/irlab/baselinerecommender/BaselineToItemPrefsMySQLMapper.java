@@ -29,8 +29,7 @@ import org.apache.mahout.math.VarLongWritable;
  * Reads ratings data from MySQL database and outputs to Hadoop environment.
  * 
  */
-public class BaselineToItemPrefsMySQLMapper
-	extends
+public class BaselineToItemPrefsMySQLMapper extends
 	Mapper<LongWritable, MySQLRecord, VarLongWritable, VarLongWritable> {
 
     public static final String RATING_SHIFT = BaselineToItemPrefsMySQLMapper.class

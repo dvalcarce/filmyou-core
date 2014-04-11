@@ -16,11 +16,11 @@
 
 package es.udc.fi.dc.irlab.util;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-
-import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 
 /**
  * Test class for {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable}.
@@ -97,8 +97,7 @@ public class TestIntDoubleOrPrefWritable {
     /**
      * Test method for
      * {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#equals(Object)}
-     * and {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#hashCode()}
-     * .
+     * and {@link es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable#hashCode()} .
      */
     @Test
     public void testIdentity() {

@@ -26,8 +26,8 @@ import org.junit.Test;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.RMTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
-import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Integration test class utility

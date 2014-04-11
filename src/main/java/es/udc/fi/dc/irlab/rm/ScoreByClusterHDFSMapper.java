@@ -21,7 +21,6 @@ import java.io.IOException;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.mahout.common.IntPairWritable;
 
-import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 
 /**
