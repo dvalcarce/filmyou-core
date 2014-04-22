@@ -23,26 +23,39 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
+import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
 
 /**
  * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (<(i, j), A_{i,j}>) and from H
  * matrix (w_i) obtained by DistributedCache.
  */
 public class VectorByMovieHDFSMapper extends
-	AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
+		AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
 
-    @Override
-    protected void map(IntPairWritable key, FloatWritable column,
-	    Context context) throws IOException, InterruptedException {
+	@Override
+	protected void map(IntPairWritable key, FloatWritable column,
+			Context context) throws IOException, InterruptedException {
 
-	float score = column.get();
+		float score = column.get();
 
-	if (score > 0) {
-	    context.write(new IntWritable(key.getFirst()), new VectorWritable(
-		    getCache(key.getSecond()).times(score)));
+		if (score <= 0) {
+			return;
+		}
+
+		int user = key.getFirst();
+		int item = key.getSecond();
+
+		if (existsMapping()) {
+			if ((user = getNewUserId(user)) != -1
+					&& (item = getNewItemId(item)) != -1) {
+				context.write(new IntWritable(user), new VectorWritable(
+						getCache(item).times(score)));
+			}
+		} else {
+			context.write(new IntWritable(user),
+					new VectorWritable(getCache(item).times(score)));
+		}
+
 	}
-
-    }
 
 }

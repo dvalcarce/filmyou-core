@@ -18,3 +18,4 @@
  * This package contains the classes needed to compute W matrix.
  */
 package es.udc.fi.dc.irlab.nmf.wcomputation;
+

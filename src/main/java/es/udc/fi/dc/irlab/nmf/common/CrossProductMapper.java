@@ -31,16 +31,16 @@ import org.apache.mahout.math.VectorWritable;
  * 
  */
 public class CrossProductMapper extends
-	Mapper<IntWritable, VectorWritable, NullWritable, MatrixWritable> {
+		Mapper<IntWritable, VectorWritable, NullWritable, MatrixWritable> {
 
-    @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
-	    throws IOException, InterruptedException {
-	Vector vector = value.get();
+	@Override
+	protected void map(IntWritable key, VectorWritable value, Context context)
+			throws IOException, InterruptedException {
+		Vector vector = value.get();
 
-	Matrix matrix = vector.cross(vector);
+		Matrix matrix = vector.cross(vector);
 
-	context.write(NullWritable.get(), new MatrixWritable(matrix));
-    }
+		context.write(NullWritable.get(), new MatrixWritable(matrix));
+	}
 
 }

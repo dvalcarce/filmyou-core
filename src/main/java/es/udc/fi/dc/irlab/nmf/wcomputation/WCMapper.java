@@ -24,7 +24,7 @@ import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.AbstractDistributedMatrixMapper;
+import es.udc.fi.dc.irlab.nmf.common.AbstractDistributedMatrixMapper;
 
 /**
  * Emit &lt;i, y_i> from &lt;i, w_i> where y_i = w_i·C.
@@ -32,19 +32,19 @@ import es.udc.fi.dc.irlab.nmf.util.AbstractDistributedMatrixMapper;
  */
 public class WCMapper extends AbstractDistributedMatrixMapper {
 
-    @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(IntWritable key, VectorWritable value, Context context)
+			throws IOException, InterruptedException {
 
-	Vector vector = value.get();
-	Matrix mVector = new DenseMatrix(1, vector.size());
+		Vector vector = value.get();
+		Matrix mVector = new DenseMatrix(1, vector.size());
 
-	for (int j = 0; j < vector.size(); j++) {
-	    mVector.set(0, j, vector.get(j));
+		for (int j = 0; j < vector.size(); j++) {
+			mVector.set(0, j, vector.get(j));
+		}
+
+		context.write(key, new VectorWritable(mVector.times(C).viewRow(0)));
+
 	}
-
-	context.write(key, new VectorWritable(mVector.times(C).viewRow(0)));
-
-    }
 
 }

@@ -30,36 +30,36 @@ import org.apache.cassandra.utils.ByteBufferUtil;
  * U {(i, j, A_{i,j})}>.
  */
 public class RM2CassandraReducer extends
-	AbstractRM2Reducer<Map<String, ByteBuffer>, List<ByteBuffer>> {
+		AbstractRM2Reducer<Map<String, ByteBuffer>, List<ByteBuffer>> {
 
-    /**
-     * Write preference to Cassandra.
-     * 
-     * @param context
-     *            reduce context
-     * @param userId
-     *            user ID
-     * @param itemId
-     *            item ID
-     * @param score
-     *            predicted score
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Override
-    protected void writePreference(Context context, int userId, int itemId,
-	    double score, int cluster) throws IOException, InterruptedException {
+	/**
+	 * Write preference to Cassandra.
+	 * 
+	 * @param context
+	 *            reduce context
+	 * @param userId
+	 *            user ID
+	 * @param itemId
+	 *            item ID
+	 * @param score
+	 *            predicted score
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	@Override
+	protected void writePreference(Context context, int userId, int itemId,
+			double score, int cluster) throws IOException, InterruptedException {
 
-	Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
-	keys.put("user", ByteBufferUtil.bytes(userId + 1));
-	keys.put("movie", ByteBufferUtil.bytes(itemId + 1));
-	keys.put("relevance", ByteBufferUtil.bytes((float) score));
+		Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
+		keys.put("user", ByteBufferUtil.bytes(userId));
+		keys.put("movie", ByteBufferUtil.bytes(itemId));
+		keys.put("relevance", ByteBufferUtil.bytes((float) score));
 
-	List<ByteBuffer> value = new LinkedList<ByteBuffer>();
-	value.add(ByteBufferUtil.bytes(cluster));
+		List<ByteBuffer> value = new LinkedList<ByteBuffer>();
+		value.add(ByteBufferUtil.bytes(cluster));
 
-	context.write(keys, value);
+		context.write(keys, value);
 
-    }
+	}
 
 }

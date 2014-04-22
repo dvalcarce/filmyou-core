@@ -26,11 +26,11 @@ import es.udc.fi.dc.irlab.nmf.wcomputation.ComputeWJob;
  */
 public class PPCDriver extends AbstractNMFDriver {
 
-    /**
-     * Initializes PPCDriver.
-     */
-    public PPCDriver() {
-	super(PPCComputeHJob.class, ComputeWJob.class);
-    }
+	/**
+	 * Initializes PPCDriver.
+	 */
+	public PPCDriver() {
+		super(PPCComputeHJob.class, ComputeWJob.class);
+	}
 
 }

@@ -18,3 +18,4 @@
  * This package contains common classes for NMF algorithms.
  */
 package es.udc.fi.dc.irlab.nmf.common;
+

@@ -18,3 +18,4 @@
  * This package contains utils for Cassandra and Hadoop.
  */
 package es.udc.fi.dc.irlab.util;
+

@@ -20,29 +20,43 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
+
+import es.udc.fi.dc.irlab.nmf.common.MappingsMapper;
 
 /**
  * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
 public class MovieScoreByUserCassandraMapper
-	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
+		extends
+		MappingsMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
-    @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(Map<String, ByteBuffer> keys,
+			Map<String, ByteBuffer> columns, Context context)
+			throws IOException, InterruptedException {
 
-	float score = columns.get("score").getFloat();
+		float score = columns.get("score").getFloat();
 
-	if (score > 0) {
-	    context.write(new IntPairWritable(keys.get("user").getInt(), 1),
-		    new VectorOrPrefWritable(keys.get("movie").getInt(), score));
+		if (score <= 0) {
+			return;
+		}
+
+		int user = keys.get("user").getInt();
+		int item = keys.get("movie").getInt();
+
+		if (existsMapping()) {
+			if ((user = getNewUserId(user)) != -1
+					&& (item = getNewItemId(item)) != -1) {
+				context.write(new IntPairWritable(user, 1),
+						new VectorOrPrefWritable(item, score));
+			}
+		} else {
+			context.write(new IntPairWritable(user, 1),
+					new VectorOrPrefWritable(item, score));
+		}
+
 	}
-
-    }
 
 }

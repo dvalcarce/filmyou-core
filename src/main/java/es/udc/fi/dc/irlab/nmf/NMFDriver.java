@@ -25,11 +25,11 @@ import es.udc.fi.dc.irlab.nmf.wcomputation.ComputeWJob;
  */
 public class NMFDriver extends AbstractNMFDriver {
 
-    /**
-     * Initializes NMFDriver.
-     */
-    public NMFDriver() {
-	super(ComputeHJob.class, ComputeWJob.class);
-    }
+	/**
+	 * Initializes NMFDriver.
+	 */
+	public NMFDriver() {
+		super(ComputeHJob.class, ComputeWJob.class);
+	}
 
 }

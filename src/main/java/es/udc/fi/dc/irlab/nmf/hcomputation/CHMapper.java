@@ -22,7 +22,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.AbstractDistributedMatrixMapper;
+import es.udc.fi.dc.irlab.nmf.common.AbstractDistributedMatrixMapper;
 
 /**
  * Emit &lt;j, y_j> from &lt;j, h_j> where y_j = C·h_j
@@ -30,14 +30,14 @@ import es.udc.fi.dc.irlab.nmf.util.AbstractDistributedMatrixMapper;
  */
 public class CHMapper extends AbstractDistributedMatrixMapper {
 
-    @Override
-    protected void map(IntWritable key, VectorWritable value, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(IntWritable key, VectorWritable value, Context context)
+			throws IOException, InterruptedException {
 
-	Vector vector = value.get();
+		Vector vector = value.get();
 
-	context.write(key, new VectorWritable(C.times(vector)));
+		context.write(key, new VectorWritable(C.times(vector)));
 
-    }
+	}
 
 }

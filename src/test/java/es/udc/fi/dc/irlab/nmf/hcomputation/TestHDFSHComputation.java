@@ -34,37 +34,37 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
  */
 public class TestHDFSHComputation extends HadoopIntegrationTest {
 
-    @Test
-    public void integrationTest() throws Exception {
-	int numberOfUsers = NMFTestData.numberOfUsers;
-	int numberOfItems = NMFTestData.numberOfItems;
-	int numberOfClusters = NMFTestData.numberOfClusters;
-	int numberOfIterations = 1;
+	@Test
+	public void integrationTest() throws Exception {
+		int numberOfUsers = NMFTestData.numberOfUsers;
+		int numberOfItems = NMFTestData.numberOfItems;
+		int numberOfClusters = NMFTestData.numberOfClusters;
+		int numberOfIterations = 1;
 
-	Configuration conf = buildConf();
-	HadoopUtils.removeData(conf, conf.get("directory"));
+		Configuration conf = buildConf();
+		HadoopUtils.removeData(conf, conf.get("directory"));
 
-	/* Data initialization */
-	Path H = DataInitialization.createDoubleMatrix(conf,
-		NMFTestData.H_init, baseDirectory, "H");
-	Path W = DataInitialization.createDoubleMatrix(conf,
-		NMFTestData.W_init, baseDirectory, "W");
-	Path H2 = new Path(baseDirectory + File.separator + "H2");
-	Path W2 = new Path(baseDirectory + File.separator + "W2");
-	Path input = DataInitialization.createIntPairFloatFile(conf,
-		NMFTestData.A, baseDirectory, "A");
+		/* Data initialization */
+		Path H = DataInitialization.createDoubleMatrix(conf,
+				NMFTestData.H_init, baseDirectory, "H", 1);
+		Path W = DataInitialization.createDoubleMatrix(conf,
+				NMFTestData.W_init, baseDirectory, "W", 1);
+		Path H2 = new Path(baseDirectory + File.separator + "H2");
+		Path W2 = new Path(baseDirectory + File.separator + "W2");
+		Path input = DataInitialization.createIntPairFloatFile(conf,
+				NMFTestData.A, baseDirectory, "A");
 
-	/* Run job */
-	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
-		numberOfIterations);
-	conf.setBoolean("useCassandra", false);
-	conf.set(HadoopUtils.inputPathName, input.toString());
-	ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
+		/* Run job */
+		conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
+				numberOfIterations);
+		conf.setBoolean("useCassandra", false);
+		conf.set(HadoopUtils.inputPathName, input.toString());
+		ToolRunner.run(conf, new ComputeHJob(H, W, H2, W2), null);
 
-	/* Run asserts */
-	compareIntVectorData(conf, NMFTestData.H_one, baseDirectory, H2);
+		/* Run asserts */
+		compareIntVectorData(conf, NMFTestData.H_one, baseDirectory, H2);
 
-	HadoopUtils.removeData(conf, conf.get("directory"));
-    }
+		HadoopUtils.removeData(conf, conf.get("directory"));
+	}
 
 }

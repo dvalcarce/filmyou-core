@@ -29,50 +29,50 @@ import org.junit.Test;
  */
 public class TestRMRecommenderJob {
 
-    /**
-     * Test method for
-     * {@link es.udc.fi.dc.irlab.rmrecommender.TestRMRecommenderJob#parseInput(String[])}
-     * .
-     * 
-     * @throws IOException
-     */
-    @Test
-    public void testParseInput() throws IOException {
-	RMRecommenderJob job = new RMRecommenderJob();
+	/**
+	 * Test method for
+	 * {@link es.udc.fi.dc.irlab.rmrecommender.TestRMRecommenderJob#parseInput(String[])}
+	 * .
+	 * 
+	 * @throws IOException
+	 */
+	@Test
+	public void testParseInput() throws IOException {
+		RMRecommenderDriver job = new RMRecommenderDriver();
 
-	String[] args = { "--cassandraHost", "127.0.0.1",
-		"--cassandraKeyspace", "recommendertest",
-		"--cassandraPartitioner",
-		"org.apache.cassandra.dht.Murmur3Partitioner",
-		"--cassandraPort", "9160", "--cassandraTTL", "86400",
-		"--cassandraTableIn", "ratings", "--cassandraTableOut",
-		"recommendations", "--clustering", "clustering",
-		"--clusteringCount", "clusteringCount", "--directory",
-		"recommendation", "--lambda", "0.5", "--numberOfClusters",
-		"50", "--numberOfItems", "17770", "--numberOfIterations", "1",
-		"--numberOfUsers", "480189", "--useCassandra", "false" };
+		String[] args = { "--cassandraHost", "127.0.0.1",
+				"--cassandraKeyspace", "recommendertest",
+				"--cassandraPartitioner",
+				"org.apache.cassandra.dht.Murmur3Partitioner",
+				"--cassandraPort", "9160", "--cassandraTTL", "86400",
+				"--cassandraTableIn", "ratings", "--cassandraTableOut",
+				"recommendations", "--clustering", "clustering",
+				"--clusteringCount", "clusteringCount", "--directory",
+				"recommendation", "--lambda", "0.5", "--numberOfClusters",
+				"50", "--numberOfItems", "17770", "--numberOfIterations", "1",
+				"--numberOfUsers", "480189", "--useCassandra", "false" };
 
-	Configuration conf = job.parseInput(args);
-	for (int i = 0; i < args.length; i += 2) {
-	    assertEquals(args[i + 1], conf.get(args[i].substring(2)));
+		Configuration conf = job.parseInput(args);
+		for (int i = 0; i < args.length; i += 2) {
+			assertEquals(args[i + 1], conf.get(args[i].substring(2)));
+		}
+
 	}
 
-    }
+	/**
+	 * Test method for
+	 * {@link es.udc.fi.dc.irlab.rmrecommender.TestRMRecommenderJob#parseInput(String[])}
+	 * .
+	 * 
+	 * @throws IOException
+	 */
+	@Test(expected = IllegalArgumentException.class)
+	public void testParseEmptyInput() throws IOException {
+		RMRecommenderDriver job = new RMRecommenderDriver();
 
-    /**
-     * Test method for
-     * {@link es.udc.fi.dc.irlab.rmrecommender.TestRMRecommenderJob#parseInput(String[])}
-     * .
-     * 
-     * @throws IOException
-     */
-    @Test(expected = IllegalArgumentException.class)
-    public void testParseEmptyInput() throws IOException {
-	RMRecommenderJob job = new RMRecommenderJob();
+		String[] args = {};
+		job.parseInput(args);
 
-	String[] args = {};
-	job.parseInput(args);
-
-    }
+	}
 
 }

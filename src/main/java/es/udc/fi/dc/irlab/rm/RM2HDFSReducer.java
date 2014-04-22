@@ -26,29 +26,29 @@ import org.apache.mahout.common.IntPairWritable;
  * {(i, j, A_{i,j})}>.
  */
 public class RM2HDFSReducer extends
-	AbstractRM2Reducer<IntPairWritable, FloatWritable> {
+		AbstractRM2Reducer<IntPairWritable, FloatWritable> {
 
-    /**
-     * Write preference to HDFS SequenceFile<IntPairWritable, FloatWritable>.
-     * 
-     * @param context
-     *            reduce context
-     * @param userId
-     *            user ID
-     * @param itemId
-     *            item ID
-     * @param score
-     *            predicted score
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Override
-    protected void writePreference(Context context, int userId, int itemId,
-	    double score, int cluster) throws IOException, InterruptedException {
+	/**
+	 * Write preference to HDFS SequenceFile<IntPairWritable, FloatWritable>.
+	 * 
+	 * @param context
+	 *            reduce context
+	 * @param userId
+	 *            user ID
+	 * @param itemId
+	 *            item ID
+	 * @param score
+	 *            predicted score
+	 * @throws IOException
+	 * @throws InterruptedException
+	 */
+	@Override
+	protected void writePreference(Context context, int userId, int itemId,
+			double score, int cluster) throws IOException, InterruptedException {
 
-	context.write(new IntPairWritable(userId + 1, itemId + 1),
-		new FloatWritable((float) score));
+		context.write(new IntPairWritable(userId, itemId), new FloatWritable(
+				(float) score));
 
-    }
+	}
 
 }

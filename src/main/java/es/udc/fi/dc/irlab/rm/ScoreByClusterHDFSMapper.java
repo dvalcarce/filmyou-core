@@ -21,26 +21,28 @@ import java.io.IOException;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.mahout.common.IntPairWritable;
 
+import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 
 /**
- * Emit &lt;(k, 2), (i, j, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>) where
+ * Emit &lt;(k, 1), (i, j, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>) where
  * j is a user from the cluster k.
  */
-public class ScoreByClusterHDFSMapper extends
-	AbstractByClusterMapper<IntPairWritable, FloatWritable> {
+public class ScoreByClusterHDFSMapper
+		extends
+		AbstractByClusterMapper<IntPairWritable, FloatWritable, IntPairWritable, IntDoubleOrPrefWritable> {
 
-    @Override
-    protected void map(IntPairWritable key, FloatWritable column,
-	    Context context) throws IOException, InterruptedException {
+	@Override
+	protected void map(IntPairWritable key, FloatWritable column,
+			Context context) throws IOException, InterruptedException {
 
-	float score = column.get();
-	if (score > 0) {
-	    int user = key.getFirst();
-	    context.write(new IntPairWritable(getCluster(user), 1),
-		    new IntDoubleOrPrefWritable(user, key.getSecond(), score));
+		float score = column.get();
+		if (score > 0) {
+			int user = key.getFirst();
+			context.write(new IntPairWritable(getCluster(user), 1),
+					new IntDoubleOrPrefWritable(user, key.getSecond(), score));
+		}
+
 	}
-
-    }
 
 }

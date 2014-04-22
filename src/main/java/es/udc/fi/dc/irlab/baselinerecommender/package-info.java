@@ -19,3 +19,4 @@
  * filtering algorithm for Cassandra and MySQL.
  */
 package es.udc.fi.dc.irlab.baselinerecommender;
+

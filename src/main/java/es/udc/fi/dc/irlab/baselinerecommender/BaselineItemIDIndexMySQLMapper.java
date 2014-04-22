@@ -29,16 +29,16 @@ import org.apache.mahout.math.VarLongWritable;
  * MySQL integration.
  */
 public final class BaselineItemIDIndexMySQLMapper extends
-	Mapper<LongWritable, MySQLRecord, VarIntWritable, VarLongWritable> {
+		Mapper<LongWritable, MySQLRecord, VarIntWritable, VarLongWritable> {
 
-    @Override
-    protected void map(LongWritable key, MySQLRecord value, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(LongWritable key, MySQLRecord value, Context context)
+			throws IOException, InterruptedException {
 
-	int index = TasteHadoopUtils.idToIndex(value.item);
-	context.write(new VarIntWritable(index),
-		new VarLongWritable(value.item));
+		int index = TasteHadoopUtils.idToIndex(value.item);
+		context.write(new VarIntWritable(index),
+				new VarLongWritable(value.item));
 
-    }
+	}
 
 }

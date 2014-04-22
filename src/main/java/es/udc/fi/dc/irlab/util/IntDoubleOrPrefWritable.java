@@ -33,140 +33,140 @@ import com.google.common.primitives.Ints;
  */
 public final class IntDoubleOrPrefWritable implements Writable {
 
-    private int userId;
-    private int itemId;
-    private float score;
-    private int key;
-    private double value;
-    private boolean isPref;
+	private int userId;
+	private int itemId;
+	private float score;
+	private int key;
+	private double value;
+	private boolean isPref;
 
-    /**
-     * Empty constructor.
-     */
-    public IntDoubleOrPrefWritable() {
-
-    }
-
-    /**
-     * Constructor for a PreferenceWritable.
-     * 
-     * @param userID
-     * @param itemID
-     * @param score
-     */
-    public IntDoubleOrPrefWritable(int userID, int itemID, float score) {
-	this.userId = userID;
-	this.itemId = itemID;
-	this.score = score;
-	this.isPref = true;
-    }
-
-    /**
-     * Constructor for a IntDoublePairWritable.
-     * 
-     * @param key
-     * @param value
-     */
-    public IntDoubleOrPrefWritable(int key, double value) {
-	this.key = key;
-	this.value = value;
-	this.isPref = false;
-    }
-
-    /**
-     * Constructor for a IntWritable (skipping value info).
-     * 
-     * @param key
-     */
-    public IntDoubleOrPrefWritable(int key) {
-	this.key = key;
-	this.isPref = false;
-    }
-
-    public int getUserId() {
-	return userId;
-    }
-
-    public int getItemId() {
-	return itemId;
-    }
-
-    public float getScore() {
-	return score;
-    }
-
-    public int getKey() {
-	return key;
-    }
-
-    public double getValue() {
-	return value;
-    }
-
-    public boolean isPref() {
-	return isPref;
-    }
-
-    @Override
-    public void write(DataOutput out) throws IOException {
-	out.writeBoolean(isPref);
-	if (isPref) {
-	    out.writeInt(userId);
-	    out.writeInt(itemId);
-	    out.writeFloat(score);
-	} else {
-	    out.writeInt(key);
-	    out.writeDouble(value);
-	}
-    }
-
-    @Override
-    public void readFields(DataInput in) throws IOException {
-	isPref = in.readBoolean();
-	if (isPref) {
-	    userId = in.readInt();
-	    itemId = in.readInt();
-	    score = in.readFloat();
-	} else {
-	    key = in.readInt();
-	    value = in.readDouble();
-	}
-    }
-
-    @Override
-    public int hashCode() {
-	if (isPref) {
-	    return Ints.hashCode(userId) ^ Ints.hashCode(itemId)
-		    ^ Floats.hashCode(score);
-	} else {
-	    return Ints.hashCode(key) ^ Doubles.hashCode(value);
-	}
-    }
-
-    @Override
-    public boolean equals(Object o) {
-	if (!(o instanceof IntDoubleOrPrefWritable)) {
-	    return false;
-	}
-	IntDoubleOrPrefWritable other = (IntDoubleOrPrefWritable) o;
-	if (isPref == other.isPref) {
-	    if (isPref) {
-		return userId == other.getUserId()
-			&& itemId == other.getItemId()
-			&& score == other.getScore();
-	    }
-	    return key == other.getKey() && value == other.getValue();
+	/**
+	 * Empty constructor.
+	 */
+	public IntDoubleOrPrefWritable() {
 
 	}
-	return false;
-    }
 
-    @Override
-    public String toString() {
-	if (isPref) {
-	    return String.format("%d\t%d\t%f", userId, itemId, score);
+	/**
+	 * Constructor for a PreferenceWritable.
+	 * 
+	 * @param userID
+	 * @param itemID
+	 * @param score
+	 */
+	public IntDoubleOrPrefWritable(int userID, int itemID, float score) {
+		this.userId = userID;
+		this.itemId = itemID;
+		this.score = score;
+		this.isPref = true;
 	}
-	return String.format("%d\t%f", key, value);
-    }
+
+	/**
+	 * Constructor for a IntDoublePairWritable.
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public IntDoubleOrPrefWritable(int key, double value) {
+		this.key = key;
+		this.value = value;
+		this.isPref = false;
+	}
+
+	/**
+	 * Constructor for a IntWritable (skipping value info).
+	 * 
+	 * @param key
+	 */
+	public IntDoubleOrPrefWritable(int key) {
+		this.key = key;
+		this.isPref = false;
+	}
+
+	public int getUserId() {
+		return userId;
+	}
+
+	public int getItemId() {
+		return itemId;
+	}
+
+	public float getScore() {
+		return score;
+	}
+
+	public int getKey() {
+		return key;
+	}
+
+	public double getValue() {
+		return value;
+	}
+
+	public boolean isPref() {
+		return isPref;
+	}
+
+	@Override
+	public void write(DataOutput out) throws IOException {
+		out.writeBoolean(isPref);
+		if (isPref) {
+			out.writeInt(userId);
+			out.writeInt(itemId);
+			out.writeFloat(score);
+		} else {
+			out.writeInt(key);
+			out.writeDouble(value);
+		}
+	}
+
+	@Override
+	public void readFields(DataInput in) throws IOException {
+		isPref = in.readBoolean();
+		if (isPref) {
+			userId = in.readInt();
+			itemId = in.readInt();
+			score = in.readFloat();
+		} else {
+			key = in.readInt();
+			value = in.readDouble();
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		if (isPref) {
+			return Ints.hashCode(userId) ^ Ints.hashCode(itemId)
+					^ Floats.hashCode(score);
+		} else {
+			return Ints.hashCode(key) ^ Doubles.hashCode(value);
+		}
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (!(o instanceof IntDoubleOrPrefWritable)) {
+			return false;
+		}
+		IntDoubleOrPrefWritable other = (IntDoubleOrPrefWritable) o;
+		if (isPref == other.isPref) {
+			if (isPref) {
+				return userId == other.getUserId()
+						&& itemId == other.getItemId()
+						&& score == other.getScore();
+			}
+			return key == other.getKey() && value == other.getValue();
+
+		}
+		return false;
+	}
+
+	@Override
+	public String toString() {
+		if (isPref) {
+			return String.format("%d\t%d\t%f", userId, itemId, score);
+		}
+		return String.format("%d\t%f", key, value);
+	}
 
 }

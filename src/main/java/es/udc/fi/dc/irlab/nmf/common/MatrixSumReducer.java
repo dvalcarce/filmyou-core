@@ -29,19 +29,19 @@ import org.apache.mahout.math.MatrixWritable;
  * 
  */
 public class MatrixSumReducer extends
-	Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
+		Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
 
-    @Override
-    protected void reduce(NullWritable key, Iterable<MatrixWritable> values,
-	    Context context) throws IOException, InterruptedException {
+	@Override
+	protected void reduce(NullWritable key, Iterable<MatrixWritable> values,
+			Context context) throws IOException, InterruptedException {
 
-	Iterator<MatrixWritable> it = values.iterator();
-	Matrix output = it.next().get();
+		Iterator<MatrixWritable> it = values.iterator();
+		Matrix output = it.next().get();
 
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
+		while (it.hasNext()) {
+			output = it.next().get().plus(output);
+		}
+		context.write(NullWritable.get(), new MatrixWritable(output));
 	}
-	context.write(NullWritable.get(), new MatrixWritable(output));
-    }
 
 }

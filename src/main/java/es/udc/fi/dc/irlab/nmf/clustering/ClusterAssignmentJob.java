@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.nmf.clustering;
 
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
@@ -23,11 +24,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
-import org.apache.hadoop.mapreduce.lib.map.InverseMapper;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
-import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
@@ -36,109 +36,95 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
  */
 public class ClusterAssignmentJob extends AbstractJob {
 
-    protected String directory;
+	private final boolean doSubClustering;
 
-    protected Path H;
-    protected Path clustering;
-    protected Path clusteringCount;
-
-    @Override
-    public int run(String[] args) throws Exception {
-	Configuration conf = getConf();
-
-	/* Prepare paths */
-	String directory = conf.get(RMRecommenderJob.directory);
-	H = new Path(conf.get(RMRecommenderJob.H));
-	clustering = new Path(directory + "/"
-		+ conf.get(RMRecommenderJob.clustering));
-	clusteringCount = new Path(directory + "/"
-		+ conf.get(RMRecommenderJob.clusteringCount));
-	HadoopUtils.removeData(conf, clustering.toString());
-	HadoopUtils.removeData(conf, clusteringCount.toString());
-
-	/* Launch jobs */
-	findClustersJob(H, clustering);
-
-	countClusters(clustering, clusteringCount);
-
-	return 0;
-    }
-
-    /**
-     * Find the proper cluster for each user and group them by cluster.
-     * 
-     * @param inputPathH
-     *            Path of H matrix (after NMF/PPC algorithm)
-     * @param outputPath
-     *            Clusters
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void findClustersJob(Path inputPathH, Path outputPath)
-	    throws IOException, ClassNotFoundException, InterruptedException {
-
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
-		"FindClustersJob");
-	job.setJarByClass(this.getClass());
-
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, inputPathH);
-
-	job.setMapperClass(FindClusterMapper.class);
-
-	job.setNumReduceTasks(0);
-
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, outputPath);
-
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(IntWritable.class);
-
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
+	public ClusterAssignmentJob(boolean doSubClustering) {
+		this.doSubClustering = doSubClustering;
 	}
 
-    }
+	@Override
+	public int run(String[] args) throws ClassNotFoundException, IOException,
+			InterruptedException {
 
-    /**
-     * Count the number of elements in each cluster.
-     * 
-     * @param inputPath
-     *            Clustering assignments
-     * @param outputPath
-     *            Number of elements in each cluster
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void countClusters(Path inputPath, Path outputPath)
-	    throws IOException, ClassNotFoundException, InterruptedException {
+		Path clustering;
+		Configuration conf = getConf();
 
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
-		"CountClustersJob");
-	job.setJarByClass(this.getClass());
+		/* Prepare paths */
+		String directory = conf.get(RMRecommenderDriver.directory);
+		clustering = new Path(directory + File.separator
+				+ conf.get(RMRecommenderDriver.clustering));
 
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, inputPath);
+		HadoopUtils.removeData(conf, clustering.toString());
 
-	job.setMapperClass(InverseMapper.class);
-	job.setReducerClass(CountReducer.class);
+		if (doSubClustering) {
+			Path H_join = new Path(directory + File.separator
+					+ RMRecommenderDriver.joinPath);
+			findSubClusters(H_join, clustering);
+		} else {
+			Path H = new Path(conf.get(RMRecommenderDriver.H));
+			findClusters(H, clustering);
+		}
 
-	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(IntWritable.class);
+		return 0;
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, outputPath);
-
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(IntWritable.class);
-
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
 	}
 
-    }
+	public void findClusters(Path inputPath, Path outputPath)
+			throws ClassNotFoundException, IOException, InterruptedException {
+
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
+				"findClustersJob");
+		job.setJarByClass(this.getClass());
+
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		SequenceFileInputFormat.addInputPath(job, inputPath);
+
+		job.setMapperClass(FindClusterMapper.class);
+		job.setNumReduceTasks(0);
+
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(IntWritable.class);
+
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
+	}
+
+	public void findSubClusters(Path inputPaths, Path outputPath)
+			throws IOException, ClassNotFoundException, InterruptedException {
+
+		Configuration conf = getConf();
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "findSubClustersJob");
+		job.setJarByClass(this.getClass());
+
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		int numberOfClusters = conf.getInt(
+				RMRecommenderDriver.numberOfClusters, -1);
+		Path path;
+		for (int i = 0; i < numberOfClusters; i++) {
+			path = new Path(inputPaths.toString() + File.separator + "cluster"
+					+ i);
+			SequenceFileInputFormat.addInputPath(job, path);
+		}
+
+		job.setMapperClass(FindSubClusterMapper.class);
+		job.setNumReduceTasks(0);
+
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, outputPath);
+
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(IntWritable.class);
+
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
+
+	}
+
 }

@@ -24,150 +24,150 @@ import com.datastax.driver.core.Session;
 
 public class CassandraUtils {
 
-    private String host;
-    private Cluster cluster;
-    private Session blank_session;
-    private Session keyspace_session;
+	private String host;
+	private Cluster cluster;
+	private Session blank_session;
+	private Session keyspace_session;
 
-    public CassandraUtils(String host, String partitioner) {
+	public CassandraUtils(String host, String partitioner) {
 
-	this.host = host;
-	cluster = Cluster.builder().addContactPoint(host).build();
-    }
-
-    private Cluster getCluster() {
-	// Cluster is singleton
-	if (cluster == null) {
-	    cluster = Cluster.builder().addContactPoints(host).build();
-	}
-	return cluster;
-    }
-
-    private Session getSession(String keyspace) {
-	// Session is singleton
-	if (keyspace == null) {
-	    if (blank_session == null) {
-		blank_session = getCluster().connect();
-	    }
-	    return blank_session;
+		this.host = host;
+		cluster = Cluster.builder().addContactPoint(host).build();
 	}
 
-	if (keyspace_session == null) {
-	    keyspace_session = getCluster().connect(keyspace);
-	}
-
-	return keyspace_session;
-    }
-
-    public void shutdownSessions() {
-	if (blank_session != null) {
-	    blank_session.close();
-	}
-
-	if (keyspace_session != null) {
-	    keyspace_session.close();
-	}
-    }
-
-    private void createKeyspaceIfNeeded(Session session, String keyspace) {
-	if (session.getCluster().getMetadata().getKeyspace(keyspace) == null) {
-	    PreparedStatement statement = session.prepare("CREATE KEYSPACE "
-		    + keyspace + " WITH REPLICATION ="
-		    + "{'class' : 'SimpleStrategy', 'replication_factor': 3}");
-	    BoundStatement boundStatement = new BoundStatement(statement);
-	    session.execute(boundStatement.bind(keyspace));
-	}
-    }
-
-    private void resetTable(Session session, String keyspace, String table)
-	    throws InterruptedException {
-
-	// Drop table if already exists
-	if (session.getCluster().getMetadata().getKeyspace(keyspace)
-		.getTable(table) != null) {
-	    session.execute("DROP TABLE " + table);
-	}
-
-	// Wait for table deletion
-	while (session.getCluster().getMetadata().getKeyspace(keyspace)
-		.getTable(table) != null) {
-	    Thread.sleep(1000);
-	}
-
-	// Create table
-	session.execute("CREATE TABLE " + table
-		+ " (user int, movie int, score float,"
-		+ "PRIMARY KEY (user, movie))");
-
-    }
-
-    public void insertData(double[][] data, String keyspace, String table)
-	    throws InterruptedException {
-
-	Session session = getSession(null);
-	createKeyspaceIfNeeded(session, keyspace);
-
-	session = getSession(keyspace);
-	resetTable(session, keyspace, table);
-
-	PreparedStatement statement = session.prepare("INSERT INTO " + table
-		+ " (user, movie, score) VALUES (?, ?, ?)");
-	BoundStatement boundStatement = new BoundStatement(statement);
-
-	// Insert data
-	for (int i = 0; i < data.length; i++) {
-	    for (int j = 0; j < data[i].length; j++) {
-		if (data[i][j] == 0.0) {
-		    continue;
+	private Cluster getCluster() {
+		// Cluster is singleton
+		if (cluster == null) {
+			cluster = Cluster.builder().addContactPoints(host).build();
 		}
-		session.execute(boundStatement.bind(j + 1, i + 1,
-			(float) data[i][j]));
-	    }
+		return cluster;
 	}
 
-	shutdownSessions();
-	getCluster().close();
+	private Session getSession(String keyspace) {
+		// Session is singleton
+		if (keyspace == null) {
+			if (blank_session == null) {
+				blank_session = getCluster().connect();
+			}
+			return blank_session;
+		}
 
-    }
+		if (keyspace_session == null) {
+			keyspace_session = getCluster().connect(keyspace);
+		}
 
-    public void initializeTable(String keyspace, String table)
-	    throws InterruptedException {
-
-	Session session = getSession(null);
-	createKeyspaceIfNeeded(session, keyspace);
-
-	session = getSession(keyspace);
-
-	// Drop table if already exists
-	if (session.getCluster().getMetadata().getKeyspace(keyspace)
-		.getTable(table) != null) {
-	    session.execute("DROP TABLE " + table);
+		return keyspace_session;
 	}
 
-	// Wait for table deletion
-	while (session.getCluster().getMetadata().getKeyspace(keyspace)
-		.getTable(table) != null) {
-	    Thread.sleep(1000);
+	public void shutdownSessions() {
+		if (blank_session != null) {
+			blank_session.close();
+		}
+
+		if (keyspace_session != null) {
+			keyspace_session.close();
+		}
 	}
 
-	session.execute("CREATE TABLE " + table
-		+ " (user int, relevance float, movie int, cluster int,"
-		+ "PRIMARY KEY (user, relevance, movie))"
-		+ "WITH CLUSTERING ORDER BY (relevance DESC, movie ASC)");
+	private void createKeyspaceIfNeeded(Session session, String keyspace) {
+		if (session.getCluster().getMetadata().getKeyspace(keyspace) == null) {
+			PreparedStatement statement = session.prepare("CREATE KEYSPACE "
+					+ keyspace + " WITH REPLICATION ="
+					+ "{'class' : 'SimpleStrategy', 'replication_factor': 3}");
+			BoundStatement boundStatement = new BoundStatement(statement);
+			session.execute(boundStatement.bind(keyspace));
+		}
+	}
 
-	shutdownSessions();
-	getCluster().close();
+	private void resetTable(Session session, String keyspace, String table)
+			throws InterruptedException {
 
-    }
+		// Drop table if already exists
+		if (session.getCluster().getMetadata().getKeyspace(keyspace)
+				.getTable(table) != null) {
+			session.execute("DROP TABLE " + table);
+		}
 
-    public ResultSet selectData(int user, String keyspace, String table)
-	    throws InterruptedException {
+		// Wait for table deletion
+		while (session.getCluster().getMetadata().getKeyspace(keyspace)
+				.getTable(table) != null) {
+			Thread.sleep(1000);
+		}
 
-	Session session = getSession(keyspace);
+		// Create table
+		session.execute("CREATE TABLE " + table
+				+ " (user int, movie int, score float,"
+				+ "PRIMARY KEY (user, movie))");
 
-	return session.execute("SELECT user, movie, relevance FROM " + table
-		+ " WHERE user = " + user);
+	}
 
-    }
+	public void insertData(double[][] data, String keyspace, String table)
+			throws InterruptedException {
+
+		Session session = getSession(null);
+		createKeyspaceIfNeeded(session, keyspace);
+
+		session = getSession(keyspace);
+		resetTable(session, keyspace, table);
+
+		PreparedStatement statement = session.prepare("INSERT INTO " + table
+				+ " (user, movie, score) VALUES (?, ?, ?)");
+		BoundStatement boundStatement = new BoundStatement(statement);
+
+		// Insert data
+		for (int i = 0; i < data.length; i++) {
+			for (int j = 0; j < data[i].length; j++) {
+				if (data[i][j] == 0.0) {
+					continue;
+				}
+				session.execute(boundStatement.bind(j + 1, i + 1,
+						(float) data[i][j]));
+			}
+		}
+
+		shutdownSessions();
+		getCluster().close();
+
+	}
+
+	public void initializeTable(String keyspace, String table)
+			throws InterruptedException {
+
+		Session session = getSession(null);
+		createKeyspaceIfNeeded(session, keyspace);
+
+		session = getSession(keyspace);
+
+		// Drop table if already exists
+		if (session.getCluster().getMetadata().getKeyspace(keyspace)
+				.getTable(table) != null) {
+			session.execute("DROP TABLE " + table);
+		}
+
+		// Wait for table deletion
+		while (session.getCluster().getMetadata().getKeyspace(keyspace)
+				.getTable(table) != null) {
+			Thread.sleep(1000);
+		}
+
+		session.execute("CREATE TABLE " + table
+				+ " (user int, relevance float, movie int, cluster int,"
+				+ "PRIMARY KEY (user, relevance, movie))"
+				+ "WITH CLUSTERING ORDER BY (relevance DESC, movie ASC)");
+
+		shutdownSessions();
+		getCluster().close();
+
+	}
+
+	public ResultSet selectData(int user, String keyspace, String table)
+			throws InterruptedException {
+
+		Session session = getSession(keyspace);
+
+		return session.execute("SELECT user, movie, relevance FROM " + table
+				+ " WHERE user = " + user);
+
+	}
 
 }

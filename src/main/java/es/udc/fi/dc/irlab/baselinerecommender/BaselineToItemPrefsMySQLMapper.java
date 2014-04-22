@@ -30,33 +30,33 @@ import org.apache.mahout.math.VarLongWritable;
  * 
  */
 public class BaselineToItemPrefsMySQLMapper extends
-	Mapper<LongWritable, MySQLRecord, VarLongWritable, VarLongWritable> {
+		Mapper<LongWritable, MySQLRecord, VarLongWritable, VarLongWritable> {
 
-    public static final String RATING_SHIFT = BaselineToItemPrefsMySQLMapper.class
-	    + "shiftRatings";
+	public static final String RATING_SHIFT = BaselineToItemPrefsMySQLMapper.class
+			+ "shiftRatings";
 
-    private boolean booleanData;
-    private float ratingShift;
+	private boolean booleanData;
+	private float ratingShift;
 
-    @Override
-    public void map(LongWritable key, MySQLRecord val, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	public void map(LongWritable key, MySQLRecord val, Context context)
+			throws IOException, InterruptedException {
 
-	if (booleanData) {
-	    context.write(new VarLongWritable(), new VarLongWritable(val.item));
-	} else {
-	    float prefValue = val.score + ratingShift;
-	    context.write(new VarLongWritable(val.user),
-		    new EntityPrefWritable(val.item, prefValue));
+		if (booleanData) {
+			context.write(new VarLongWritable(), new VarLongWritable(val.item));
+		} else {
+			float prefValue = val.score + ratingShift;
+			context.write(new VarLongWritable(val.user),
+					new EntityPrefWritable(val.item, prefValue));
+		}
+
 	}
 
-    }
-
-    @Override
-    protected void setup(Context context) {
-	Configuration jobConf = context.getConfiguration();
-	booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
-	ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
-    }
+	@Override
+	protected void setup(Context context) {
+		Configuration jobConf = context.getConfiguration();
+		booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
+		ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
+	}
 
 }

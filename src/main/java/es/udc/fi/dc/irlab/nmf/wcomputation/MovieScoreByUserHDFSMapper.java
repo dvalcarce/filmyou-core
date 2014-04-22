@@ -19,28 +19,42 @@ package es.udc.fi.dc.irlab.nmf.wcomputation;
 import java.io.IOException;
 
 import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
+
+import es.udc.fi.dc.irlab.nmf.common.MappingsMapper;
 
 /**
  * Emit &lt;(j, 1), (i, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>).
  */
 public class MovieScoreByUserHDFSMapper
-	extends
-	Mapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
+		extends
+		MappingsMapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
 
-    @Override
-    protected void map(IntPairWritable keys, FloatWritable columns,
-	    Context context) throws IOException, InterruptedException {
+	@Override
+	protected void map(IntPairWritable keys, FloatWritable columns,
+			Context context) throws IOException, InterruptedException {
 
-	float score = columns.get();
+		float score = columns.get();
 
-	if (score > 0) {
-	    context.write(new IntPairWritable(keys.getFirst(), 1),
-		    new VectorOrPrefWritable(keys.getSecond(), score));
+		if (score <= 0) {
+			return;
+		}
+
+		int user = keys.getFirst();
+		int item = keys.getSecond();
+
+		if (existsMapping()) {
+			if ((user = getNewUserId(user)) != -1
+					&& (item = getNewItemId(item)) != -1) {
+				context.write(new IntPairWritable(user, 1),
+						new VectorOrPrefWritable(item, score));
+			}
+		} else {
+			context.write(new IntPairWritable(user, 1),
+					new VectorOrPrefWritable(item, score));
+		}
+
 	}
-
-    }
 
 }

@@ -18,3 +18,4 @@
  * This package contains a Hadoop implementation of RM2. 
  */
 package es.udc.fi.dc.irlab.rm;
+

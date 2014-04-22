@@ -34,43 +34,43 @@ import org.junit.Test;
 
 public class TestPPCHComputationReducer {
 
-    private ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
+	private ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
 
-    @Before
-    public void setup() {
-	reduceDriver = new ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable>();
-    }
-
-    @Test
-    public void testReducer() throws IOException {
-	double accuracy = 0.0001;
-
-	IntPairWritable inputKey = new IntPairWritable(1, 0);
-	List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
-
-	inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0,
-		2.0, 3.0 })));
-	inputValues.add(new VectorWritable(new DenseVector(new double[] { 3.0,
-		10.0, 20.0 })));
-	inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0,
-		5.0, 4.0 })));
-
-	IntWritable outputKey = new IntWritable(1);
-	Vector outputVector = new DenseVector(new double[] { 0.30952381, 0.75,
-		1.48275862 });
-
-	reduceDriver.withReducer(new PPCHComputationReducer());
-	reduceDriver.withInput(inputKey, inputValues);
-
-	List<Pair<IntWritable, VectorWritable>> list = reduceDriver.run();
-	Pair<IntWritable, VectorWritable> pair = list.get(0);
-
-	assertEquals(outputKey, pair.getFirst());
-	Vector vector = pair.getSecond().get();
-
-	for (int i = 0; i < outputVector.size(); i++) {
-	    assertEquals(outputVector.get(i), vector.get(i), accuracy);
+	@Before
+	public void setup() {
+		reduceDriver = new ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable>();
 	}
-    }
+
+	@Test
+	public void testReducer() throws IOException {
+		double accuracy = 0.0001;
+
+		IntPairWritable inputKey = new IntPairWritable(1, 0);
+		List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
+
+		inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0,
+				2.0, 3.0 })));
+		inputValues.add(new VectorWritable(new DenseVector(new double[] { 3.0,
+				10.0, 20.0 })));
+		inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0,
+				5.0, 4.0 })));
+
+		IntWritable outputKey = new IntWritable(1);
+		Vector outputVector = new DenseVector(new double[] { 0.30952381, 0.75,
+				1.48275862 });
+
+		reduceDriver.withReducer(new PPCHComputationReducer());
+		reduceDriver.withInput(inputKey, inputValues);
+
+		List<Pair<IntWritable, VectorWritable>> list = reduceDriver.run();
+		Pair<IntWritable, VectorWritable> pair = list.get(0);
+
+		assertEquals(outputKey, pair.getFirst());
+		Vector vector = pair.getSecond().get();
+
+		for (int i = 0; i < outputVector.size(); i++) {
+			assertEquals(outputVector.get(i), vector.get(i), accuracy);
+		}
+	}
 
 }

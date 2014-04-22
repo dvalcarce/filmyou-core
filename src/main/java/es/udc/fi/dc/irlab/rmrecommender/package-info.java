@@ -19,3 +19,4 @@
  * collaborative filtering algorithm.
  */
 package es.udc.fi.dc.irlab.rmrecommender;
+

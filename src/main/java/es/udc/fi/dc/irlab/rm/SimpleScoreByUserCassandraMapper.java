@@ -28,20 +28,20 @@ import org.apache.hadoop.mapreduce.Mapper;
  * Emit <j, A_{i,j}> from Cassandra ratings ({A_{i,j}}).
  */
 public class SimpleScoreByUserCassandraMapper
-	extends
-	Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, DoubleWritable> {
+		extends
+		Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, DoubleWritable> {
 
-    @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(Map<String, ByteBuffer> keys,
+			Map<String, ByteBuffer> columns, Context context)
+			throws IOException, InterruptedException {
 
-	float score = columns.get("score").getFloat();
-	if (score > 0) {
-	    context.write(new IntWritable(keys.get("user").getInt()),
-		    new DoubleWritable(score));
+		float score = columns.get("score").getFloat();
+		if (score > 0) {
+			context.write(new IntWritable(keys.get("user").getInt()),
+					new DoubleWritable(score));
+		}
+
 	}
-
-    }
 
 }

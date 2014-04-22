@@ -29,19 +29,19 @@ import org.apache.mahout.math.VectorWritable;
  * 
  */
 public class VectorSumReducer extends
-	Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+		Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-    @Override
-    protected void reduce(IntWritable key, Iterable<VectorWritable> values,
-	    Context context) throws IOException, InterruptedException {
-	Iterator<VectorWritable> it = values.iterator();
-	Vector output = it.next().get();
+	@Override
+	protected void reduce(IntWritable key, Iterable<VectorWritable> values,
+			Context context) throws IOException, InterruptedException {
+		Iterator<VectorWritable> it = values.iterator();
+		Vector output = it.next().get();
 
-	while (it.hasNext()) {
-	    output = it.next().get().plus(output);
+		while (it.hasNext()) {
+			output = it.next().get().plus(output);
+		}
+		context.write(new IntWritable((int) key.get()), new VectorWritable(
+				output));
 	}
-	context.write(new IntWritable((int) key.get()), new VectorWritable(
-		output));
-    }
 
 }

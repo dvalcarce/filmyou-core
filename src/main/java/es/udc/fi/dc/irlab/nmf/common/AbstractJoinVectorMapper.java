@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.util;
+package es.udc.fi.dc.irlab.nmf.common;
 
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
@@ -24,62 +25,64 @@ import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
 /**
- * Emit &lt;(i, 0), w_i> from H matrix (w_i).
  * 
+ * 
+ * @param <A>
+ *            input key
+ * @param <B>
+ *            input value
  */
-
 public abstract class AbstractJoinVectorMapper<A, B> extends
-	Mapper<A, B, IntWritable, VectorWritable> {
+		MappingsMapper<A, B, IntWritable, VectorWritable> {
 
-    private Path[] paths;
-    private TIntObjectMap<Vector> map = new TIntObjectHashMap<Vector>();
+	private TIntObjectMap<Vector> cache = new TIntObjectHashMap<Vector>();
 
-    /**
-     * Build HashMap with DistributedCache data.
-     */
-    @Override
-    protected void setup(Context context) throws IOException,
-	    InterruptedException {
+	/**
+	 * Build HashMap with DistributedCache data.
+	 */
+	@Override
+	protected void setup(Context context) throws IOException,
+			InterruptedException {
 
-	Configuration conf = context.getConfiguration();
+		super.setup(context);
 
-	paths = DistributedCache.getLocalCacheFiles(conf);
+		Configuration conf = context.getConfiguration();
 
-	if (paths == null || paths.length < 1) {
-	    throw new FileNotFoundException();
-	}
+		Path[] paths = DistributedCache.getLocalCacheFiles(conf);
 
-	for (Path path : paths) {
-	    try (SequenceFile.Reader reader = new SequenceFile.Reader(
-		    FileSystem.getLocal(conf), path, conf)) {
+		if (paths == null || paths.length < 1) {
+			throw new FileNotFoundException();
+		}
+
+		Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
+
 		IntWritable key = new IntWritable();
 		VectorWritable val = new VectorWritable();
 
-		while (reader.next(key, val)) {
-		    map.put(key.get(), val.get());
+		for (Reader reader : readers) {
+			while (reader.next(key, val)) {
+				cache.put(key.get(), val.get());
+			}
 		}
-	    }
-	}
-    }
 
-    /**
-     * Get cached Vector of the given key. Used for replication join.
-     * 
-     * @param key
-     *            integer key
-     * @return Vector
-     */
-    protected Vector getCache(int key) {
-	return map.get(key);
-    }
+	}
+
+	/**
+	 * Get cached Vector of the given key. Used for replication join.
+	 * 
+	 * @param key
+	 *            integer key
+	 * @return Vector
+	 */
+	protected Vector getCache(int key) {
+		return cache.get(key);
+	}
 
 }

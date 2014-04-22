@@ -23,28 +23,41 @@ import java.util.Map;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.util.AbstractJoinVectorMapper;
+import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
 
 /**
  * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings ({A_{i,j}}) and from H matrix
  * (w_i) obtained by DistributedCache.
  */
 public class VectorByMovieCassandraMapper
-	extends
-	AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+		extends
+		AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
-    @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(Map<String, ByteBuffer> keys,
+			Map<String, ByteBuffer> columns, Context context)
+			throws IOException, InterruptedException {
 
-	float score = columns.get("score").getFloat();
+		float score = columns.get("score").getFloat();
 
-	if (score > 0) {
-	    context.write(new IntWritable(keys.get("user").getInt()),
-		    new VectorWritable(getCache(keys.get("movie").getInt())
-			    .times(score)));
+		if (score <= 0) {
+			return;
+		}
+
+		int user = keys.get("user").getInt();
+		int item = keys.get("movie").getInt();
+
+		if (existsMapping()) {
+			if ((user = getNewUserId(user)) != -1
+					&& (item = getNewItemId(item)) != -1) {
+				context.write(new IntWritable(user), new VectorWritable(
+						getCache(item).times(score)));
+			}
+		} else {
+			context.write(new IntWritable(user),
+					new VectorWritable(getCache(item).times(score)));
+		}
+
 	}
 
-    }
 }

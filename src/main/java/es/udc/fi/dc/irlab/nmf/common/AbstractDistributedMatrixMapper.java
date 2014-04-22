@@ -14,61 +14,62 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.util;
+package es.udc.fi.dc.irlab.nmf.common;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.math.Matrix;
 import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.VectorWritable;
+
+import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Load matrix from DistributedCache in the setup phase.
  * 
  */
 public abstract class AbstractDistributedMatrixMapper extends
-	Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+		Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-    protected Matrix C;
-    private Path[] paths;
+	protected Matrix C;
 
-    /**
-     * Load matrix from DistributedCache.
-     */
-    @Override
-    protected void setup(Context context) throws IOException,
-	    InterruptedException {
+	/**
+	 * Load matrix from DistributedCache.
+	 */
+	@Override
+	protected void setup(Context context) throws IOException,
+			InterruptedException {
 
-	Configuration conf = context.getConfiguration();
+		Configuration conf = context.getConfiguration();
 
-	paths = DistributedCache.getLocalCacheFiles(conf);
+		Path[] paths = DistributedCache.getLocalCacheFiles(conf);
 
-	if (paths == null || paths.length < 1) {
-	    throw new FileNotFoundException();
+		if (paths == null || paths.length < 1) {
+			throw new FileNotFoundException();
+		}
+
+		Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
+
+		NullWritable key = NullWritable.get();
+		MatrixWritable val = new MatrixWritable();
+
+		for (Reader reader : readers) {
+			if (reader.next(key, val)) {
+				C = val.get();
+			} else {
+				throw new FileNotFoundException(getClass()
+						+ ": Invalid C file.");
+			}
+		}
+
 	}
-
-	try (SequenceFile.Reader reader = new SequenceFile.Reader(
-		FileSystem.getLocal(conf), paths[0], conf)) {
-	    NullWritable key = NullWritable.get();
-	    MatrixWritable val = new MatrixWritable();
-
-	    if (reader.next(key, val)) {
-		C = val.get();
-	    } else {
-		throw new FileNotFoundException(getClass()
-			+ ": Invalid C file.");
-	    }
-	}
-
-    }
 
 }

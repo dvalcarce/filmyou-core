@@ -34,42 +34,42 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class TestSumMatrixReducer {
-    private ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable> reduceDriver;
+	private ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable> reduceDriver;
 
-    @Before
-    public void setup() {
-	reduceDriver = new ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable>();
-    }
-
-    @Test
-    public void testReduceNullWritableIterableOfMatrixWritableContext()
-	    throws IOException {
-	NullWritable inputKey = NullWritable.get();
-	List<MatrixWritable> inputValues = new ArrayList<MatrixWritable>();
-	Matrix inputMatrix1 = new DenseMatrix(new double[][] {
-		{ 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 }, { 3.0, 6.0, 9.0 } });
-	Matrix inputMatrix2 = new DenseMatrix(new double[][] {
-		{ 5.0, 5.0, 5.0 }, { 2.0, 2.0, 2.0 }, { 3.0, 4.0, 5.0 } });
-	inputValues.add(new MatrixWritable(inputMatrix1));
-	inputValues.add(new MatrixWritable(inputMatrix2));
-
-	NullWritable outputKey = NullWritable.get();
-	double[][] outputRows = new double[][] { { 6.0, 7.0, 8.0 },
-		{ 4.0, 6.0, 8.0 }, { 6.0, 10.0, 14.0 } };
-
-	reduceDriver.withReducer(new MatrixSumReducer());
-	reduceDriver.withInput(inputKey, inputValues);
-
-	List<Pair<NullWritable, MatrixWritable>> list = reduceDriver.run();
-	Pair<NullWritable, MatrixWritable> pair = list.get(0);
-
-	assertEquals(outputKey, pair.getFirst());
-
-	int i = 0;
-	for (Vector row : pair.getSecond().get()) {
-	    assertEquals(new DenseVector(outputRows[i]), row);
-	    i++;
+	@Before
+	public void setup() {
+		reduceDriver = new ReduceDriver<NullWritable, MatrixWritable, NullWritable, MatrixWritable>();
 	}
-    }
+
+	@Test
+	public void testReduceNullWritableIterableOfMatrixWritableContext()
+			throws IOException {
+		NullWritable inputKey = NullWritable.get();
+		List<MatrixWritable> inputValues = new ArrayList<MatrixWritable>();
+		Matrix inputMatrix1 = new DenseMatrix(new double[][] {
+				{ 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 }, { 3.0, 6.0, 9.0 } });
+		Matrix inputMatrix2 = new DenseMatrix(new double[][] {
+				{ 5.0, 5.0, 5.0 }, { 2.0, 2.0, 2.0 }, { 3.0, 4.0, 5.0 } });
+		inputValues.add(new MatrixWritable(inputMatrix1));
+		inputValues.add(new MatrixWritable(inputMatrix2));
+
+		NullWritable outputKey = NullWritable.get();
+		double[][] outputRows = new double[][] { { 6.0, 7.0, 8.0 },
+				{ 4.0, 6.0, 8.0 }, { 6.0, 10.0, 14.0 } };
+
+		reduceDriver.withReducer(new MatrixSumReducer());
+		reduceDriver.withInput(inputKey, inputValues);
+
+		List<Pair<NullWritable, MatrixWritable>> list = reduceDriver.run();
+		Pair<NullWritable, MatrixWritable> pair = list.get(0);
+
+		assertEquals(outputKey, pair.getFirst());
+
+		int i = 0;
+		for (Vector row : pair.getSecond().get()) {
+			assertEquals(new DenseVector(outputRows[i]), row);
+			i++;
+		}
+	}
 
 }

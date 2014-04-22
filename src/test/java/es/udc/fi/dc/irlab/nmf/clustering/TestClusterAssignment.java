@@ -24,8 +24,10 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
 import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
+import es.udc.fi.dc.irlab.testdata.SubClusteringTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
@@ -36,41 +38,76 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
  */
 public class TestClusterAssignment extends HadoopIntegrationTest {
 
-    @Test
-    public void integrationTest() throws Exception {
-	int numberOfUsers = ClusteringTestData.numberOfUsers;
-	int numberOfClusters = ClusteringTestData.numberOfClusters;
+	@Test
+	public void clusteringTest() throws Exception {
+		int numberOfUsers = ClusteringTestData.numberOfUsers;
+		int numberOfClusters = ClusteringTestData.numberOfClusters;
 
-	Configuration conf = buildConf();
-	HadoopUtils.removeData(conf, baseDirectory);
+		Configuration conf = buildConf();
+		HadoopUtils.removeData(conf, baseDirectory);
 
-	/* Data initialization */
-	Path H = DataInitialization.createDoubleMatrix(conf,
-		ClusteringTestData.H, baseDirectory, "H");
-	Path clustering = new Path(baseDirectory + File.separator
-		+ "clustering");
-	Path clusteringCount = new Path(baseDirectory + File.separator
-		+ "clusteringCount");
+		/* Data initialization */
+		Path H = DataInitialization.createDoubleMatrix(conf,
+				ClusteringTestData.H, baseDirectory, "H", 1);
+		Path clustering = new Path(baseDirectory + File.separator
+				+ "clustering");
 
-	/* Insert data in Cassandra */
-	CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
-		cassandraPartitioner);
-	cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
-		cassandraTableIn);
+		/* Insert data in Cassandra */
+		CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
+				cassandraPartitioner);
+		cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+				cassandraTableIn);
 
-	/* Run job */
-	conf = buildConf(H, "clustering", "clusteringCount", numberOfUsers,
-		numberOfClusters);
+		/* Run job */
+		conf = buildConf(H, "clustering", "clusteringCount", numberOfUsers,
+				numberOfClusters);
 
-	ToolRunner.run(conf, new ClusterAssignmentJob(), null);
+		ToolRunner.run(conf, new ClusterAssignmentJob(false), null);
 
-	/* Run asserts */
-	compareIntIntData(conf, ClusteringTestData.clustering, baseDirectory,
-		clustering);
-	compareIntIntData(conf, ClusteringTestData.clusteringCount,
-		baseDirectory, clusteringCount);
+		/* Run asserts */
+		compareIntIntData(conf, ClusteringTestData.clustering, baseDirectory,
+				clustering);
 
-	HadoopUtils.removeData(conf, conf.get("directory"));
-    }
+		HadoopUtils.removeData(conf, conf.get("directory"));
+	}
+
+	@Test
+	public void subClusteringTest() throws Exception {
+		int numberOfUsers = SubClusteringTestData.numberOfUsers;
+		int numberOfClusters = SubClusteringTestData.numberOfClusters;
+
+		Configuration conf = buildConf();
+		HadoopUtils.removeData(conf, baseDirectory);
+
+		/* Data initialization */
+		DataInitialization.createDoubleMatrix(conf, SubClusteringTestData.H0,
+				baseDirectory, RMRecommenderDriver.joinPath + File.separator
+						+ "cluster0", 1);
+		DataInitialization.createDoubleMatrix(conf, SubClusteringTestData.H1,
+				baseDirectory, RMRecommenderDriver.joinPath + File.separator
+						+ "cluster1", 18);
+		Path clustering = new Path(baseDirectory + File.separator
+				+ "clustering");
+
+		/* Insert data in Cassandra */
+		CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
+				cassandraPartitioner);
+		cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
+				cassandraTableIn);
+
+		/* Run job */
+		conf = buildConf(null, "clustering", "clusteringCount", numberOfUsers,
+				numberOfClusters);
+		conf.setInt(RMRecommenderDriver.numberOfSubClusters,
+				SubClusteringTestData.numberOfSubClusters);
+
+		ToolRunner.run(conf, new ClusterAssignmentJob(true), null);
+
+		/* Run asserts */
+		compareIntIntData(conf, SubClusteringTestData.clustering,
+				baseDirectory, clustering);
+
+		HadoopUtils.removeData(conf, conf.get("directory"));
+	}
 
 }

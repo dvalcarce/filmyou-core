@@ -29,20 +29,17 @@ import org.apache.mahout.math.VectorWritable;
  * Emit &lt;j, k> from &lt;j, h_j> where k = arg max (h_j).
  */
 public class FindClusterMapper extends
-	Mapper<IntWritable, VectorWritable, IntWritable, IntWritable> {
+		Mapper<IntWritable, VectorWritable, IntWritable, IntWritable> {
 
-    @Override
-    protected void map(IntWritable user, VectorWritable value, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(IntWritable user, VectorWritable value, Context context)
+			throws IOException, InterruptedException {
 
-	Vector vector = value.get();
-	int cluster = vector.maxValueIndex();
+		Vector vector = value.get();
+		int cluster = vector.maxValueIndex();
 
-	// Cluster indexes start at 1
-	cluster++;
+		context.write(user, new IntWritable(cluster));
 
-	context.write(user, new IntWritable(cluster));
-
-    }
+	}
 
 }

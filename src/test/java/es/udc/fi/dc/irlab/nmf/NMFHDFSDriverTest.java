@@ -32,36 +32,36 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
  */
 public class NMFHDFSDriverTest extends HadoopIntegrationTest {
 
-    @Test
-    public void integrationTest() throws Exception {
-	int numberOfUsers = NMFTestData.numberOfUsers;
-	int numberOfItems = NMFTestData.numberOfItems;
-	int numberOfClusters = NMFTestData.numberOfClusters;
-	int numberOfIterations = 10;
+	@Test
+	public void integrationTest() throws Exception {
+		int numberOfUsers = NMFTestData.numberOfUsers;
+		int numberOfItems = NMFTestData.numberOfItems;
+		int numberOfClusters = NMFTestData.numberOfClusters;
+		int numberOfIterations = 10;
 
-	Configuration conf = buildConf();
-	HadoopUtils.removeData(conf, conf.get("directory"));
+		Configuration conf = buildConf();
+		HadoopUtils.removeData(conf, conf.get("directory"));
 
-	/* Data initialization */
-	Path H = DataInitialization.createDoubleMatrix(conf,
-		NMFTestData.H_init, baseDirectory, "H");
-	Path W = DataInitialization.createDoubleMatrix(conf,
-		NMFTestData.W_init, baseDirectory, "W");
-	Path input = DataInitialization.createIntPairFloatFile(conf,
-		NMFTestData.A, baseDirectory, "A");
+		/* Data initialization */
+		Path H = DataInitialization.createDoubleMatrix(conf,
+				NMFTestData.H_init, baseDirectory, "H", 1);
+		Path W = DataInitialization.createDoubleMatrix(conf,
+				NMFTestData.W_init, baseDirectory, "W", 1);
+		Path input = DataInitialization.createIntPairFloatFile(conf,
+				NMFTestData.A, baseDirectory, "A");
 
-	/* Run job */
-	conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
-		numberOfIterations);
-	conf.setBoolean("useCassandra", false);
-	conf.set(HadoopUtils.inputPathName, input.toString());
-	ToolRunner.run(conf, new NMFDriver(), null);
+		/* Run job */
+		conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
+				numberOfIterations);
+		conf.setBoolean("useCassandra", false);
+		conf.set(HadoopUtils.inputPathName, input.toString());
+		ToolRunner.run(conf, new NMFDriver(), null);
 
-	/* Run asserts */
-	compareIntVectorData(conf, NMFTestData.H_ten, baseDirectory, H);
-	compareIntVectorData(conf, NMFTestData.W_ten, baseDirectory, W);
+		/* Run asserts */
+		compareIntVectorData(conf, NMFTestData.H_ten, baseDirectory, H);
+		compareIntVectorData(conf, NMFTestData.W_ten, baseDirectory, W);
 
-	HadoopUtils.removeData(conf, conf.get("directory"));
-    }
+		HadoopUtils.removeData(conf, conf.get("directory"));
+	}
 
 }

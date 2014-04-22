@@ -35,46 +35,46 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
  */
 public class TestHDFSRM2 extends HadoopIntegrationTest {
 
-    @Test
-    public void test() throws Exception {
-	Configuration conf = buildConf();
+	@Test
+	public void test() throws Exception {
+		Configuration conf = buildConf();
 
-	String baseDirectory = conf.get("directory");
-	String directory = conf.get("directory") + "/rm2";
+		String baseDirectory = conf.get("directory");
+		String directory = conf.get("directory") + "/rm2";
 
-	HadoopUtils.removeData(conf, baseDirectory);
+		HadoopUtils.removeData(conf, baseDirectory);
 
-	Path userSum = new Path(directory + File.separator + "userSum");
-	Path movieSum = new Path(directory + File.separator + "movieSum");
-	Path totalSum = new Path(directory + File.separator + "totalSum");
-	Path itemColl = new Path(directory + File.separator + "itemColl");
-	DataInitialization.createIntIntFileParent(conf,
-		ClusteringTestData.clustering, baseDirectory, "clustering");
-	DataInitialization.createIntIntFileParent(conf,
-		ClusteringTestData.clusteringCount, baseDirectory,
-		"clusteringCount");
-	Path input = DataInitialization.createIntPairFloatFile(conf,
-		RMTestData.A, baseDirectory, "A");
-	Path output = new Path(directory + File.separator + "output");
+		Path userSum = new Path(directory + File.separator + RM2Job.userSum);
+		Path itemSum = new Path(directory + File.separator + RM2Job.itemSum);
+		Path totalSum = new Path(directory + File.separator + RM2Job.totalSum);
+		Path itemColl = new Path(directory + File.separator + RM2Job.itemColl);
+		DataInitialization.createIntIntFileParent(conf,
+				ClusteringTestData.clustering, baseDirectory, "clustering", 1);
+		DataInitialization.createIntIntFileParent(conf,
+				ClusteringTestData.clusteringCount, baseDirectory,
+				"clusteringCount", 0);
+		Path input = DataInitialization.createIntPairFloatFile(conf,
+				RMTestData.A, baseDirectory, "A");
+		Path output = new Path(directory + File.separator + "output");
 
-	/* Run job */
-	conf = buildConf("clustering", "clusteringCount",
-		RMTestData.numberOfUsers, RMTestData.numberOfItems);
-	conf.setBoolean("useCassandra", false);
-	conf.set(HadoopUtils.inputPathName, input.toString());
-	conf.set(HadoopUtils.outputPathName, output.toString());
-	ToolRunner.run(conf, new RM2Job(), null);
+		/* Run job */
+		conf = buildConf("clustering", "clusteringCount",
+				RMTestData.numberOfUsers, RMTestData.numberOfItems);
+		conf.setBoolean("useCassandra", false);
+		conf.set(HadoopUtils.inputPathName, input.toString());
+		conf.set(HadoopUtils.outputPathName, output.toString());
+		ToolRunner.run(conf, new RM2Job(), null);
 
-	/* Run asserts */
-	compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);
-	compareIntDoubleData(conf, RMTestData.movieSum, baseDirectory, movieSum);
-	compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
-	compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
-		itemColl);
-	compareIntPairFloatData(conf, RMTestData.recommendations,
-		baseDirectory, output);
+		/* Run asserts */
+		compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);
+		compareIntDoubleData(conf, RMTestData.itemSum, baseDirectory, itemSum);
+		compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
+		compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
+				itemColl);
+		compareIntPairFloatData(conf, RMTestData.recommendations,
+				baseDirectory, output);
 
-	HadoopUtils.removeData(conf, baseDirectory);
-    }
+		HadoopUtils.removeData(conf, baseDirectory);
+	}
 
 }

@@ -30,37 +30,37 @@ import org.apache.mahout.math.VectorWritable;
  * Emit &lt;j, A_{i,j}w_i^T> from &lt;i, {w_i, {(j, A_{i, j}})>.
  */
 public class W1Reducer
-	extends
-	Reducer<IntPairWritable, VectorOrPrefWritable, IntWritable, VectorWritable> {
+		extends
+		Reducer<IntPairWritable, VectorOrPrefWritable, IntWritable, VectorWritable> {
 
-    @Override
-    protected void reduce(IntPairWritable key,
-	    Iterable<VectorOrPrefWritable> values, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void reduce(IntPairWritable key,
+			Iterable<VectorOrPrefWritable> values, Context context)
+			throws IOException, InterruptedException {
 
-	long movie;
-	double score;
-	VectorWritable output;
+		long movie;
+		double score;
+		VectorWritable output;
 
-	Iterator<VectorOrPrefWritable> it = values.iterator();
-	Vector vector = it.next().getVector();
+		Iterator<VectorOrPrefWritable> it = values.iterator();
+		Vector vector = it.next().getVector();
 
-	if (vector == null) {
-	    throw new IllegalArgumentException("Bad reduce-side join ("
-		    + getClass() + ")");
+		if (vector == null) {
+			throw new IllegalArgumentException("Bad reduce-side join ("
+					+ getClass() + ")");
+		}
+		while (it.hasNext()) {
+			VectorOrPrefWritable pref = it.next();
+
+			// PrefWritable stores a movieID in the userID field
+			movie = pref.getUserID();
+			score = (double) pref.getValue();
+			if (score > 0) {
+				output = new VectorWritable(vector.times(score));
+				context.write(new IntWritable((int) movie), output);
+			}
+		}
+
 	}
-	while (it.hasNext()) {
-	    VectorOrPrefWritable pref = it.next();
-
-	    // PrefWritable stores a movieID in the userID field
-	    movie = pref.getUserID();
-	    score = (double) pref.getValue();
-	    if (score > 0) {
-		output = new VectorWritable(vector.times(score));
-		context.write(new IntWritable((int) movie), output);
-	    }
-	}
-
-    }
 
 }

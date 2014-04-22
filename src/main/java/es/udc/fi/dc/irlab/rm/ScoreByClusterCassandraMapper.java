@@ -22,30 +22,31 @@ import java.util.Map;
 
 import org.apache.mahout.common.IntPairWritable;
 
+import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 
 /**
- * Emit &lt;(k, 2), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
+ * Emit &lt;(k, 1), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
  * is a user from the cluster k.
  */
 public class ScoreByClusterCassandraMapper
-	extends
-	AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+		extends
+		AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, IntDoubleOrPrefWritable> {
 
-    @Override
-    protected void map(Map<String, ByteBuffer> keys,
-	    Map<String, ByteBuffer> columns, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(Map<String, ByteBuffer> keys,
+			Map<String, ByteBuffer> columns, Context context)
+			throws IOException, InterruptedException {
 
-	float score = columns.get("score").getFloat();
+		float score = columns.get("score").getFloat();
 
-	if (score > 0) {
-	    int user = keys.get("user").getInt();
-	    context.write(new IntPairWritable(getCluster(user), 1),
-		    new IntDoubleOrPrefWritable(user, keys.get("movie")
-			    .getInt(), score));
+		if (score > 0) {
+			int user = keys.get("user").getInt();
+			context.write(new IntPairWritable(getCluster(user), 1),
+					new IntDoubleOrPrefWritable(user, keys.get("movie")
+							.getInt(), score));
+		}
+
 	}
-
-    }
 
 }

@@ -28,18 +28,18 @@ import org.apache.mahout.common.IntPairWritable;
  * Emit <i, A_{i,j}> from HDFS ratings (<(i, j), A_{i,j}>).
  */
 public class SimpleScoreByMovieHDFSMapper extends
-	Mapper<IntPairWritable, FloatWritable, IntWritable, DoubleWritable> {
+		Mapper<IntPairWritable, FloatWritable, IntWritable, DoubleWritable> {
 
-    @Override
-    protected void map(IntPairWritable key, FloatWritable value, Context context)
-	    throws IOException, InterruptedException {
+	@Override
+	protected void map(IntPairWritable key, FloatWritable value, Context context)
+			throws IOException, InterruptedException {
 
-	float score = value.get();
-	if (score > 0) {
-	    context.write(new IntWritable(key.getSecond()), new DoubleWritable(
-		    score));
+		float score = value.get();
+		if (score > 0) {
+			context.write(new IntWritable(key.getSecond()), new DoubleWritable(
+					score));
+		}
+
 	}
-
-    }
 
 }

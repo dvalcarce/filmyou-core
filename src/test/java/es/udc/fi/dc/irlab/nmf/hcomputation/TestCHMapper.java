@@ -35,41 +35,41 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 public class TestCHMapper {
 
-    private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
+	private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
 
-    @Before
-    public void setup() {
-	mapDriver = new MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
-    }
+	@Before
+	public void setup() {
+		mapDriver = new MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
+	}
 
-    @Test
-    public void testMap() throws IOException {
-	String baseDirectory = "TestCHMapper";
-	Configuration conf = new Configuration();
+	@Test
+	public void testMap() throws IOException {
+		String baseDirectory = "TestCHMapper";
+		Configuration conf = new Configuration();
 
-	HadoopUtils.removeData(conf, baseDirectory);
+		HadoopUtils.removeData(conf, baseDirectory);
 
-	Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
-		{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
-	Path cPath = DataInitialization.createMapNullMatrix(conf, matrix,
-		baseDirectory, "C-merged");
+		Matrix matrix = new DenseMatrix(new double[][] { { 1.0, 2.0, 3.0 },
+				{ 4.0, 5.0, 6.0 }, { 7.0, 8.0, 9.0 } });
+		Path cPath = DataInitialization.createMapNullMatrix(conf, matrix,
+				baseDirectory, "C-merged");
 
-	IntWritable inputKey = new IntWritable(1);
-	Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
-	VectorWritable inputValue = new VectorWritable(inputVector);
+		IntWritable inputKey = new IntWritable(1);
+		Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
+		VectorWritable inputValue = new VectorWritable(inputVector);
 
-	IntWritable outputKey = new IntWritable(1);
-	Vector outputVector = new DenseVector(new double[] { 14.0, 32.0, 50.0 });
-	VectorWritable outputValue = new VectorWritable(outputVector);
+		IntWritable outputKey = new IntWritable(1);
+		Vector outputVector = new DenseVector(new double[] { 14.0, 32.0, 50.0 });
+		VectorWritable outputValue = new VectorWritable(outputVector);
 
-	mapDriver.withMapper(new CHMapper());
-	mapDriver.withCacheFile(cPath.toString());
+		mapDriver.withMapper(new CHMapper());
+		mapDriver.withCacheFile(cPath.toString());
 
-	mapDriver.withInput(inputKey, inputValue);
-	mapDriver.withOutput(outputKey, outputValue);
-	mapDriver.runTest();
+		mapDriver.withInput(inputKey, inputValue);
+		mapDriver.withOutput(outputKey, outputValue);
+		mapDriver.runTest();
 
-	HadoopUtils.removeData(conf, baseDirectory);
-    }
+		HadoopUtils.removeData(conf, baseDirectory);
+	}
 
 }

@@ -40,294 +40,294 @@ import es.udc.fi.dc.irlab.nmf.common.CrossProductMapper;
 import es.udc.fi.dc.irlab.nmf.common.MatrixSumReducer;
 import es.udc.fi.dc.irlab.nmf.common.Vector0Mapper;
 import es.udc.fi.dc.irlab.nmf.common.VectorSumReducer;
-import es.udc.fi.dc.irlab.nmf.util.IntPairKeyPartitioner;
-import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderJob;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
+import es.udc.fi.dc.irlab.util.IntPairKeyPartitioner;
 
 public class ComputeWJob extends MatrixComputationJob {
 
-    /**
-     * ComputeHJob constructor.
-     * 
-     * @param H
-     *            Path to the input H matrix
-     * @param W
-     *            Path to the input W matrix
-     * @param H2
-     *            Path to the output H matrix
-     * @param W2
-     *            Path to the output W matrix
-     */
-    public ComputeWJob(Path H, Path W, Path H2, Path W2) {
-	super(H, W, H2, W2);
-    }
-
-    /**
-     * Run all chained map-reduce jobs in order to compute H matrix.
-     */
-    @Override
-    public int run(String[] args) throws Exception {
-	Configuration conf = getConf();
-	inputPath = HadoopUtils.getInputPath(conf);
-	iteration = conf.getInt(RMRecommenderJob.iteration, -1);
-	directory = conf.get(RMRecommenderJob.directory) + File.separator
-		+ "wcomputation";
-
-	HadoopUtils.createFolder(conf, directory);
-	HadoopUtils.removeData(conf, directory);
-
-	this.out1 = new Path(directory + File.separator + "wout1");
-	this.X = new Path(directory + File.separator + "X");
-	this.C = new Path(directory + File.separator + "C");
-	this.Y = new Path(directory + File.separator + "Y");
-
-	runJob1(H, out1);
-	runJob2(out1, X);
-	runJob3(H, C);
-	runJob4(W, Y, C);
-	runJob5(W, X, Y, W2);
-
-	return 0;
-    }
-
-    /**
-     * Launch the first job for W computation.
-     * 
-     * @param hPath
-     *            initial H path
-     * @param wout1Path
-     *            temporal output
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void runJob1(Path hPath, Path wout1Path) throws IOException,
-	    ClassNotFoundException, InterruptedException {
-
-	Configuration conf = getConf();
-
-	Job job = new Job(HadoopUtils.sanitizeConf(conf), "W1-it" + iteration);
-	job.setJarByClass(ComputeWJob.class);
-
-	Configuration jobConf = job.getConfiguration();
-
-	if (conf.getBoolean("useCassandra", true)) {
-	    MultipleInputs.addInputPath(job, new Path("unused"),
-		    CqlPagingInputFormat.class,
-		    MovieScoreByUserCassandraMapper.class);
-	    CassandraSetup.updateConfForInput(conf, jobConf);
-	} else {
-	    MultipleInputs.addInputPath(job, inputPath,
-		    SequenceFileInputFormat.class,
-		    MovieScoreByUserHDFSMapper.class);
+	/**
+	 * ComputeHJob constructor.
+	 * 
+	 * @param H
+	 *            Path to the input H matrix
+	 * @param W
+	 *            Path to the input W matrix
+	 * @param H2
+	 *            Path to the output H matrix
+	 * @param W2
+	 *            Path to the output W matrix
+	 */
+	public ComputeWJob(Path H, Path W, Path H2, Path W2) {
+		super(H, W, H2, W2);
 	}
 
-	MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
-		HSecondaryMapper.class);
+	/**
+	 * Run all chained map-reduce jobs in order to compute H matrix.
+	 */
+	@Override
+	public int run(String[] args) throws Exception {
+		Configuration conf = getConf();
+		inputPath = HadoopUtils.getInputPath(conf);
+		iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
+		directory = conf.get(RMRecommenderDriver.directory) + File.separator
+				+ "wcomputation";
 
-	job.setReducerClass(W1Reducer.class);
+		HadoopUtils.createFolder(conf, directory);
+		HadoopUtils.removeData(conf, W2.toString());
+		HadoopUtils.removeData(conf, directory);
 
-	job.setMapOutputKeyClass(IntPairWritable.class);
-	job.setMapOutputValueClass(VectorOrPrefWritable.class);
+		this.out1 = new Path(directory + File.separator + "wout1");
+		this.X = new Path(directory + File.separator + "X");
+		this.C = new Path(directory + File.separator + "C");
+		this.Y = new Path(directory + File.separator + "Y");
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, wout1Path);
+		runJob1(H, out1);
+		runJob2(out1, X);
+		runJob3(H, C);
+		runJob4(W, Y, C);
+		runJob5(W, X, Y, W2);
 
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
-
-	job.setPartitionerClass(IntPairKeyPartitioner.class);
-	job.setSortComparatorClass(IntPairWritable.Comparator.class);
-	job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
-
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
+		return 0;
 	}
 
-    }
+	/**
+	 * Launch the first job for W computation.
+	 * 
+	 * @param hPath
+	 *            initial H path
+	 * @param wout1Path
+	 *            temporal output
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
+	protected void runJob1(Path hPath, Path wout1Path) throws IOException,
+			ClassNotFoundException, InterruptedException {
 
-    /**
-     * Launch the second job for W computation.
-     * 
-     * @param wout1Path
-     *            output of the first job
-     * @param xPath
-     *            X path
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void runJob2(Path wout1Path, Path xPath) throws IOException,
-	    ClassNotFoundException, InterruptedException {
+		Configuration conf = getConf();
 
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W2-it"
-		+ iteration);
-	job.setJarByClass(ComputeWJob.class);
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "W1-it" + iteration);
+		job.setJarByClass(ComputeWJob.class);
 
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, wout1Path);
+		Configuration jobConf = job.getConfiguration();
 
-	job.setMapperClass(Mapper.class);
-	job.setCombinerClass(VectorSumReducer.class);
-	job.setReducerClass(VectorSumReducer.class);
+		if (conf.getBoolean("useCassandra", true)) {
+			MultipleInputs.addInputPath(job, new Path("unused"),
+					CqlPagingInputFormat.class,
+					MovieScoreByUserCassandraMapper.class);
+			CassandraSetup.updateConfForInput(conf, jobConf);
+		} else {
+			MultipleInputs.addInputPath(job, inputPath,
+					SequenceFileInputFormat.class,
+					MovieScoreByUserHDFSMapper.class);
+		}
 
-	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(VectorWritable.class);
+		MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
+				HSecondaryMapper.class);
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, xPath);
+		job.setReducerClass(W1Reducer.class);
 
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
+		job.setMapOutputKeyClass(IntPairWritable.class);
+		job.setMapOutputValueClass(VectorOrPrefWritable.class);
 
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, wout1Path);
+
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(VectorWritable.class);
+
+		job.setPartitionerClass(IntPairKeyPartitioner.class);
+		job.setSortComparatorClass(IntPairWritable.Comparator.class);
+		job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
+
+		injectMappings(job, conf, true);
+		jobConf.setInt(MatrixComputationJob.numberOfFiles, 2);
+
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
+
 	}
 
-    }
+	/**
+	 * Launch the second job for W computation.
+	 * 
+	 * @param wout1Path
+	 *            output of the first job
+	 * @param xPath
+	 *            X path
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
+	protected void runJob2(Path wout1Path, Path xPath) throws IOException,
+			ClassNotFoundException, InterruptedException {
 
-    /**
-     * Launch the third job for W computation.
-     * 
-     * @param wPath
-     *            W path
-     * @param cPath
-     *            C path
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void runJob3(Path wPath, Path cPath) throws IOException,
-	    ClassNotFoundException, InterruptedException {
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W2-it"
+				+ iteration);
+		job.setJarByClass(ComputeWJob.class);
 
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W3-it"
-		+ iteration);
-	job.setJarByClass(ComputeWJob.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		SequenceFileInputFormat.addInputPath(job, wout1Path);
 
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, wPath);
+		job.setMapperClass(Mapper.class);
+		job.setCombinerClass(VectorSumReducer.class);
+		job.setReducerClass(VectorSumReducer.class);
 
-	job.setMapperClass(CrossProductMapper.class);
-	job.setCombinerClass(MatrixSumReducer.class);
-	job.setReducerClass(MatrixSumReducer.class);
+		job.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputValueClass(VectorWritable.class);
 
-	job.setMapOutputKeyClass(NullWritable.class);
-	job.setMapOutputValueClass(MatrixWritable.class);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, xPath);
 
-	job.setNumReduceTasks(1);
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(VectorWritable.class);
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, cPath);
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
 
-	job.setOutputKeyClass(NullWritable.class);
-	job.setOutputValueClass(MatrixWritable.class);
-
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
 	}
 
-    }
+	/**
+	 * Launch the third job for W computation.
+	 * 
+	 * @param wPath
+	 *            W path
+	 * @param cPath
+	 *            C path
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
+	protected void runJob3(Path wPath, Path cPath) throws IOException,
+			ClassNotFoundException, InterruptedException {
 
-    /**
-     * Launch the fourth job for H computation.
-     * 
-     * @param hPath
-     *            H path
-     * @param yPath
-     *            Y path
-     * @param cPath
-     *            C path
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void runJob4(Path hPath, Path yPath, Path cPath)
-	    throws IOException, ClassNotFoundException, InterruptedException {
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W3-it"
+				+ iteration);
+		job.setJarByClass(ComputeWJob.class);
 
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W4-it"
-		+ iteration);
-	job.setJarByClass(ComputeWJob.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		SequenceFileInputFormat.addInputPath(job, wPath);
 
-	job.setInputFormatClass(SequenceFileInputFormat.class);
-	SequenceFileInputFormat.addInputPath(job, hPath);
+		job.setMapperClass(CrossProductMapper.class);
+		job.setCombinerClass(MatrixSumReducer.class);
+		job.setReducerClass(MatrixSumReducer.class);
 
-	job.setMapperClass(WCMapper.class);
-	job.setNumReduceTasks(0);
-	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(VectorWritable.class);
+		job.setMapOutputKeyClass(NullWritable.class);
+		job.setMapOutputValueClass(MatrixWritable.class);
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, yPath);
+		job.setNumReduceTasks(1);
 
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, cPath);
 
-	Configuration conf = job.getConfiguration();
-	Path mergedPath = HadoopUtils.mergeFile(conf, cPath, directory,
-		"C-merged");
-	DistributedCache.addCacheFile(mergedPath.toUri(), conf);
+		job.setOutputKeyClass(NullWritable.class);
+		job.setOutputValueClass(MatrixWritable.class);
 
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
+
 	}
 
-    }
+	/**
+	 * Launch the fourth job for H computation.
+	 * 
+	 * @param hPath
+	 *            H path
+	 * @param yPath
+	 *            Y path
+	 * @param cPath
+	 *            C path
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
+	protected void runJob4(Path hPath, Path yPath, Path cPath)
+			throws IOException, ClassNotFoundException, InterruptedException {
 
-    /**
-     * Launch the fifth job for H computation.
-     * 
-     * @param wPath
-     *            initial W path
-     * @param xPath
-     *            input X
-     * @param yPath
-     *            input Y
-     * @param wOutputPath
-     *            output W path
-     * @throws IOException
-     * @throws ClassNotFoundException
-     * @throws InterruptedException
-     */
-    protected void runJob5(Path wPath, Path xPath, Path yPath, Path wOutputPath)
-	    throws IOException, ClassNotFoundException, InterruptedException {
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W4-it"
+				+ iteration);
+		job.setJarByClass(ComputeWJob.class);
 
-	Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W5-it"
-		+ iteration);
-	job.setJarByClass(ComputeWJob.class);
+		job.setInputFormatClass(SequenceFileInputFormat.class);
+		SequenceFileInputFormat.addInputPath(job, hPath);
 
-	MultipleInputs.addInputPath(job, wPath, SequenceFileInputFormat.class,
-		Vector0Mapper.class);
+		job.setMapperClass(WCMapper.class);
+		job.setNumReduceTasks(0);
+		job.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputValueClass(VectorWritable.class);
 
-	job.setMapperClass(WComputationMapper.class);
-	job.setNumReduceTasks(0);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, yPath);
 
-	job.setMapOutputKeyClass(IntWritable.class);
-	job.setMapOutputValueClass(VectorWritable.class);
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(VectorWritable.class);
 
-	job.setOutputFormatClass(SequenceFileOutputFormat.class);
-	SequenceFileOutputFormat.setOutputPath(job, wOutputPath);
+		Configuration jobConf = job.getConfiguration();
+		DistributedCache.addCacheFile(cPath.toUri(), jobConf);
+		jobConf.setInt(MatrixComputationJob.numberOfFiles, 1);
 
-	job.setOutputKeyClass(IntWritable.class);
-	job.setOutputValueClass(VectorWritable.class);
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
 
-	Configuration jobConf = job.getConfiguration();
-	Path xMergedPath = HadoopUtils.mergeFile(jobConf, xPath, directory,
-		"x-merged");
-	DistributedCache.addCacheFile(xMergedPath.toUri(), jobConf);
-	Path yMergedPath = HadoopUtils.mergeFile(jobConf, yPath, directory,
-		"y-merged");
-	DistributedCache.addCacheFile(yMergedPath.toUri(), jobConf);
-
-	boolean succeeded = job.waitForCompletion(true);
-	if (!succeeded) {
-	    throw new RuntimeException(job.getJobName() + " failed!");
 	}
 
-    }
+	/**
+	 * Launch the fifth job for H computation.
+	 * 
+	 * @param wPath
+	 *            initial W path
+	 * @param xPath
+	 *            input X
+	 * @param yPath
+	 *            input Y
+	 * @param wOutputPath
+	 *            output W path
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
+	protected void runJob5(Path wPath, Path xPath, Path yPath, Path wOutputPath)
+			throws IOException, ClassNotFoundException, InterruptedException {
+
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W5-it"
+				+ iteration);
+		job.setJarByClass(ComputeWJob.class);
+
+		MultipleInputs.addInputPath(job, wPath, SequenceFileInputFormat.class,
+				Vector0Mapper.class);
+
+		job.setMapperClass(WComputationMapper.class);
+		job.setNumReduceTasks(0);
+
+		job.setMapOutputKeyClass(IntWritable.class);
+		job.setMapOutputValueClass(VectorWritable.class);
+
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		SequenceFileOutputFormat.setOutputPath(job, wOutputPath);
+
+		job.setOutputKeyClass(IntWritable.class);
+		job.setOutputValueClass(VectorWritable.class);
+
+		Configuration jobConf = job.getConfiguration();
+		DistributedCache.addCacheFile(xPath.toUri(), jobConf);
+		DistributedCache.addCacheFile(yPath.toUri(), jobConf);
+		jobConf.setInt(MatrixComputationJob.numberOfFiles, 2);
+
+		boolean succeeded = job.waitForCompletion(true);
+		if (!succeeded) {
+			throw new RuntimeException(job.getJobName() + " failed!");
+		}
+
+	}
 
 }
