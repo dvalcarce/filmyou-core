@@ -146,13 +146,13 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			items = userItems.get(userId);
 			unratedItems = new TIntHashSet(clusterItems);
 			unratedItems.removeAll(items);
-			System.err
-					.print("\tCalculating relevance for user " + userId + " ");
+			System.err.print("\tCalculating relevance for user " + userId
+					+ " \t");
 			buildRecommendations(context, userId, items, unratedItems,
 					key.getFirst());
 			System.err.println();
 		}
-
+		System.err.println();
 	}
 
 	/**
@@ -206,9 +206,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	 * @param cluster
 	 *            cluster ID
 	 */
-	final private void buildRecommendations(final Context context,
-			final int userId, final TIntSet items, final TIntSet unratedItems,
-			final int cluster) {
+	private void buildRecommendations(final Context context, final int userId,
+			final TIntSet items, final TIntSet unratedItems, final int cluster) {
 
 		// Calculate relevance for each unrated item
 		unratedItems.forEach(new TIntProcedure() {
@@ -276,7 +275,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	 *            userId
 	 * @return
 	 */
-	final private double probItemGivenUser(final int item, final int user) {
+	private double probItemGivenUser(final int item, final int user) {
 		final double rating = preferences.get(user, item);
 		final double sum = clusterUserSum.get(user);
 

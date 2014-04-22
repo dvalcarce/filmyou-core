@@ -21,8 +21,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
-import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.testdata.PPCTestData;
+import es.udc.fi.dc.irlab.util.CassandraUtils;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
 import es.udc.fi.dc.irlab.util.HadoopUtils;

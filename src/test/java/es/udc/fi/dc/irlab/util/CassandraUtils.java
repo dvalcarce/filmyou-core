@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.util;
+package es.udc.fi.dc.irlab.util;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -71,11 +71,9 @@ public class CassandraUtils {
 
 	private void createKeyspaceIfNeeded(Session session, String keyspace) {
 		if (session.getCluster().getMetadata().getKeyspace(keyspace) == null) {
-			PreparedStatement statement = session.prepare("CREATE KEYSPACE "
-					+ keyspace + " WITH REPLICATION ="
+			session.execute("CREATE KEYSPACE " + keyspace
+					+ " WITH REPLICATION = "
 					+ "{'class' : 'SimpleStrategy', 'replication_factor': 3}");
-			BoundStatement boundStatement = new BoundStatement(statement);
-			session.execute(boundStatement.bind(keyspace));
 		}
 	}
 

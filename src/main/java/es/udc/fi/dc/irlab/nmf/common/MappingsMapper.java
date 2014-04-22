@@ -62,8 +62,8 @@ public class MappingsMapper<K1, V1, K2, V2> extends Mapper<K1, V1, K2, V2> {
 		Path[] paths = DistributedCache.getLocalCacheFiles(conf);
 
 		if (paths == null || paths.length != length) {
-			throw new FileNotFoundException("Found " + paths.length
-					+ " files, " + length + " required");
+			throw new FileNotFoundException("Found " + paths + ", " + length
+					+ " files required");
 		}
 
 		userMap = new TIntIntHashMap(conf.getInt(

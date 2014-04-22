@@ -42,7 +42,6 @@ import org.apache.mahout.math.VectorWritable;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 
-import es.udc.fi.dc.irlab.nmf.util.CassandraUtils;
 import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 
 /**
