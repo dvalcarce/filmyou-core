@@ -47,8 +47,9 @@ public class RM2CassandraReducer extends
 	 * @throws InterruptedException
 	 */
 	@Override
-	protected void writePreference(Context context, int userId, int itemId,
-			double score, int cluster) throws IOException, InterruptedException {
+	protected void writePreference(final Context context, final int userId,
+			final int itemId, final double score, final int cluster)
+			throws IOException, InterruptedException {
 
 		Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
 		keys.put("user", ByteBufferUtil.bytes(userId));

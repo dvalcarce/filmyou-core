@@ -43,8 +43,9 @@ public class RM2HDFSReducer extends
 	 * @throws InterruptedException
 	 */
 	@Override
-	protected void writePreference(Context context, int userId, int itemId,
-			double score, int cluster) throws IOException, InterruptedException {
+	protected void writePreference(final Context context, final int userId,
+			final int itemId, final double score, final int cluster)
+			throws IOException, InterruptedException {
 
 		context.write(new IntPairWritable(userId, itemId), new FloatWritable(
 				(float) score));

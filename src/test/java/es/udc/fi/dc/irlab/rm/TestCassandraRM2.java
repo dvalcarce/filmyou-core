@@ -65,7 +65,8 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 
 		/* Run job */
 		conf = buildConf("clustering", "clusteringCount",
-				RMTestData.numberOfUsers, RMTestData.numberOfItems);
+				RMTestData.numberOfUsers, RMTestData.numberOfItems,
+				RMTestData.numberOfClusters);
 		ToolRunner.run(conf, new RM2Job(), null);
 
 		/* Run asserts */

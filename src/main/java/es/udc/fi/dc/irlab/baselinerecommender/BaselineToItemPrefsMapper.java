@@ -64,4 +64,5 @@ public class BaselineToItemPrefsMapper
 		booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
 		ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
 	}
+
 }

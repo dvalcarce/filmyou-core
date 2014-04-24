@@ -59,11 +59,14 @@ public class TestHDFSRM2 extends HadoopIntegrationTest {
 
 		/* Run job */
 		conf = buildConf("clustering", "clusteringCount",
-				RMTestData.numberOfUsers, RMTestData.numberOfItems);
+				RMTestData.numberOfUsers, RMTestData.numberOfItems,
+				RMTestData.numberOfClusters);
 		conf.setBoolean("useCassandra", false);
 		conf.set(HadoopUtils.inputPathName, input.toString());
 		conf.set(HadoopUtils.outputPathName, output.toString());
 		ToolRunner.run(conf, new RM2Job(), null);
+
+		// Thread.sleep(20 * 1000);
 
 		/* Run asserts */
 		compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);

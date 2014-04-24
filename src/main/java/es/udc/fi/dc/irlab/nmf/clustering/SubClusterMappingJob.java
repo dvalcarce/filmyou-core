@@ -95,7 +95,7 @@ public class SubClusterMappingJob extends AbstractJob {
 		job.setMapOutputValueClass(IntWritable.class);
 
 		int numberOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, 0);
+				RMRecommenderDriver.numberOfClusters, -1);
 		job.setNumReduceTasks(Math.min(numberOfClusters,
 				job.getNumReduceTasks()));
 
@@ -140,7 +140,7 @@ public class SubClusterMappingJob extends AbstractJob {
 		job.setMapOutputValueClass(IntWritable.class);
 
 		int numberOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, 0);
+				RMRecommenderDriver.numberOfClusters, -1);
 		job.setNumReduceTasks(Math.min(numberOfClusters,
 				job.getNumReduceTasks()));
 

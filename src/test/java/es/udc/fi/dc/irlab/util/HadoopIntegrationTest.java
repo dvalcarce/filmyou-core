@@ -81,6 +81,7 @@ public abstract class HadoopIntegrationTest {
 	protected Configuration buildConf() {
 		Configuration conf = new Configuration();
 
+		conf.setInt(RMRecommenderDriver.numberOfRecommendations, 500);
 		conf.set(RMRecommenderDriver.directory, baseDirectory);
 		conf.setBoolean(RMRecommenderDriver.useCassandra, true);
 		conf.setInt(RMRecommenderDriver.cassandraPort, cassandraPort);
@@ -204,10 +205,11 @@ public abstract class HadoopIntegrationTest {
 	 * @return conf
 	 */
 	protected Configuration buildConf(String clustering,
-			String clusteringCount, int numberOfUsers, int numberOfItems) {
+			String clusteringCount, int numberOfUsers, int numberOfItems,
+			int numberOfClusters) {
 
 		Configuration conf = buildConf(null, null, numberOfUsers,
-				numberOfItems, 0, 0);
+				numberOfItems, numberOfClusters, 0);
 
 		if (clustering != null) {
 			conf.set(RMRecommenderDriver.clustering, clustering);
@@ -432,7 +434,9 @@ public abstract class HadoopIntegrationTest {
 				count++;
 				i = key.getSecond();
 				j = key.getFirst();
-
+				// System.out.println("relevance(" + i + ", " + j + ") =\t"
+				// + val.get() + "\t| CORRECT -> "
+				// + map.get(new ImmutablePair<Integer, Integer>(j, i)));
 				assertEquals(
 						map.get(new ImmutablePair<Integer, Integer>(j, i)),
 						val.get(), accuracy);
