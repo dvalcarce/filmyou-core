@@ -52,6 +52,7 @@ public class RMRecommenderDriver extends AbstractJob {
 	public static final String numberOfClusters = "numberOfClusters";
 	public static final String numberOfSubClusters = "numberOfSubClusters";
 	public static final String numberOfIterations = "numberOfIterations";
+	public static final String numberOfRecommendations = "numberOfRecommendations";
 	public static final String directory = "directory";
 	public static final String cassandraPort = "cassandraPort";
 	public static final String cassandraHost = "cassandraHost";
@@ -87,6 +88,8 @@ public class RMRecommenderDriver extends AbstractJob {
 		addOption(numberOfSubClusters, "k2", "Number of subclusters",
 				String.valueOf(0));
 		addOption(numberOfIterations, "i", "Number of iterations", "20");
+		addOption(numberOfRecommendations, "r", "Number of recommendations",
+				"500");
 		addOption(directory, "d", "Working directory", "recommendation");
 		addOption(useCassandra, "useCas", "Use Cassandra instead of HDFS",
 				"true");
