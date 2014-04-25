@@ -81,7 +81,7 @@ public abstract class HadoopIntegrationTest {
 	protected Configuration buildConf() {
 		Configuration conf = new Configuration();
 
-		conf.setInt(RMRecommenderDriver.numberOfRecommendations, 500);
+		conf.setInt(RMRecommenderDriver.numberOfRecommendations, 1000);
 		conf.set(RMRecommenderDriver.directory, baseDirectory);
 		conf.setBoolean(RMRecommenderDriver.useCassandra, true);
 		conf.setInt(RMRecommenderDriver.cassandraPort, cassandraPort);
@@ -427,24 +427,21 @@ public abstract class HadoopIntegrationTest {
 		IntPairWritable key = new IntPairWritable();
 		FloatWritable val = new FloatWritable();
 
-		int i, j, count = 0;
+		int item, user, count = 0;
 
 		for (SequenceFile.Reader reader : readers) {
 			while (reader.next(key, val)) {
 				count++;
-				i = key.getSecond();
-				j = key.getFirst();
-				// System.out.println("relevance(" + i + ", " + j + ") =\t"
-				// + val.get() + "\t| CORRECT -> "
-				// + map.get(new ImmutablePair<Integer, Integer>(j, i)));
-				assertEquals(
-						map.get(new ImmutablePair<Integer, Integer>(j, i)),
-						val.get(), accuracy);
+				item = key.getSecond();
+				user = key.getFirst();
+				assertEquals(map.get(new ImmutablePair<Integer, Integer>(user,
+						item)), val.get(), accuracy);
 			}
 		}
 
 		if (count != data.length) {
-			fail("Data length does not match");
+			fail("Data length does not match (" + count + " vs " + data.length
+					+ ")");
 		}
 
 	}
@@ -469,15 +466,27 @@ public abstract class HadoopIntegrationTest {
 		CassandraUtils cassandra = new CassandraUtils(
 				conf.get("cassandraHost"), conf.get("cassandraPartitioner"));
 
-		int i = 0;
+		Map<Pair<Integer, Integer>, Double> map = new HashMap<Pair<Integer, Integer>, Double>();
+
+		for (int i = 0; i < data.length; i++) {
+			map.put(new ImmutablePair<Integer, Integer>((int) data[i][0],
+					(int) data[i][1]), data[i][2]);
+
+		}
+
+		int count = 0;
 		for (int user = 1; user <= numberOfUsers; user++) {
 			result = cassandra.selectData(user, keyspace, table);
 			for (Row row : result) {
-				assertEquals((int) data[i][0], row.getInt(0));
-				assertEquals((int) data[i][1], row.getInt(1));
-				assertEquals(data[i][2], row.getFloat(2), accuracy);
-				i++;
+				count++;
+				assertEquals(map.get(new ImmutablePair<Integer, Integer>(row
+						.getInt(0), row.getInt(1))), row.getFloat(2), accuracy);
 			}
+		}
+
+		if (count != data.length) {
+			fail("Data length does not match (" + count + " vs " + data.length
+					+ ")");
 		}
 
 		cassandra.shutdownSessions();

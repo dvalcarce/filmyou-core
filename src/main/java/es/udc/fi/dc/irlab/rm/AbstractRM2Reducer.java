@@ -31,7 +31,6 @@ import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.procedure.TIntDoubleProcedure;
 import gnu.trove.procedure.TIntObjectProcedure;
-import gnu.trove.procedure.TIntProcedure;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 
@@ -70,11 +69,6 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 	private int newItemId;
 
-	private double logResult;
-	private double sum;
-
-	private SortedSet<IntDouble> prefs;
-
 	@Override
 	public void setup(Context context) throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
@@ -110,8 +104,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 		itemColl = paths[2];
 		lambda = Double.valueOf(conf.get(RM2Job.lambdaName));
-		numberOfItems = Integer.valueOf(conf
-				.get(RMRecommenderDriver.numberOfItems));
+		numberOfItems = conf.getInt(RMRecommenderDriver.numberOfItems, -1);
+		numberOfRecommendations = conf.getInt(
+				RMRecommenderDriver.numberOfRecommendations, -1);
 	}
 
 	@Override
@@ -167,7 +162,6 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		System.out.println(">> CLUSTER " + key.getFirst() + " <<");
 		System.out.println("# USERS: " + numberOfUsersInCluster);
 		System.out.println("# ITEMS: " + numberOfItemsInCluster);
-		System.out.println();
 
 		// TEST: Preload p(a|b)
 		cache = new double[numberOfUsersInCluster][numberOfItemsInCluster];
@@ -191,12 +185,14 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 			System.out.print("\tCalculating relevance for user " + user + "\t");
 			long startTime = System.nanoTime();
-			buildRecommendations(context, user, ratedItems, unratedItems,
-					neighbours, key.getFirst());
+			buildRecommendations(context, user, ratedItems.toArray(),
+					unratedItems.toArray(), neighbours.toArray(),
+					key.getFirst());
 			long estimatedTime = System.nanoTime() - startTime;
-			System.out.println((estimatedTime / 1000000000) + " seconds");
+			System.out.println((estimatedTime / 1000000000.0) + " seconds");
 
 		}
+		System.out.println();
 
 	}
 
@@ -289,66 +285,49 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	 *            cluster ID
 	 */
 	private void buildRecommendations(final Context context, final int userId,
-			final TIntSet ratedItems, final TIntSet unratedItems,
-			final TIntSet neighbours, final int cluster) {
+			final int[] ratedItems, final int[] unratedItems,
+			final int[] neighbours, final int cluster) {
 
-		prefs = new TreeSet<IntDouble>();
+		SortedSet<IntDouble> prefs = new TreeSet<IntDouble>();
 
 		/* Calculate relevance for each unrated item */
-		unratedItems.forEach(new TIntProcedure() {
+		for (int recommendedItem : unratedItems) {
 
-			/**
-			 * This procedure implements RM2
-			 */
-			@Override
-			public boolean execute(final int recommendedItem) {
-				logResult = 0.0;
+			double logResult = 0.0;
 
-				/* For each rated item */
-				ratedItems.forEach(new TIntProcedure() {
+			/* For each rated item */
+			for (int item : ratedItems) {
 
-					@Override
-					public boolean execute(final int item) {
-						sum = 0.0;
+				double sum = 0.0;
 
-						/* For each neighbour */
-						neighbours.forEach(new TIntProcedure() {
+				/* For each neighbour */
+				for (int neighbour : neighbours) {
 
-							@Override
-							public boolean execute(final int neighbour) {
-								sum += cache[neighbour][recommendedItem]
-										* cache[neighbour][item];
-								return true;
+					sum += cache[neighbour][recommendedItem]
+							* cache[neighbour][item];
 
-							}
+				}
 
-						});
-
-						logResult += Math.log(sum);
-						return true;
-
-					}
-
-				});
-
-				// n = #items rated by the user
-				int n = ratedItems.size();
-
-				logResult += (n - 1) * Math.log(numberOfItems) - n
-						* Math.log(numberOfUsersInCluster);
-
-				prefs.add(new IntDouble(items[recommendedItem], logResult));
-
-				return true;
+				logResult += Math.log(sum);
 
 			}
 
-		});
+			// n = #items rated by the user
+			int n = ratedItems.length;
+
+			logResult += (n - 1) * Math.log(numberOfItems) - n
+					* Math.log(numberOfUsersInCluster);
+
+			prefs.add(new IntDouble(recommendedItem, logResult));
+			context.progress();
+
+		}
 
 		/* Write top recommendations for the given user */
 		Iterator<IntDouble> it = prefs.iterator();
 		IntDouble element;
 		int iterations = Math.min(numberOfRecommendations, prefs.size());
+
 		for (int i = 0; i < iterations; i++) {
 			element = it.next();
 			try {

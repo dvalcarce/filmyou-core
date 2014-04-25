@@ -20,7 +20,26 @@ public class IntDouble implements Comparable<IntDouble> {
 
 	@Override
 	public int compareTo(IntDouble o) {
-		return Double.compare(o.value, this.value);
+		int result = Double.compare(o.value, this.value);
+		if (result == 0) {
+			return Integer.compare(o.key, this.key);
+		}
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return String.format("(%d, %f)", key, value);
+	}
+
+	@Override
+	public int hashCode() {
+		return new Integer(key).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return ((IntDouble) o).key == key;
 	}
 
 }
