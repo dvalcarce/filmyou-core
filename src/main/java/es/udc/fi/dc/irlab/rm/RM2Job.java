@@ -75,21 +75,25 @@ public class RM2Job extends AbstractJob {
 		directory = baseDirectory + "/rm2";
 		HadoopUtils.removeData(conf, directory);
 
-		Path userSum = new Path(directory + File.separator + RM2Job.userSum);
-		Path itemSum = new Path(directory + File.separator + RM2Job.itemSum);
-		Path totalSum = new Path(directory + File.separator + RM2Job.totalSum);
-		Path itemColl = new Path(directory + File.separator + RM2Job.itemColl);
-		Path clustering = new Path(baseDirectory + File.separator
+		final Path userSum = new Path(directory + File.separator
+				+ RM2Job.userSum);
+		final Path itemSum = new Path(directory + File.separator
+				+ RM2Job.itemSum);
+		final Path totalSum = new Path(directory + File.separator
+				+ RM2Job.totalSum);
+		final Path itemColl = new Path(directory + File.separator
+				+ RM2Job.itemColl);
+		final Path clustering = new Path(baseDirectory + File.separator
 				+ conf.get(RMRecommenderDriver.clustering));
-		Path clusteringCount = new Path(baseDirectory + File.separator
+		final Path clusteringCount = new Path(baseDirectory + File.separator
 				+ conf.get(RMRecommenderDriver.clusteringCount));
 
 		runUserSum(userSum);
 		runMovieSum(itemSum);
 		runTotalSum(itemSum, totalSum);
 
-		double sum = HadoopUtils.getDoubleFromSequenceFile(conf, totalSum,
-				directory);
+		final double sum = HadoopUtils.getDoubleFromSequenceFile(conf,
+				totalSum, directory);
 
 		runItemProbInCollection(itemSum, sum, itemColl);
 
@@ -324,7 +328,7 @@ public class RM2Job extends AbstractJob {
 
 		int nubmerOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
-		int numberOfSubClusters = conf.getInt(
+		final int numberOfSubClusters = conf.getInt(
 				RMRecommenderDriver.numberOfSubClusters, -1);
 		if (numberOfSubClusters > 0) {
 			nubmerOfClusters *= numberOfSubClusters;

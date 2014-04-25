@@ -46,6 +46,11 @@ public abstract class AbstractJoinVectorMapper<A, B> extends
 
 	/**
 	 * Build HashMap with DistributedCache data.
+	 * 
+	 * @param context
+	 *            Context
+	 * @throws IOException
+	 * @throws InterruptedException
 	 */
 	@Override
 	protected void setup(Context context) throws IOException,

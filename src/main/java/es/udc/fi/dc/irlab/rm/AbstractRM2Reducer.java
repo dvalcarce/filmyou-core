@@ -81,7 +81,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 		int nubmerOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
-		int numberOfSubClusters = conf.getInt(
+		final int numberOfSubClusters = conf.getInt(
 				RMRecommenderDriver.numberOfSubClusters, -1);
 		if (numberOfSubClusters > 0) {
 			nubmerOfClusters *= numberOfSubClusters;
@@ -288,7 +288,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			final int[] ratedItems, final int[] unratedItems,
 			final int[] neighbours, final int cluster) {
 
-		SortedSet<IntDouble> prefs = new TreeSet<IntDouble>();
+		final SortedSet<IntDouble> prefs = new TreeSet<IntDouble>();
 
 		/* Calculate relevance for each unrated item */
 		for (int recommendedItem : unratedItems) {
@@ -313,7 +313,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			}
 
 			// n = #items rated by the user
-			int n = ratedItems.length;
+			final int n = ratedItems.length;
 
 			logResult += (n - 1) * Math.log(numberOfItems) - n
 					* Math.log(numberOfUsersInCluster);
@@ -324,10 +324,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		}
 
 		/* Write top recommendations for the given user */
-		Iterator<IntDouble> it = prefs.iterator();
+		final Iterator<IntDouble> it = prefs.iterator();
 		IntDouble element;
-		int iterations = Math.min(numberOfRecommendations, prefs.size());
-
+		final int iterations = Math.min(numberOfRecommendations, prefs.size());
 		for (int i = 0; i < iterations; i++) {
 			element = it.next();
 			try {

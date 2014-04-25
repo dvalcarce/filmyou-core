@@ -119,6 +119,7 @@ public class RMRecommenderDriver extends AbstractJob {
 	 * 
 	 * @param args
 	 *            command line arguments
+	 * @return Configuration
 	 * @throws IOException
 	 */
 	protected Configuration parseInput(String[] args) throws IOException {
@@ -160,10 +161,11 @@ public class RMRecommenderDriver extends AbstractJob {
 		Configuration conf = parseInput(args);
 
 		/* Launch PPC */
-		if (conf.getInt(numberOfIterations, 0) > 0) {
-			if (ToolRunner.run(conf, new PPCDriver(), args) < 0) {
-				throw new RuntimeException("PPCJob failed!");
-			}
+		if (conf.getInt(numberOfIterations, -1) > 0
+				&& ToolRunner.run(conf, new PPCDriver(), args) < 0) {
+
+			throw new RuntimeException("PPCJob failed!");
+
 		}
 
 		/* Set H and W paths properly */
@@ -179,7 +181,9 @@ public class RMRecommenderDriver extends AbstractJob {
 		}
 
 		/* Launch cluster refinement if required */
-		clusterRefinement(conf, args);
+		if (conf.getInt(numberOfIterations, -1) > 0) {
+			clusterRefinement(conf, args);
+		}
 
 		/* Count number of users per cluster */
 		if (ToolRunner.run(conf, new CountClustersJob(), args) < 0) {
@@ -206,9 +210,9 @@ public class RMRecommenderDriver extends AbstractJob {
 	private void clusterRefinement(Configuration conf, String[] args)
 			throws Exception {
 
-		int numberOfClusters = conf.getInt(
+		final int numberOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
-		int numberOfSubClusters = conf.getInt(
+		final int numberOfSubClusters = conf.getInt(
 				RMRecommenderDriver.numberOfSubClusters, 0);
 
 		if (numberOfSubClusters > 0) {

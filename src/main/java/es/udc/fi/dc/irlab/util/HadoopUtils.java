@@ -234,7 +234,7 @@ public final class HadoopUtils {
 			Configuration conf) throws IOException {
 
 		FileSystem fs = FileSystem.getLocal(conf);
-		return _getSequenceReaders(directory, conf, fs);
+		return getSequenceReaders(directory, conf, fs);
 
 	}
 
@@ -253,11 +253,23 @@ public final class HadoopUtils {
 			Configuration conf) throws IOException {
 
 		FileSystem fs = FileSystem.get(conf);
-		return _getSequenceReaders(directory, conf, fs);
+		return getSequenceReaders(directory, conf, fs);
 
 	}
 
-	private static SequenceFile.Reader[] _getSequenceReaders(Path directory,
+	/**
+	 * Auxiliary method for getting SequenceReaders.
+	 * 
+	 * @param directory
+	 *            SequenceFileOutputFormat output
+	 * @param conf
+	 *            Job Configuration
+	 * @param fs
+	 *            FileSystem
+	 * @return the readers
+	 * @throws IOException
+	 */
+	private static SequenceFile.Reader[] getSequenceReaders(Path directory,
 			Configuration conf, FileSystem fs) throws IOException {
 
 		// Fix for bug MAPREDUCE-5448

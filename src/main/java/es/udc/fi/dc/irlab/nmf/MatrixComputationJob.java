@@ -78,6 +78,8 @@ public abstract class MatrixComputationJob extends AbstractJob {
 	 *            Job
 	 * @param conf
 	 *            Configuration
+	 * @param mapItems
+	 *            true if items need to be also mapped, false otherwise
 	 * @throws IOException
 	 */
 	protected void injectMappings(Job job, Configuration conf, boolean mapItems)
@@ -91,19 +93,32 @@ public abstract class MatrixComputationJob extends AbstractJob {
 		Path folder = new Path(conf.get(RMRecommenderDriver.directory)
 				+ File.separator + RMRecommenderDriver.subClusteringUserPath
 				+ File.separator + RMRecommenderDriver.mappingPath);
-		_addMapping(job, conf, cluster, folder);
+		addMapping(job, conf, cluster, folder);
 
 		if (mapItems) {
 			folder = new Path(conf.get(RMRecommenderDriver.directory)
 					+ File.separator
 					+ RMRecommenderDriver.subClusteringItemPath
 					+ File.separator + RMRecommenderDriver.mappingPath);
-			_addMapping(job, conf, cluster, folder);
+			addMapping(job, conf, cluster, folder);
 		}
 
 	}
 
-	private void _addMapping(Job job, Configuration conf, final int cluster,
+	/**
+	 * Auxiliary method. Add mapping from given folder.
+	 * 
+	 * @param job
+	 *            Job
+	 * @param conf
+	 *            Configuration
+	 * @param cluster
+	 *            cluster id
+	 * @param folder
+	 *            data directory
+	 * @throws IOException
+	 */
+	private void addMapping(Job job, Configuration conf, final int cluster,
 			Path folder) throws IOException {
 
 		FileSystem fs = FileSystem.get(conf);

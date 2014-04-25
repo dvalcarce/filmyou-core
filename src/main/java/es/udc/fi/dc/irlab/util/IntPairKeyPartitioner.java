@@ -11,8 +11,8 @@ public class IntPairKeyPartitioner extends
 		Partitioner<IntPairWritable, Writable> {
 
 	@Override
-	public int getPartition(IntPairWritable key, Writable value,
-			int numPartitions) {
+	public int getPartition(final IntPairWritable key, final Writable value,
+			final int numPartitions) {
 
 		return (Integer.valueOf(key.getFirst()).hashCode() & Integer.MAX_VALUE)
 				% numPartitions;

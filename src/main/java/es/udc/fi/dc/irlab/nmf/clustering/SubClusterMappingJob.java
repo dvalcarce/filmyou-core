@@ -76,6 +76,17 @@ public class SubClusterMappingJob extends AbstractJob {
 		return 0;
 	}
 
+	/**
+	 * Do user mapping
+	 * 
+	 * @param inputPath
+	 *            input Path
+	 * @param outputPath
+	 *            output Path
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
 	private void mapUsers(Path inputPath, Path outputPath) throws IOException,
 			ClassNotFoundException, InterruptedException {
 
@@ -113,6 +124,18 @@ public class SubClusterMappingJob extends AbstractJob {
 
 	}
 
+	/**
+	 * Do item mapping
+	 * 
+	 * @param inputPath
+	 *            input Path
+	 * @param outputPath
+	 *            output Path
+	 * @param clustering
+	 * @throws IOException
+	 * @throws ClassNotFoundException
+	 * @throws InterruptedException
+	 */
 	private void mapItems(Path inputPath, Path outputPath, Path clustering)
 			throws IOException, ClassNotFoundException, InterruptedException {
 

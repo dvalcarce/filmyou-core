@@ -43,6 +43,11 @@ public abstract class AbstractDistributedMatrixMapper extends
 
 	/**
 	 * Load matrix from DistributedCache.
+	 * 
+	 * @param context
+	 *            Context
+	 * @throws IOException
+	 * @throws InterruptedException
 	 */
 	@Override
 	protected void setup(Context context) throws IOException,
