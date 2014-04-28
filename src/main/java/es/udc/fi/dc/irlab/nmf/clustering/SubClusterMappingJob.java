@@ -93,7 +93,7 @@ public class SubClusterMappingJob extends AbstractJob {
 		Configuration conf = getConf();
 
 		/* Prepare job */
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "UserMappingJob");
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "User Mapping");
 		job.setJarByClass(this.getClass());
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -142,7 +142,7 @@ public class SubClusterMappingJob extends AbstractJob {
 		Configuration conf = getConf();
 
 		/* Prepare job */
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "ItemMappingJob");
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "Item Mapping");
 		job.setJarByClass(this.getClass());
 
 		Configuration jobConf = job.getConfiguration();

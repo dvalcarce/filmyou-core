@@ -72,8 +72,7 @@ public class ClusterAssignmentJob extends AbstractJob {
 	public void findClusters(Path inputPath, Path outputPath)
 			throws ClassNotFoundException, IOException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
-				"findClustersJob");
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "Find Clusters");
 		job.setJarByClass(this.getClass());
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -98,7 +97,7 @@ public class ClusterAssignmentJob extends AbstractJob {
 			throws IOException, ClassNotFoundException, InterruptedException {
 
 		Configuration conf = getConf();
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "findSubClustersJob");
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "Find SubClusters");
 		job.setJarByClass(this.getClass());
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);

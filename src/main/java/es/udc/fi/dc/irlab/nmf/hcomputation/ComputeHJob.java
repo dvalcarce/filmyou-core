@@ -71,7 +71,10 @@ public class ComputeHJob extends MatrixComputationJob {
 	@Override
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
-
+		int c;
+		if ((c = conf.getInt(RMRecommenderDriver.subClustering, -1)) >= 0) {
+			cluster = "(" + c + ")";
+		}
 		inputPath = HadoopUtils.getInputPath(conf);
 		iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
 		directory = conf.get(RMRecommenderDriver.directory) + File.separator
@@ -109,8 +112,8 @@ public class ComputeHJob extends MatrixComputationJob {
 
 		Configuration conf = getConf();
 
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H1-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H1"
+				+ cluster + "-it" + iteration);
 		job.setJarByClass(this.getClass());
 
 		Configuration jobConf = job.getConfiguration();
@@ -162,8 +165,8 @@ public class ComputeHJob extends MatrixComputationJob {
 	protected void runJob2(Path wPath, Path cPath) throws IOException,
 			ClassNotFoundException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H2-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H2"
+				+ cluster + "-it" + iteration);
 		job.setJarByClass(this.getClass());
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -207,8 +210,8 @@ public class ComputeHJob extends MatrixComputationJob {
 	protected void runJob3(Path hPath, Path yPath, Path cPath)
 			throws IOException, ClassNotFoundException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H3-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), prefix + "H3"
+				+ cluster + "-it" + iteration);
 		job.setJarByClass(this.getClass());
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -256,8 +259,8 @@ public class ComputeHJob extends MatrixComputationJob {
 
 		Configuration conf = getConf();
 
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H4-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H4"
+				+ cluster + "-it" + iteration);
 		job.setJarByClass(this.getClass());
 
 		MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,

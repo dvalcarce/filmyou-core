@@ -37,8 +37,12 @@ public class MappingsReducer<K1, V1, K2, V2> extends Reducer<K1, V1, K2, V2> {
 			InterruptedException {
 
 		Configuration conf = context.getConfiguration();
+		int iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
+		int subClustering = conf.getInt(RMRecommenderDriver.subClustering, -1);
+		int numberOfIterations = conf.getInt(
+				RMRecommenderDriver.numberOfIterations, -1);
 
-		if (conf.getInt(RMRecommenderDriver.subClustering, -1) >= 0) {
+		if (subClustering >= 0 && iteration == numberOfIterations) {
 			loadMappings(conf,
 					conf.getInt(MatrixComputationJob.numberOfFiles, -1));
 		}

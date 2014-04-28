@@ -41,6 +41,7 @@ public abstract class MatrixComputationJob extends AbstractJob {
 
 	protected String directory;
 	protected int iteration;
+	protected String cluster = "";
 
 	protected Path H;
 	protected Path W;

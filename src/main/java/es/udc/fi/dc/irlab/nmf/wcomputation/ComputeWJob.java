@@ -70,6 +70,10 @@ public class ComputeWJob extends MatrixComputationJob {
 	public int run(String[] args) throws Exception {
 		Configuration conf = getConf();
 		inputPath = HadoopUtils.getInputPath(conf);
+		int c;
+		if ((c = conf.getInt(RMRecommenderDriver.subClustering, -1)) >= 0) {
+			cluster = "(" + c + ")";
+		}
 		iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
 		directory = conf.get(RMRecommenderDriver.directory) + File.separator
 				+ "wcomputation";
@@ -108,7 +112,8 @@ public class ComputeWJob extends MatrixComputationJob {
 
 		Configuration conf = getConf();
 
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "W1-it" + iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "W1" + cluster
+				+ "-it" + iteration);
 		job.setJarByClass(ComputeWJob.class);
 
 		Configuration jobConf = job.getConfiguration();
@@ -166,8 +171,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	protected void runJob2(Path wout1Path, Path xPath) throws IOException,
 			ClassNotFoundException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W2-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W2" + cluster
+				+ "-it" + iteration);
 		job.setJarByClass(ComputeWJob.class);
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -207,8 +212,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	protected void runJob3(Path wPath, Path cPath) throws IOException,
 			ClassNotFoundException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W3-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W3" + cluster
+				+ "-it" + iteration);
 		job.setJarByClass(ComputeWJob.class);
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -252,8 +257,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	protected void runJob4(Path hPath, Path yPath, Path cPath)
 			throws IOException, ClassNotFoundException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W4-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W4" + cluster
+				+ "-it" + iteration);
 		job.setJarByClass(ComputeWJob.class);
 
 		job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -299,8 +304,8 @@ public class ComputeWJob extends MatrixComputationJob {
 	protected void runJob5(Path wPath, Path xPath, Path yPath, Path wOutputPath)
 			throws IOException, ClassNotFoundException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W5-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "W5" + cluster
+				+ "-it" + iteration);
 		job.setJarByClass(ComputeWJob.class);
 
 		MultipleInputs.addInputPath(job, wPath, SequenceFileInputFormat.class,

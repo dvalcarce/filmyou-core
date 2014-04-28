@@ -68,6 +68,7 @@ public class RMRecommenderDriver extends AbstractJob {
 	public static final String lambda = "lambda";
 	public static final String iteration = "iteration";
 	public static final String subClustering = "subClustering";
+	public static final String normalizationFrequency = "normalizationFrequency";
 
 	public static final String subClusteringUserPath = "subClusteringUser";
 	public static final String subClusteringItemPath = "subClusteringItem";
@@ -112,6 +113,8 @@ public class RMRecommenderDriver extends AbstractJob {
 				"clusteringCount");
 		addOption(lambda, null,
 				"Lambda parameter for Jelinek-Mercer smoothing", "0.5");
+		addOption(normalizationFrequency, null, "PCC Normalization Frequency",
+				"12");
 	}
 
 	/**

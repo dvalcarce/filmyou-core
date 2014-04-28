@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.mahout.common.IntPairWritable;
 import org.apache.mahout.math.Vector;
@@ -27,6 +28,7 @@ import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 
 import es.udc.fi.dc.irlab.nmf.common.MappingsReducer;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 
 /**
  * Emit &lt;j, a_j · x_j / y_j> from &lt;j, {a_j, x_j, y_j}>.
@@ -57,7 +59,19 @@ public class HComputationReducer
 			}
 		});
 
-		context.write(new IntWritable(getOldUserId(key.getFirst())),
+		Configuration conf = context.getConfiguration();
+		int iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
+		int numberOfIterations = conf.getInt(
+				RMRecommenderDriver.numberOfIterations, -1);
+		int userId;
+
+		if (iteration < numberOfIterations) {
+			userId = key.getFirst();
+		} else {
+			userId = getOldUserId(key.getFirst());
+		}
+
+		context.write(new IntWritable(userId),
 				new VectorWritable(vectorH.times(vectorXY)));
 
 	}

@@ -38,8 +38,6 @@ import es.udc.fi.dc.irlab.util.IntPairKeyPartitioner;
 
 public class PPCComputeHJob extends ComputeHJob {
 
-	public static final int normalizationFrequency = 12;
-
 	/**
 	 * ComputeHJob constructor.
 	 * 
@@ -77,8 +75,8 @@ public class PPCComputeHJob extends ComputeHJob {
 
 		Configuration conf = getConf();
 
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H4-it"
-				+ iteration);
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), prefix + "H4"
+				+ cluster + "-it" + iteration);
 		job.setJarByClass(this.getClass());
 
 		MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
