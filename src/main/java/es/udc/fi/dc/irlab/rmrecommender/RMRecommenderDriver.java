@@ -88,9 +88,9 @@ public class RMRecommenderDriver extends AbstractJob {
 		addOption(numberOfClusters, "k", "Number of clusters", true);
 		addOption(numberOfSubClusters, "k2", "Number of subclusters",
 				String.valueOf(0));
-		addOption(numberOfIterations, "i", "Number of iterations", "20");
+		addOption(numberOfIterations, "i", "Number of iterations", "10");
 		addOption(numberOfRecommendations, "r", "Number of recommendations",
-				"500");
+				"1000");
 		addOption(directory, "d", "Working directory", "recommendation");
 		addOption(useCassandra, "useCas", "Use Cassandra instead of HDFS",
 				"true");
@@ -112,9 +112,9 @@ public class RMRecommenderDriver extends AbstractJob {
 		addOption(clusteringCount, null, "Clustering count results",
 				"clusteringCount");
 		addOption(lambda, null,
-				"Lambda parameter for Jelinek-Mercer smoothing", "0.5");
-		addOption(normalizationFrequency, null, "PCC Normalization Frequency",
-				"12");
+				"Lambda parameter for Jelinek-Mercer smoothing", "0.1");
+		addOption(normalizationFrequency, "normFreq",
+				"PCC Normalization Frequency", "12");
 	}
 
 	/**
@@ -184,7 +184,8 @@ public class RMRecommenderDriver extends AbstractJob {
 		}
 
 		/* Launch cluster refinement if required */
-		if (conf.getInt(numberOfIterations, -1) > 0) {
+		if (conf.getInt(numberOfIterations, -1) > 0
+				&& conf.getInt(RMRecommenderDriver.numberOfSubClusters, -1) > 0) {
 			clusterRefinement(conf, args);
 		}
 
@@ -194,7 +195,8 @@ public class RMRecommenderDriver extends AbstractJob {
 		}
 
 		/* Run RM2 recommendation algorithm */
-		if (ToolRunner.run(conf, new RM2Job(), args) < 0) {
+		if (conf.getInt(numberOfRecommendations, -1) > 0
+				&& ToolRunner.run(conf, new RM2Job(), args) < 0) {
 			throw new RuntimeException("RMJob failed!");
 		}
 
