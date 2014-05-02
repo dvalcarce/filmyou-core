@@ -144,6 +144,8 @@ public class ComputeHJob extends MatrixComputationJob {
 		injectMappings(job, conf, true);
 		jobConf.setInt(MatrixComputationJob.numberOfFiles, 3);
 
+		jobConf.set(maxSplitSize, MB16);
+
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {
 			throw new RuntimeException(job.getJobName() + " failed!");
@@ -186,6 +188,9 @@ public class ComputeHJob extends MatrixComputationJob {
 
 		job.setOutputKeyClass(NullWritable.class);
 		job.setOutputValueClass(MatrixWritable.class);
+
+		Configuration jobConf = job.getConfiguration();
+		jobConf.set(maxSplitSize, MB4);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {

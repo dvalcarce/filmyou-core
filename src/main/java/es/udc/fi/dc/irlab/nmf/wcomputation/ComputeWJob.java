@@ -234,6 +234,9 @@ public class ComputeWJob extends MatrixComputationJob {
 		job.setOutputKeyClass(NullWritable.class);
 		job.setOutputValueClass(MatrixWritable.class);
 
+		Configuration jobConf = job.getConfiguration();
+		jobConf.set(maxSplitSize, MB16);
+
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {
 			throw new RuntimeException(job.getJobName() + " failed!");
@@ -278,6 +281,8 @@ public class ComputeWJob extends MatrixComputationJob {
 		Configuration jobConf = job.getConfiguration();
 		DistributedCache.addCacheFile(cPath.toUri(), jobConf);
 		jobConf.setInt(MatrixComputationJob.numberOfFiles, 1);
+
+		jobConf.set(maxSplitSize, MB4);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {
@@ -327,6 +332,8 @@ public class ComputeWJob extends MatrixComputationJob {
 		DistributedCache.addCacheFile(xPath.toUri(), jobConf);
 		DistributedCache.addCacheFile(yPath.toUri(), jobConf);
 		jobConf.setInt(MatrixComputationJob.numberOfFiles, 2);
+
+		jobConf.set(maxSplitSize, MB4);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {
