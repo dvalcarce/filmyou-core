@@ -30,11 +30,7 @@ public class IntDouble implements Comparable<IntDouble> {
 
 	@Override
 	public int compareTo(final IntDouble other) {
-		final int result = Double.compare(other.value, this.value);
-		if (result == 0) {
-			return Integer.compare(other.key, this.key);
-		}
-		return result;
+		return Double.compare(other.value, this.value);
 	}
 
 	@Override

@@ -231,8 +231,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 						});
 
 						newItemId++;
-
 						return true;
+
 					}
 
 				});
@@ -288,7 +288,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			final int[] ratedItems, final int[] unratedItems,
 			final int[] neighbours, final int cluster) {
 
-		final PriorityQueue<IntDouble> prefs = new PriorityQueue<IntDouble>();
+		final PriorityQueue<IntDouble> prefs = new PriorityQueue<IntDouble>(
+				unratedItems.length);
 
 		final int n = ratedItems.length;
 		final double pvpi = (n - 1) * Math.log(numberOfItems) - n
