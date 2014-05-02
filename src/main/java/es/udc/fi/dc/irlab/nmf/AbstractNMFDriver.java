@@ -19,6 +19,8 @@ package es.udc.fi.dc.irlab.nmf;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -34,6 +36,8 @@ import es.udc.fi.dc.irlab.util.DataInitialization;
  * 
  */
 public abstract class AbstractNMFDriver extends AbstractJob {
+
+	private static final Log LOG = LogFactory.getLog(AbstractNMFDriver.class);
 
 	private Class<? extends MatrixComputationJob> hClass;
 	private Class<? extends MatrixComputationJob> wClass;
@@ -70,9 +74,11 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 	 * @throws IOException
 	 */
 	protected void createInitialMatrices() throws IOException {
+		LOG.info("Creating H (" + numberOfUsers + "x" + numberOfClusters + ")");
 		H = DataInitialization.createMatrix(getConf(), baseDirectory, "H",
 				numberOfUsers, numberOfClusters);
 
+		LOG.info("Creating W(" + numberOfItems + "x" + numberOfClusters + ")");
 		W = DataInitialization.createMatrix(getConf(), baseDirectory, "W",
 				numberOfItems, numberOfClusters);
 	}
@@ -106,8 +112,10 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 		W2 = new Path(baseDirectory + File.separator + "W2");
 		FileSystem fs = H.getFileSystem(conf);
 
+		LOG.info("Running matrix factorization");
+
 		/* Run algorithm iterations */
-		for (int i = 0; i < numberOfIterations; i++) {
+		for (int i = 1; i <= numberOfIterations; i++) {
 			MatrixComputationJob hJob = hClass.getConstructor(
 					new Class[] { Path.class, Path.class, Path.class,
 							Path.class }).newInstance(H, W, H2, W2);
@@ -116,8 +124,10 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 					new Class[] { Path.class, Path.class, Path.class,
 							Path.class }).newInstance(H, W, H2, W2);
 
-			conf.setInt(RMRecommenderDriver.iteration, i + 1);
+			conf.setInt(RMRecommenderDriver.iteration, i);
+			LOG.info("Launching H" + i);
 			ToolRunner.run(conf, hJob, args);
+			LOG.info("Launching W" + i);
 			ToolRunner.run(conf, wJob, args);
 
 			fs.delete(H, true);
