@@ -38,6 +38,9 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 public abstract class MatrixComputationJob extends AbstractJob {
 
 	public static final String numberOfFiles = "numberOfFiles";
+	protected static final String maxSplitSize = "mapred.max.split.size";
+	protected static final String MB16 = "16777216";
+	protected static final String MB4 = "4194304";
 
 	protected String directory;
 	protected int iteration;

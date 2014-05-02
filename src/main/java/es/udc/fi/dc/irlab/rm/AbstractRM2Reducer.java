@@ -3,8 +3,7 @@ package es.udc.fi.dc.irlab.rm;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.PriorityQueue;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -140,6 +139,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			userSums[j] = entry.getValue();
 		}
 
+		System.out.println(">> CLUSTER " + key.getFirst() + " <<");
+		System.out.println("# USERS: " + numberOfUsersInCluster);
+
 		// Read the neighborhood preferences in order to build preferences
 		// matrix
 		while (it.hasNext()) {
@@ -159,8 +161,6 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 		buildItemCollMap(context);
 
-		System.out.println(">> CLUSTER " + key.getFirst() + " <<");
-		System.out.println("# USERS: " + numberOfUsersInCluster);
 		System.out.println("# ITEMS: " + numberOfItemsInCluster);
 
 		// TEST: Preload p(a|b)
@@ -175,6 +175,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		TIntSet ratedItems;
 		TIntSet neighbours;
 		// For each user
+		System.out.print("\tCalculating relevance...\t");
+		long startTime = System.nanoTime();
+
 		for (int user = 0; user < users.length; user++) {
 			ratedItems = userItemsMap.get(user);
 			unratedItems = new TIntHashSet(itemsSet);
@@ -183,16 +186,13 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			neighbours = new TIntHashSet(usersMap.values());
 			neighbours.remove(user);
 
-			System.out.print("\tCalculating relevance for user " + user + "\t");
-			long startTime = System.nanoTime();
+			context.progress();
 			buildRecommendations(context, user, ratedItems.toArray(),
 					unratedItems.toArray(), neighbours.toArray(),
 					key.getFirst());
-			long estimatedTime = System.nanoTime() - startTime;
-			System.out.println((estimatedTime / 1000000000.0) + " seconds");
-
 		}
-		System.out.println();
+		long estimatedTime = System.nanoTime() - startTime;
+		System.out.println((estimatedTime / 1000000000.0) + "\t seconds\n");
 
 	}
 
@@ -288,7 +288,11 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			final int[] ratedItems, final int[] unratedItems,
 			final int[] neighbours, final int cluster) {
 
-		final SortedSet<IntDouble> prefs = new TreeSet<IntDouble>();
+		final PriorityQueue<IntDouble> prefs = new PriorityQueue<IntDouble>();
+
+		final int n = ratedItems.length;
+		final double pvpi = (n - 1) * Math.log(numberOfItems) - n
+				* Math.log(numberOfUsersInCluster);
 
 		/* Calculate relevance for each unrated item */
 		for (int recommendedItem : unratedItems) {
@@ -312,23 +316,17 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 			}
 
-			// n = #items rated by the user
-			final int n = ratedItems.length;
-
-			logResult += (n - 1) * Math.log(numberOfItems) - n
-					* Math.log(numberOfUsersInCluster);
+			logResult += pvpi;
 
 			prefs.add(new IntDouble(recommendedItem, logResult));
-			context.progress();
 
 		}
 
 		/* Write top recommendations for the given user */
-		final Iterator<IntDouble> it = prefs.iterator();
 		IntDouble element;
 		final int iterations = Math.min(numberOfRecommendations, prefs.size());
 		for (int i = 0; i < iterations; i++) {
-			element = it.next();
+			element = prefs.poll();
 			try {
 				writePreference(context, users[userId],
 						items[element.getKey()], element.getValue(), cluster);
