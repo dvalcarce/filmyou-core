@@ -147,7 +147,7 @@ public class SubClusterMappingJob extends AbstractJob {
 
 		Configuration jobConf = job.getConfiguration();
 
-		if (conf.getBoolean("useCassandra", true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			job.setInputFormatClass(CqlPagingInputFormat.class);
 			job.setMapperClass(ItemByClusterCassandraMapper.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);

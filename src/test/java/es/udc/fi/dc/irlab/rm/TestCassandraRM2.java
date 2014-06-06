@@ -45,10 +45,8 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 
 		HadoopUtils.removeData(conf, baseDirectory);
 
-		Path userSum = new Path(directory + File.separator + RM2Job.userSum);
-		Path movieSum = new Path(directory + File.separator + RM2Job.itemSum);
-		Path totalSum = new Path(directory + File.separator + RM2Job.totalSum);
-		Path itemColl = new Path(directory + File.separator + RM2Job.itemColl);
+		Path userSum = new Path(directory + File.separator + RM2Job.USER_SUM);
+		Path itemColl = new Path(directory + File.separator + RM2Job.ITEMM_COLL);
 		DataInitialization.createIntIntFileParent(conf,
 				ClusteringTestData.clustering, baseDirectory, "clustering", 1);
 		DataInitialization.createIntIntFileParent(conf,
@@ -71,8 +69,6 @@ public class TestCassandraRM2 extends HadoopIntegrationTest {
 
 		/* Run asserts */
 		compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);
-		compareIntDoubleData(conf, RMTestData.itemSum, baseDirectory, movieSum);
-		compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
 		compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
 				itemColl);
 		compareCassandraData(conf, RMTestData.recommendations,

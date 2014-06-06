@@ -28,7 +28,7 @@ import es.udc.fi.dc.irlab.nmf.common.MappingsMapper;
 /**
  * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
-public class MovieScoreByUserCassandraMapper
+public class ItemScoreByUserCassandraMapper
 		extends
 		MappingsMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
@@ -44,7 +44,7 @@ public class MovieScoreByUserCassandraMapper
 		}
 
 		int user = keys.get("user").getInt();
-		int item = keys.get("movie").getInt();
+		int item = keys.get("item").getInt();
 
 		if (existsMapping()) {
 			if ((user = getNewUserId(user)) != -1

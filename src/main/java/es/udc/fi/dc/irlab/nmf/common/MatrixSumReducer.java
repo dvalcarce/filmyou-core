@@ -41,7 +41,9 @@ public class MatrixSumReducer extends
 		while (it.hasNext()) {
 			output = it.next().get().plus(output);
 		}
+
 		context.write(NullWritable.get(), new MatrixWritable(output));
+
 	}
 
 }

@@ -94,8 +94,8 @@ public class CassandraUtils {
 
 		// Create table
 		session.execute("CREATE TABLE " + table
-				+ " (user int, movie int, score float,"
-				+ "PRIMARY KEY (user, movie))");
+				+ " (user int, item int, score float,"
+				+ "PRIMARY KEY (user, item))");
 
 	}
 
@@ -109,7 +109,7 @@ public class CassandraUtils {
 		resetTable(session, keyspace, table);
 
 		PreparedStatement statement = session.prepare("INSERT INTO " + table
-				+ " (user, movie, score) VALUES (?, ?, ?)");
+				+ " (user, item, score) VALUES (?, ?, ?)");
 		BoundStatement boundStatement = new BoundStatement(statement);
 
 		// Insert data
@@ -149,9 +149,9 @@ public class CassandraUtils {
 		}
 
 		session.execute("CREATE TABLE " + table
-				+ " (user int, relevance float, movie int, cluster int,"
-				+ "PRIMARY KEY (user, relevance, movie))"
-				+ "WITH CLUSTERING ORDER BY (relevance DESC, movie ASC)");
+				+ " (user int, relevance float, item int, cluster int,"
+				+ "PRIMARY KEY (user, relevance, item))"
+				+ "WITH CLUSTERING ORDER BY (relevance DESC, item ASC)");
 
 		shutdownSessions();
 		getCluster().close();
@@ -163,7 +163,7 @@ public class CassandraUtils {
 
 		Session session = getSession(keyspace);
 
-		return session.execute("SELECT user, movie, relevance FROM " + table
+		return session.execute("SELECT user, item, relevance FROM " + table
 				+ " WHERE user = " + user);
 
 	}

@@ -229,7 +229,7 @@ public class BaselineAggregateAndRecommendReducer
 			for (RecommendedItem item : topItems) {
 				Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
 				keys.put("user", ByteBufferUtil.bytes((int) userID.get()));
-				keys.put("movie", ByteBufferUtil.bytes((int) item.getItemID()));
+				keys.put("item", ByteBufferUtil.bytes((int) item.getItemID()));
 				keys.put("score", ByteBufferUtil.bytes(item.getValue()));
 
 				List<ByteBuffer> value = new LinkedList<ByteBuffer>();

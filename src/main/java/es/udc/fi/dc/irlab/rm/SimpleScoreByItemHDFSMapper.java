@@ -25,9 +25,9 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.mahout.common.IntPairWritable;
 
 /**
- * Emit <i, A_{i,j}> from HDFS ratings (<(i, j), A_{i,j}>).
+ * Emit <i, A_{i,j}> from HDFS ratings (<(j, i), A_{i,j}>).
  */
-public class SimpleScoreByMovieHDFSMapper extends
+public class SimpleScoreByItemHDFSMapper extends
 		Mapper<IntPairWritable, FloatWritable, IntWritable, DoubleWritable> {
 
 	@Override

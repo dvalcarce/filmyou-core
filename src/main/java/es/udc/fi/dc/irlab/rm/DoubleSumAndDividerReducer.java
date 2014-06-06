@@ -19,26 +19,29 @@ package es.udc.fi.dc.irlab.rm;
 import java.io.IOException;
 
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapreduce.Reducer;
 
 /**
- * Emit <NULL, x> from <i, x> where x = sum_j A_{i, j}.
+ * Emit <x, sum_y A_xy> from <x, {A_xy}>.
  */
-public class ItemProbInCollectionMapper extends
-		Mapper<IntWritable, DoubleWritable, IntWritable, DoubleWritable> {
+public class DoubleSumAndDividerReducer extends
+		Reducer<Writable, DoubleWritable, Writable, DoubleWritable> {
 
 	@Override
-	protected void map(IntWritable key, DoubleWritable value, Context context)
-			throws IOException, InterruptedException {
+	protected void reduce(Writable key, Iterable<DoubleWritable> values,
+			Context context) throws IOException, InterruptedException {
 
-		double result;
-		double globalSum = Double.valueOf(context.getConfiguration().get(
+		double sum = 0;
+
+		for (DoubleWritable val : values) {
+			sum += val.get();
+		}
+
+		final double globalSum = Double.valueOf(context.getConfiguration().get(
 				RM2Job.TOTAL_SUM_NAME));
 
-		result = value.get() / globalSum;
-
-		context.write(key, new DoubleWritable(result));
+		context.write(key, new DoubleWritable(sum / globalSum));
 
 	}
 

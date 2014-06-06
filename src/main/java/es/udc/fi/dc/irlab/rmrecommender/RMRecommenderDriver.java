@@ -46,7 +46,8 @@ import org.apache.mahout.common.AbstractJob;
  */
 public class RMRecommenderDriver extends AbstractJob {
 
-	public static final String useCassandra = "useCassandra";
+	public static final String useCassandraInput = "useCassandraInput";
+	public static final String useCassandraOutput = "useCassandraOutput";
 	public static final String numberOfUsers = "numberOfUsers";
 	public static final String numberOfItems = "numberOfItems";
 	public static final String numberOfClusters = "numberOfClusters";
@@ -84,7 +85,7 @@ public class RMRecommenderDriver extends AbstractJob {
 	 */
 	private void loadDefaultSetup() {
 		addOption(numberOfUsers, "n", "Number of users", true);
-		addOption(numberOfItems, "m", "Number of movies", true);
+		addOption(numberOfItems, "m", "Number of items", true);
 		addOption(numberOfClusters, "k", "Number of clusters", true);
 		addOption(numberOfSubClusters, "k2", "Number of subclusters",
 				String.valueOf(0));
@@ -92,8 +93,10 @@ public class RMRecommenderDriver extends AbstractJob {
 		addOption(numberOfRecommendations, "r", "Number of recommendations",
 				"1000");
 		addOption(directory, "d", "Working directory", "recommendation");
-		addOption(useCassandra, "useCas", "Use Cassandra instead of HDFS",
-				"true");
+		addOption(useCassandraInput, "useCas",
+				"Use Cassandra instead of HDFS for input", "false");
+		addOption(useCassandraOutput, "useCasOut",
+				"Use Cassandra instead of HDFS for output", "false");
 		addOption(cassandraPort, "port", "Cassandra TCP port", "9160");
 		addOption(cassandraHost, "host", "Cassandra host IP", "127.0.0.1");
 		addOption(cassandraKeyspace, "keyspace", "Cassandra keyspace name",
@@ -164,34 +167,36 @@ public class RMRecommenderDriver extends AbstractJob {
 		Configuration conf = parseInput(args);
 
 		/* Launch PPC */
-		if (conf.getInt(numberOfIterations, -1) > 0
-				&& ToolRunner.run(conf, new PPCDriver(), args) < 0) {
+		if (conf.getInt(numberOfIterations, -1) > 0) {
 
-			throw new RuntimeException("PPCJob failed!");
+			if (ToolRunner.run(conf, new PPCDriver(), args) < 0) {
+				throw new RuntimeException("PPCJob failed!");
+			}
 
-		}
+			/* Set H and W paths properly */
+			if (conf.get(RMRecommenderDriver.H) == null) {
+				String directory = conf.get(RMRecommenderDriver.directory);
+				conf.set(RMRecommenderDriver.H, directory + File.separator
+						+ "H");
+				conf.set(RMRecommenderDriver.W, directory + File.separator
+						+ "W");
+			}
 
-		/* Set H and W paths properly */
-		if (conf.get(RMRecommenderDriver.H) == null) {
-			String directory = conf.get(RMRecommenderDriver.directory);
-			conf.set(RMRecommenderDriver.H, directory + File.separator + "H");
-			conf.set(RMRecommenderDriver.W, directory + File.separator + "W");
-		}
+			/* Assign clusters */
+			if (ToolRunner.run(conf, new ClusterAssignmentJob(false), args) < 0) {
+				throw new RuntimeException("ClusterAssignmentJob failed!");
+			}
 
-		/* Assign clusters */
-		if (ToolRunner.run(conf, new ClusterAssignmentJob(false), args) < 0) {
-			throw new RuntimeException("ClusterAssignmentJob failed!");
-		}
+			/* Launch cluster refinement if required */
+			if (conf.getInt(RMRecommenderDriver.numberOfSubClusters, -1) > 0) {
+				clusterRefinement(conf, args);
+			}
 
-		/* Launch cluster refinement if required */
-		if (conf.getInt(numberOfIterations, -1) > 0
-				&& conf.getInt(RMRecommenderDriver.numberOfSubClusters, -1) > 0) {
-			clusterRefinement(conf, args);
-		}
+			/* Count number of users per cluster */
+			if (ToolRunner.run(conf, new CountClustersJob(), args) < 0) {
+				throw new RuntimeException("CountClustersJob failed!");
+			}
 
-		/* Count number of users per cluster */
-		if (ToolRunner.run(conf, new CountClustersJob(), args) < 0) {
-			throw new RuntimeException("CountClustersJob failed!");
 		}
 
 		/* Run RM2 recommendation algorithm */

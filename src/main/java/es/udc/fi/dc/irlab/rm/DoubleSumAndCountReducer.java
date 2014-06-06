@@ -17,30 +17,31 @@
 package es.udc.fi.dc.irlab.rm;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Map;
 
 import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.mapreduce.Reducer;
 
 /**
- * Emit <i, A_{i,j}> from Cassandra ratings ({A_{i,j}}).
+ * Emit <x, sum_y A_xy> from <x, {A_xy}>.
  */
-public class SimpleScoreByMovieCassandraMapper
-		extends
-		Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, DoubleWritable> {
+public class DoubleSumAndCountReducer extends
+		Reducer<Writable, DoubleWritable, Writable, DoubleWritable> {
 
 	@Override
-	protected void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+	protected void reduce(Writable key, Iterable<DoubleWritable> values,
+			Context context) throws IOException, InterruptedException {
 
-		float score = columns.get("score").getFloat();
-		if (score > 0) {
-			context.write(new IntWritable(keys.get("movie").getInt()),
-					new DoubleWritable(score));
+		double sum = 0;
+
+		for (DoubleWritable val : values) {
+			sum += val.get();
 		}
+
+		context.getCounter(RM2Job.Score.SUM).increment(
+				(long) sum * RM2Job.OFFSET);
+
+		context.write(key, new DoubleWritable(sum));
 
 	}
 

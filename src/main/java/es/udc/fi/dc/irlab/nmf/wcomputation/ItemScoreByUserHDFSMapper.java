@@ -14,46 +14,45 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.hcomputation;
+package es.udc.fi.dc.irlab.nmf.wcomputation;
 
 import java.io.IOException;
 
 import org.apache.hadoop.io.FloatWritable;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.mahout.cf.taste.hadoop.item.VectorOrPrefWritable;
 import org.apache.mahout.common.IntPairWritable;
-import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
+import es.udc.fi.dc.irlab.nmf.common.MappingsMapper;
 
 /**
- * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (<(i, j), A_{i,j}>) and from H
- * matrix (w_i) obtained by DistributedCache.
+ * Emit &lt;(j, 1), (i, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>).
  */
-public class VectorByMovieHDFSMapper extends
-		AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
+public class ItemScoreByUserHDFSMapper
+		extends
+		MappingsMapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
 
 	@Override
-	protected void map(IntPairWritable key, FloatWritable column,
+	protected void map(IntPairWritable keys, FloatWritable columns,
 			Context context) throws IOException, InterruptedException {
 
-		float score = column.get();
+		float score = columns.get();
 
 		if (score <= 0) {
 			return;
 		}
 
-		int user = key.getFirst();
-		int item = key.getSecond();
+		int user = keys.getFirst();
+		int item = keys.getSecond();
 
 		if (existsMapping()) {
 			if ((user = getNewUserId(user)) != -1
 					&& (item = getNewItemId(item)) != -1) {
-				context.write(new IntWritable(user), new VectorWritable(
-						getCache(item).times(score)));
+				context.write(new IntPairWritable(user, 1),
+						new VectorOrPrefWritable(item, score));
 			}
 		} else {
-			context.write(new IntWritable(user),
-					new VectorWritable(getCache(item).times(score)));
+			context.write(new IntPairWritable(user, 1),
+					new VectorOrPrefWritable(item, score));
 		}
 
 	}

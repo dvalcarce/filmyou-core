@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
@@ -12,15 +14,16 @@ import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.MapFile.Reader;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
 import org.apache.mahout.common.IntPairWritable;
 
 import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.IntDouble;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.IntKeyPartitioner;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 import gnu.trove.map.TIntDoubleMap;
 import gnu.trove.map.TIntIntMap;
@@ -43,6 +46,8 @@ import gnu.trove.set.hash.TIntHashSet;
  */
 public abstract class AbstractRM2Reducer<A, B> extends
 		Reducer<IntPairWritable, IntDoubleOrPrefWritable, A, B> {
+
+	private static final Log LOG = LogFactory.getLog(AbstractRM2Reducer.class);
 
 	private Path itemColl;
 	private double lambda;
@@ -102,7 +107,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		}
 
 		itemColl = paths[2];
-		lambda = Double.valueOf(conf.get(RM2Job.lambdaName));
+		lambda = Double.valueOf(conf.get(RM2Job.LAMBDA_NAME));
 		numberOfItems = conf.getInt(RMRecommenderDriver.numberOfItems, -1);
 		numberOfRecommendations = conf.getInt(
 				RMRecommenderDriver.numberOfRecommendations, -1);
@@ -116,11 +121,12 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		int userId, itemId;
 		float score;
 		IntDoubleOrPrefWritable entry;
+		int thisCluster = key.getFirst();
 
 		Iterator<IntDoubleOrPrefWritable> it = values.iterator();
 
 		// Read the number of users in the cluster
-		numberOfUsersInCluster = clusterSizes[key.getFirst()];
+		numberOfUsersInCluster = clusterSizes[thisCluster];
 
 		// Initialize collections
 		sparsePreferences = new TIntObjectHashMap<TIntDoubleMap>();
@@ -139,9 +145,6 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			userSums[j] = entry.getValue();
 		}
 
-		System.out.println(">> CLUSTER " + key.getFirst() + " <<");
-		System.out.println("# USERS: " + numberOfUsersInCluster);
-
 		// Read the neighborhood preferences in order to build preferences
 		// matrix
 		while (it.hasNext()) {
@@ -153,7 +156,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			if (!sparsePreferences.containsKey(itemId)) {
 				sparsePreferences.put(itemId, new TIntDoubleHashMap());
 			}
-			sparsePreferences.get(itemId).put(userId, score);
+			sparsePreferences.get(itemId).put(userId, (double) score);
 
 		}
 
@@ -161,27 +164,50 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 		buildItemCollMap(context);
 
-		System.out.println("# ITEMS: " + numberOfItemsInCluster);
-
-		// TEST: Preload p(a|b)
+		// Preload p(a|b)
 		cache = new double[numberOfUsersInCluster][numberOfItemsInCluster];
 		for (int user = 0; user < users.length; user++) {
 			for (int item = 0; item < items.length; item++) {
 				cache[user][item] = probItemGivenUser(item, user);
+
+				if (cache[user][item] == 0.0) {
+
+					double rating = sparsePreferences.get(items[item]).get(
+							users[user]);
+					double sum = userSums[user];
+
+					throw new IllegalArgumentException("CLUSTER: "
+							+ thisCluster + " user " + users[user] + ", item "
+							+ items[item] + " = " + cache[user][item]
+							+ "| lambda = " + lambda + "| rating = " + rating
+							+ "| sum = " + sum + "| p(i|C) = "
+							+ itemProbInColl[item]);
+
+				}
+
 			}
 		}
 
 		TIntSet unratedItems;
 		TIntSet ratedItems;
 		TIntSet neighbours;
-		// For each user
-		System.out.print("\tCalculating relevance...\t");
-		long startTime = System.nanoTime();
 
+		LOG.info("Cluster " + key.getFirst() + " (" + numberOfUsersInCluster
+				+ " users, " + numberOfItemsInCluster + " items)");
+
+		long time = System.nanoTime();
+
+		// For each user
 		for (int user = 0; user < users.length; user++) {
 			ratedItems = userItemsMap.get(user);
 			unratedItems = new TIntHashSet(itemsSet);
 			unratedItems.removeAll(ratedItems);
+
+			if (unratedItems.size() == 0) {
+				LOG.warn("User " + users[user]
+						+ "does not have any unrated item in the cluster");
+				continue;
+			}
 
 			neighbours = new TIntHashSet(usersMap.values());
 			neighbours.remove(user);
@@ -191,8 +217,11 @@ public abstract class AbstractRM2Reducer<A, B> extends
 					unratedItems.toArray(), neighbours.toArray(),
 					key.getFirst());
 		}
-		long estimatedTime = System.nanoTime() - startTime;
-		System.out.println((estimatedTime / 1000000000.0) + "\t seconds\n");
+
+		time = System.nanoTime() - time;
+
+		LOG.info("Cluster " + key.getFirst() + ": " + (time / 1000000000.0)
+				+ "\t seconds");
 
 	}
 
@@ -251,18 +280,23 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		final Configuration conf = context.getConfiguration();
 		final Reader[] readers = MapFileOutputFormat.getLocalReaders(itemColl,
 				conf);
-		final Partitioner<IntWritable, DoubleWritable> partitioner = new HashPartitioner<IntWritable, DoubleWritable>();
+		final Partitioner<IntWritable, Writable> partitioner = new IntKeyPartitioner();
 		final DoubleWritable probability = new DoubleWritable();
 
 		itemProbInColl = new double[numberOfItemsInCluster];
 
+		Writable entry;
 		for (int i = 0; i < items.length; i++) {
-			try {
-				MapFileOutputFormat.getEntry(readers, partitioner,
-						new IntWritable(items[i]), probability);
-			} catch (IOException e) {
-				throw new RuntimeException(e);
+			entry = MapFileOutputFormat.getEntry(readers, partitioner,
+					new IntWritable(items[i]), probability);
+			if (entry == null) {
+				throw new RuntimeException("p("
+						+ items[i]
+						+ "|C) not found | partition = "
+						+ partitioner.getPartition(new IntWritable(items[i]),
+								probability, readers.length));
 			}
+
 			itemProbInColl[i] = probability.get();
 		}
 

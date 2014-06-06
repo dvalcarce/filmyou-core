@@ -143,7 +143,7 @@ public final class HadoopUtils {
 	 * @return the path
 	 */
 	public static Path getInputPath(Configuration conf) {
-		if (conf.getBoolean(RMRecommenderDriver.useCassandra, true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			return null;
 		}
 		return new Path(conf.get(HadoopUtils.inputPathName));
@@ -157,7 +157,7 @@ public final class HadoopUtils {
 	 * @return the path
 	 */
 	public static Path getOutputPath(Configuration conf) {
-		if (conf.getBoolean(RMRecommenderDriver.useCassandra, true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			return null;
 		}
 		return new Path(conf.get(HadoopUtils.outputPathName));

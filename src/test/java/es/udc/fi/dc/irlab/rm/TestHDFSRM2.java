@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.testdata.ClusteringTestData;
 import es.udc.fi.dc.irlab.testdata.RMTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
@@ -44,10 +45,8 @@ public class TestHDFSRM2 extends HadoopIntegrationTest {
 
 		HadoopUtils.removeData(conf, baseDirectory);
 
-		Path userSum = new Path(directory + File.separator + RM2Job.userSum);
-		Path itemSum = new Path(directory + File.separator + RM2Job.itemSum);
-		Path totalSum = new Path(directory + File.separator + RM2Job.totalSum);
-		Path itemColl = new Path(directory + File.separator + RM2Job.itemColl);
+		Path userSum = new Path(directory + File.separator + RM2Job.USER_SUM);
+		Path itemColl = new Path(directory + File.separator + RM2Job.ITEMM_COLL);
 		DataInitialization.createIntIntFileParent(conf,
 				ClusteringTestData.clustering, baseDirectory, "clustering", 1);
 		DataInitialization.createIntIntFileParent(conf,
@@ -61,7 +60,8 @@ public class TestHDFSRM2 extends HadoopIntegrationTest {
 		conf = buildConf("clustering", "clusteringCount",
 				RMTestData.numberOfUsers, RMTestData.numberOfItems,
 				RMTestData.numberOfClusters);
-		conf.setBoolean("useCassandra", false);
+		conf.setBoolean(RMRecommenderDriver.useCassandraInput, false);
+		conf.setBoolean(RMRecommenderDriver.useCassandraOutput, false);
 		conf.set(HadoopUtils.inputPathName, input.toString());
 		conf.set(HadoopUtils.outputPathName, output.toString());
 		ToolRunner.run(conf, new RM2Job(), null);
@@ -70,8 +70,6 @@ public class TestHDFSRM2 extends HadoopIntegrationTest {
 
 		/* Run asserts */
 		compareIntDoubleData(conf, RMTestData.userSum, baseDirectory, userSum);
-		compareIntDoubleData(conf, RMTestData.itemSum, baseDirectory, itemSum);
-		compareNullFloatData(conf, RMTestData.totalSum, baseDirectory, totalSum);
 		compareMapIntDoubleData(conf, RMTestData.itemColl, baseDirectory,
 				itemColl);
 		compareIntPairFloatData(conf, RMTestData.recommendations,

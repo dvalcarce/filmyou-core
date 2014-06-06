@@ -40,7 +40,7 @@ public class RMTestData2 {
 	/**
 	 * Sum by item (3 items)
 	 */
-	public static final double[] movieSum = new double[] { 8, 8, 11 };
+	public static final double[] itemSum = new double[] { 8, 8, 11 };
 
 	/**
 	 * Global sum

@@ -29,7 +29,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.MultipleInputs;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
@@ -42,6 +41,7 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.IntKeyPartitioner;
 import es.udc.fi.dc.irlab.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
 
@@ -51,12 +51,18 @@ import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
  */
 public class RM2Job extends AbstractJob {
 
-	public static final String totalSumName = "rm.totalSum";
-	public static final String lambdaName = "lambda";
-	public static final String userSum = "userSum";
-	public static final String itemSum = "itemSum";
-	public static final String totalSum = "totalSum";
-	public static final String itemColl = "itemColl";
+	public enum Score {
+		SUM
+	}
+
+	public static final long OFFSET = 100;
+
+	public static final String TOTAL_SUM_NAME = "rm.totalSum";
+	public static final String LAMBDA_NAME = "lambda";
+	public static final String USER_SUM = "userSum";
+	public static final String ITEM_SUM = "itemSum";
+	public static final String TOTAL_SUM = "totalSum";
+	public static final String ITEMM_COLL = "itemColl";
 
 	private String directory;
 
@@ -76,26 +82,17 @@ public class RM2Job extends AbstractJob {
 		HadoopUtils.removeData(conf, directory);
 
 		final Path userSum = new Path(directory + File.separator
-				+ RM2Job.userSum);
-		final Path itemSum = new Path(directory + File.separator
-				+ RM2Job.itemSum);
-		final Path totalSum = new Path(directory + File.separator
-				+ RM2Job.totalSum);
+				+ RM2Job.USER_SUM);
 		final Path itemColl = new Path(directory + File.separator
-				+ RM2Job.itemColl);
+				+ RM2Job.ITEMM_COLL);
 		final Path clustering = new Path(baseDirectory + File.separator
 				+ conf.get(RMRecommenderDriver.clustering));
 		final Path clusteringCount = new Path(baseDirectory + File.separator
 				+ conf.get(RMRecommenderDriver.clusteringCount));
 
-		runUserSum(userSum);
-		runMovieSum(itemSum);
-		runTotalSum(itemSum, totalSum);
+		final double sum = runUserSum(userSum);
 
-		final double sum = HadoopUtils.getDoubleFromSequenceFile(conf,
-				totalSum, directory);
-
-		runItemProbInCollection(itemSum, sum, itemColl);
+		runItemColl(sum / OFFSET, itemColl);
 
 		runItemRecommendation(userSum, clusteringCount, clustering, itemColl);
 
@@ -110,7 +107,7 @@ public class RM2Job extends AbstractJob {
 	 * @throws ClassNotFoundException
 	 * @throws InterruptedException
 	 */
-	protected void runUserSum(Path userSum) throws IOException,
+	protected double runUserSum(Path userSum) throws IOException,
 			ClassNotFoundException, InterruptedException {
 
 		Configuration conf = getConf();
@@ -120,7 +117,7 @@ public class RM2Job extends AbstractJob {
 
 		Configuration jobConf = job.getConfiguration();
 
-		if (conf.getBoolean("useCassandra", true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			job.setInputFormatClass(CqlPagingInputFormat.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 			job.setMapperClass(SimpleScoreByUserCassandraMapper.class);
@@ -131,7 +128,9 @@ public class RM2Job extends AbstractJob {
 		}
 
 		job.setCombinerClass(DoubleSumReducer.class);
-		job.setReducerClass(DoubleSumReducer.class);
+		job.setReducerClass(DoubleSumAndCountReducer.class);
+
+		job.setPartitionerClass(IntKeyPartitioner.class);
 
 		job.setMapOutputKeyClass(IntWritable.class);
 		job.setMapOutputValueClass(DoubleWritable.class);
@@ -147,18 +146,23 @@ public class RM2Job extends AbstractJob {
 			throw new RuntimeException(job.getJobName() + " failed!");
 		}
 
+		return job.getCounters().findCounter(Score.SUM).getValue();
+
 	}
 
 	/**
-	 * Calculates the sum of the ratings of each item.
+	 * Calculates the probability of each item in the collection.
 	 * 
-	 * @param itemSum
+	 * @param totalSum
+	 *            sum of all the ratings
+	 * @param itemColl
+	 *            output Path
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 * @throws InterruptedException
 	 */
-	protected void runMovieSum(Path itemSum) throws IOException,
-			ClassNotFoundException, InterruptedException {
+	protected void runItemColl(double totalSum, Path itemColl)
+			throws IOException, ClassNotFoundException, InterruptedException {
 
 		Configuration conf = getConf();
 
@@ -167,104 +171,23 @@ public class RM2Job extends AbstractJob {
 
 		Configuration jobConf = job.getConfiguration();
 
-		if (conf.getBoolean("useCassandra", true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			job.setInputFormatClass(CqlPagingInputFormat.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
-			job.setMapperClass(SimpleScoreByMovieCassandraMapper.class);
+			job.setMapperClass(SimpleScoreByItemCassandraMapper.class);
 		} else {
 			job.setInputFormatClass(SequenceFileInputFormat.class);
 			SequenceFileInputFormat.addInputPath(job, inputPath);
-			job.setMapperClass(SimpleScoreByMovieHDFSMapper.class);
+			job.setMapperClass(SimpleScoreByItemHDFSMapper.class);
 		}
 
 		job.setCombinerClass(DoubleSumReducer.class);
-		job.setReducerClass(DoubleSumReducer.class);
+		job.setReducerClass(DoubleSumAndDividerReducer.class);
 
 		job.setMapOutputKeyClass(IntWritable.class);
 		job.setMapOutputValueClass(DoubleWritable.class);
 
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		SequenceFileOutputFormat.setOutputPath(job, itemSum);
-
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(DoubleWritable.class);
-
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
-
-	}
-
-	/**
-	 * Calculates the sum of the ratings of the collection.
-	 * 
-	 * @param itemSum
-	 * @param totalSum
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws InterruptedException
-	 */
-	protected void runTotalSum(Path itemSum, Path totalSum) throws IOException,
-			ClassNotFoundException, InterruptedException {
-
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "RM2-3");
-		job.setJarByClass(this.getClass());
-
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		SequenceFileInputFormat.addInputPath(job, itemSum);
-
-		job.setMapperClass(NullMapper.class);
-		job.setCombinerClass(DoubleSumReducer.class);
-		job.setReducerClass(DoubleSumReducer.class);
-
-		job.setNumReduceTasks(1);
-
-		job.setMapOutputKeyClass(NullWritable.class);
-		job.setMapOutputValueClass(DoubleWritable.class);
-
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		SequenceFileOutputFormat.setOutputPath(job, totalSum);
-
-		job.setOutputKeyClass(NullWritable.class);
-		job.setOutputValueClass(DoubleWritable.class);
-
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
-
-	}
-
-	/**
-	 * Calculates the probability of a item in the collection.
-	 * 
-	 * @param itemSum
-	 *            sum of the ratings of each movie
-	 * @param totalSum
-	 *            global sum of the ratings
-	 * @param itemColl
-	 *            result
-	 * @throws InterruptedException
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 */
-	protected void runItemProbInCollection(Path itemSum, double totalSum,
-			Path itemColl) throws ClassNotFoundException, IOException,
-			InterruptedException {
-
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "RM2-4");
-		job.setJarByClass(this.getClass());
-
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		SequenceFileInputFormat.addInputPath(job, itemSum);
-
-		job.setMapperClass(ItemProbInCollectionMapper.class);
-
-		job.setMapOutputKeyClass(IntWritable.class);
-		job.setMapOutputValueClass(DoubleWritable.class);
-
-		job.setNumReduceTasks(0);
+		job.setPartitionerClass(IntKeyPartitioner.class);
 
 		job.setOutputFormatClass(MapFileOutputFormat.class);
 		MapFileOutputFormat.setOutputPath(job, itemColl);
@@ -272,8 +195,7 @@ public class RM2Job extends AbstractJob {
 		job.setOutputKeyClass(IntWritable.class);
 		job.setOutputValueClass(DoubleWritable.class);
 
-		Configuration jobConf = job.getConfiguration();
-		jobConf.set(totalSumName, String.valueOf(totalSum));
+		jobConf.set(TOTAL_SUM_NAME, String.valueOf(totalSum));
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {
@@ -295,7 +217,7 @@ public class RM2Job extends AbstractJob {
 
 		Configuration conf = getConf();
 
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "RM2-5");
+		Job job = new Job(HadoopUtils.sanitizeConf(conf), "RM2-3");
 		job.setJarByClass(this.getClass());
 
 		Configuration jobConf = job.getConfiguration();
@@ -303,22 +225,24 @@ public class RM2Job extends AbstractJob {
 		MultipleInputs.addInputPath(job, userSum,
 				SequenceFileInputFormat.class, UserSumByClusterMapper.class);
 
-		if (jobConf.getBoolean("useCassandra", true)) {
+		if (jobConf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			MultipleInputs.addInputPath(job, new Path("unused"),
 					CqlPagingInputFormat.class,
 					ScoreByClusterCassandraMapper.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
+		} else {
+			MultipleInputs.addInputPath(job, inputPath,
+					SequenceFileInputFormat.class,
+					ScoreByClusterHDFSMapper.class);
+		}
 
+		if (jobConf.getBoolean(RMRecommenderDriver.useCassandraOutput, true)) {
 			job.setReducerClass(RM2CassandraReducer.class);
 			job.setOutputFormatClass(CqlOutputFormat.class);
 			job.setOutputKeyClass(Map.class);
 			job.setOutputValueClass(List.class);
 			CassandraSetup.updateConfForOutput(conf, jobConf);
 		} else {
-			MultipleInputs.addInputPath(job, inputPath,
-					SequenceFileInputFormat.class,
-					ScoreByClusterHDFSMapper.class);
-
 			job.setReducerClass(RM2HDFSReducer.class);
 			job.setOutputFormatClass(SequenceFileOutputFormat.class);
 			job.setOutputKeyClass(IntPairWritable.class);
@@ -334,8 +258,7 @@ public class RM2Job extends AbstractJob {
 			nubmerOfClusters *= numberOfSubClusters;
 		}
 
-		job.setNumReduceTasks(Math.min(nubmerOfClusters,
-				job.getNumReduceTasks()));
+		job.setNumReduceTasks(nubmerOfClusters);
 
 		job.setMapOutputKeyClass(IntPairWritable.class);
 		job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);

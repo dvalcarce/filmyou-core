@@ -38,7 +38,7 @@ public final class BaselineItemIDIndexMapper
 			Map<String, ByteBuffer> columns, Context context)
 			throws IOException, InterruptedException {
 
-		long itemID = keys.get("movie").getInt();
+		long itemID = keys.get("item").getInt();
 		int index = TasteHadoopUtils.idToIndex(itemID);
 		context.write(new VarIntWritable(index), new VarLongWritable(itemID));
 	}

@@ -46,7 +46,7 @@ public class BaselineToItemPrefsMapper
 			throws IOException, InterruptedException {
 
 		long userID = keys.get("user").getInt();
-		long itemID = keys.get("movie").getInt();
+		long itemID = keys.get("item").getInt();
 
 		if (booleanData) {
 			context.write(new VarLongWritable(userID), new VarLongWritable(

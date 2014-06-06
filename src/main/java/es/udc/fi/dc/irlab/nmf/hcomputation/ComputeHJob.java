@@ -118,13 +118,13 @@ public class ComputeHJob extends MatrixComputationJob {
 
 		Configuration jobConf = job.getConfiguration();
 
-		if (conf.getBoolean("useCassandra", true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			job.setInputFormatClass(CqlPagingInputFormat.class);
-			job.setMapperClass(VectorByMovieCassandraMapper.class);
+			job.setMapperClass(VectorByItemCassandraMapper.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 		} else {
 			job.setInputFormatClass(SequenceFileInputFormat.class);
-			job.setMapperClass(VectorByMovieHDFSMapper.class);
+			job.setMapperClass(VectorByItemHDFSMapper.class);
 			SequenceFileInputFormat.addInputPath(job, inputPath);
 		}
 
@@ -144,7 +144,7 @@ public class ComputeHJob extends MatrixComputationJob {
 		injectMappings(job, conf, true);
 		jobConf.setInt(MatrixComputationJob.numberOfFiles, 3);
 
-		jobConf.set(maxSplitSize, MB16);
+		jobConf.set(maxSplitSize, MB4);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {

@@ -118,15 +118,15 @@ public class ComputeWJob extends MatrixComputationJob {
 
 		Configuration jobConf = job.getConfiguration();
 
-		if (conf.getBoolean("useCassandra", true)) {
+		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			MultipleInputs.addInputPath(job, new Path("unused"),
 					CqlPagingInputFormat.class,
-					MovieScoreByUserCassandraMapper.class);
+					ItemScoreByUserCassandraMapper.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 		} else {
 			MultipleInputs.addInputPath(job, inputPath,
 					SequenceFileInputFormat.class,
-					MovieScoreByUserHDFSMapper.class);
+					ItemScoreByUserHDFSMapper.class);
 		}
 
 		MultipleInputs.addInputPath(job, hPath, SequenceFileInputFormat.class,
@@ -149,6 +149,8 @@ public class ComputeWJob extends MatrixComputationJob {
 
 		injectMappings(job, conf, true);
 		jobConf.setInt(MatrixComputationJob.numberOfFiles, 2);
+
+		jobConf.set(dfsSize, MB4096);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {
@@ -235,7 +237,7 @@ public class ComputeWJob extends MatrixComputationJob {
 		job.setOutputValueClass(MatrixWritable.class);
 
 		Configuration jobConf = job.getConfiguration();
-		jobConf.set(maxSplitSize, MB16);
+		jobConf.set(maxSplitSize, MB4);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {

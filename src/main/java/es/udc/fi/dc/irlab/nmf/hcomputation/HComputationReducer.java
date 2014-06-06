@@ -49,7 +49,7 @@ public class HComputationReducer
 			vectorY = it.next().get();
 		} catch (NoSuchElementException e) {
 			throw new NoSuchElementException(String.format(
-					"User %d has not rated any movie", key.getFirst()));
+					"User %d has not rated any item", key.getFirst()));
 		}
 
 		// Performs (X ./ Y)

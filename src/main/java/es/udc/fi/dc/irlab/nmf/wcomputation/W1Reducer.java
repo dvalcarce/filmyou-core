@@ -38,7 +38,7 @@ public class W1Reducer
 			Iterable<VectorOrPrefWritable> values, Context context)
 			throws IOException, InterruptedException {
 
-		long movie;
+		long item;
 		double score;
 		VectorWritable output;
 
@@ -52,12 +52,12 @@ public class W1Reducer
 		while (it.hasNext()) {
 			VectorOrPrefWritable pref = it.next();
 
-			// PrefWritable stores a movieID in the userID field
-			movie = pref.getUserID();
+			// PrefWritable stores an itemID in the userID field
+			item = pref.getUserID();
 			score = (double) pref.getValue();
 			if (score > 0) {
 				output = new VectorWritable(vector.times(score));
-				context.write(new IntWritable((int) movie), output);
+				context.write(new IntWritable((int) item), output);
 			}
 		}
 

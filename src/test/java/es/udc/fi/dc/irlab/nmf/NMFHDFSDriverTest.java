@@ -21,6 +21,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Test;
 
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.testdata.NMFTestData;
 import es.udc.fi.dc.irlab.util.DataInitialization;
 import es.udc.fi.dc.irlab.util.HadoopIntegrationTest;
@@ -53,7 +54,8 @@ public class NMFHDFSDriverTest extends HadoopIntegrationTest {
 		/* Run job */
 		conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
 				numberOfIterations);
-		conf.setBoolean("useCassandra", false);
+		conf.setBoolean(RMRecommenderDriver.useCassandraInput, false);
+		conf.setBoolean(RMRecommenderDriver.useCassandraOutput, false);
 		conf.set(HadoopUtils.inputPathName, input.toString());
 		ToolRunner.run(conf, new NMFDriver(), null);
 

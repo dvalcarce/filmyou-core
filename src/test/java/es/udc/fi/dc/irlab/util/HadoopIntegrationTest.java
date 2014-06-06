@@ -83,7 +83,8 @@ public abstract class HadoopIntegrationTest {
 
 		conf.setInt(RMRecommenderDriver.numberOfRecommendations, 1000);
 		conf.set(RMRecommenderDriver.directory, baseDirectory);
-		conf.setBoolean(RMRecommenderDriver.useCassandra, true);
+		conf.setBoolean(RMRecommenderDriver.useCassandraInput, true);
+		conf.setBoolean(RMRecommenderDriver.useCassandraOutput, true);
 		conf.setInt(RMRecommenderDriver.cassandraPort, cassandraPort);
 		conf.set(RMRecommenderDriver.cassandraHost, cassandraHost);
 		conf.set(RMRecommenderDriver.cassandraKeyspace, cassandraKeyspace);

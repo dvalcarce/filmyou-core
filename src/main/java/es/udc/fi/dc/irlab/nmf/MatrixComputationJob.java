@@ -39,7 +39,11 @@ public abstract class MatrixComputationJob extends AbstractJob {
 
 	public static final String numberOfFiles = "numberOfFiles";
 	protected static final String maxSplitSize = "mapred.max.split.size";
+	protected static final String minSplitSize = "mapred.min.split.size";
+	protected static final String dfsSize = "dfs.block.size";
+	protected static final String MB4096 = "4294967296";
 	protected static final String MB16 = "16777216";
+	protected static final String MB8 = "8388608";
 	protected static final String MB4 = "4194304";
 
 	protected String directory;

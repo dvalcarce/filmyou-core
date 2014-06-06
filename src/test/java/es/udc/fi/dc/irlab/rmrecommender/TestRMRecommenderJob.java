@@ -50,7 +50,8 @@ public class TestRMRecommenderJob {
 				"--clusteringCount", "clusteringCount", "--directory",
 				"recommendation", "--lambda", "0.5", "--numberOfClusters",
 				"50", "--numberOfItems", "17770", "--numberOfIterations", "1",
-				"--numberOfUsers", "480189", "--useCassandra", "false" };
+				"--numberOfUsers", "480189", "--useCassandraInput", "false",
+				"--useCassandraOutput", "false" };
 
 		Configuration conf = job.parseInput(args);
 		for (int i = 0; i < args.length; i += 2) {

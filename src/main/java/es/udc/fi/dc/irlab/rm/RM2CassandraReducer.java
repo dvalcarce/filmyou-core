@@ -53,7 +53,7 @@ public class RM2CassandraReducer extends
 
 		Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
 		keys.put("user", ByteBufferUtil.bytes(userId));
-		keys.put("movie", ByteBufferUtil.bytes(itemId));
+		keys.put("item", ByteBufferUtil.bytes(itemId));
 		keys.put("relevance", ByteBufferUtil.bytes((float) score));
 
 		List<ByteBuffer> value = new LinkedList<ByteBuffer>();

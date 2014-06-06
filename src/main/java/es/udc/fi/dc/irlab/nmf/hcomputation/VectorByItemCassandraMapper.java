@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Daniel Valcarce Silva
+ * Copyright 2013 Daniel Valcarce Silva
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package es.udc.fi.dc.irlab.nmf.clustering;
+package es.udc.fi.dc.irlab.nmf.hcomputation;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
 import org.apache.hadoop.io.IntWritable;
+import org.apache.mahout.math.VectorWritable;
 
-import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
+import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
 
 /**
- * Emit &lt;k, i> from Cassandra ratings ({A_{i,j}}) where k is the cluster of
- * user j.
+ * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings ({A_{i,j}}) and from H matrix
+ * (w_i) obtained by DistributedCache.
  */
-public class ItemByClusterCassandraMapper
+public class VectorByItemCassandraMapper
 		extends
-		AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, IntWritable> {
+		AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
 	@Override
 	protected void map(Map<String, ByteBuffer> keys,
@@ -39,10 +40,22 @@ public class ItemByClusterCassandraMapper
 
 		float score = columns.get("score").getFloat();
 
-		if (score > 0) {
-			context.write(
-					new IntWritable(getCluster(keys.get("user").getInt())),
-					new IntWritable(keys.get("item").getInt()));
+		if (score <= 0) {
+			return;
+		}
+
+		int user = keys.get("user").getInt();
+		int item = keys.get("item").getInt();
+
+		if (existsMapping()) {
+			if ((user = getNewUserId(user)) != -1
+					&& (item = getNewItemId(item)) != -1) {
+				context.write(new IntWritable(user), new VectorWritable(
+						getCache(item).times(score)));
+			}
+		} else {
+			context.write(new IntWritable(user),
+					new VectorWritable(getCache(item).times(score)));
 		}
 
 	}

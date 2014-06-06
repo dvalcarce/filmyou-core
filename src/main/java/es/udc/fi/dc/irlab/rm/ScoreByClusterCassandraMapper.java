@@ -43,8 +43,8 @@ public class ScoreByClusterCassandraMapper
 		if (score > 0) {
 			int user = keys.get("user").getInt();
 			context.write(new IntPairWritable(getCluster(user), 1),
-					new IntDoubleOrPrefWritable(user, keys.get("movie")
-							.getInt(), score));
+					new IntDoubleOrPrefWritable(user,
+							keys.get("item").getInt(), score));
 		}
 
 	}
