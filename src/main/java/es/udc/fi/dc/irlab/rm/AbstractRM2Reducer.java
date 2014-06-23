@@ -195,6 +195,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		LOG.info("Cluster " + key.getFirst() + " (" + numberOfUsersInCluster
 				+ " users, " + numberOfItemsInCluster + " items)");
 
+		Configuration conf = context.getConfiguration();
+		int userFilter = conf.getInt(RMRecommenderDriver.filterUsers, 0);
+
 		long time = System.nanoTime();
 
 		// For each user
@@ -213,6 +216,12 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			neighbours.remove(user);
 
 			context.progress();
+
+			// Skip users
+			if (users[user] < userFilter) {
+				continue;
+			}
+
 			buildRecommendations(context, user, ratedItems.toArray(),
 					unratedItems.toArray(), neighbours.toArray(),
 					key.getFirst());
