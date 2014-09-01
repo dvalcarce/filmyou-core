@@ -42,8 +42,8 @@ import es.udc.fi.dc.irlab.util.CassandraSetup;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 import es.udc.fi.dc.irlab.util.IntKeyPartitioner;
-import es.udc.fi.dc.irlab.util.IntPairKeyPartitioner;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
+import es.udc.fi.dc.irlab.util.StringIntPairWritable;
 
 /**
  * Relevance Model 2 job.
@@ -260,12 +260,12 @@ public class RM2Job extends AbstractJob {
 
 		job.setNumReduceTasks(nubmerOfClusters);
 
-		job.setMapOutputKeyClass(IntPairWritable.class);
+		job.setMapOutputKeyClass(StringIntPairWritable.class);
 		job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);
 
-		job.setPartitionerClass(IntPairKeyPartitioner.class);
-		job.setSortComparatorClass(IntPairWritable.Comparator.class);
-		job.setGroupingComparatorClass(IntPairWritable.FirstGroupingComparator.class);
+		job.setPartitionerClass(StringIntPairWritable.KeyPartitioner.class);
+		job.setSortComparatorClass(StringIntPairWritable.Comparator.class);
+		job.setGroupingComparatorClass(StringIntPairWritable.KeyComparator.class);
 
 		DistributedCache.addCacheFile(clustering.toUri(), jobConf);
 		DistributedCache.addCacheFile(clusteringCount.toUri(), jobConf);

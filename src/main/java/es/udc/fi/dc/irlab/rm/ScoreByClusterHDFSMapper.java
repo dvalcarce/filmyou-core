@@ -21,8 +21,9 @@ import java.io.IOException;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.mahout.common.IntPairWritable;
 
-import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
+import es.udc.fi.dc.irlab.common.AbstractByClusterAndCountMapper;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.StringIntPairWritable;
 
 /**
  * Emit &lt;(k, 1), (i, j, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>) where
@@ -30,7 +31,7 @@ import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
  */
 public class ScoreByClusterHDFSMapper
 		extends
-		AbstractByClusterMapper<IntPairWritable, FloatWritable, IntPairWritable, IntDoubleOrPrefWritable> {
+		AbstractByClusterAndCountMapper<IntPairWritable, FloatWritable, StringIntPairWritable, IntDoubleOrPrefWritable> {
 
 	@Override
 	protected void map(IntPairWritable key, FloatWritable column,
@@ -39,10 +40,13 @@ public class ScoreByClusterHDFSMapper
 		float score = column.get();
 		if (score > 0) {
 			int user = key.getFirst();
-			context.write(new IntPairWritable(getCluster(user), 1),
-					new IntDoubleOrPrefWritable(user, key.getSecond(), score));
+			for (String split : getSplits(user)) {
+				context.write(new StringIntPairWritable(split, 1),
+						new IntDoubleOrPrefWritable(user, key.getSecond(),
+								score));
+			}
+
 		}
 
 	}
-
 }

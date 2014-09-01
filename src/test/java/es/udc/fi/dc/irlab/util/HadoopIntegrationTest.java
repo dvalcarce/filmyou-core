@@ -93,6 +93,7 @@ public abstract class HadoopIntegrationTest {
 		conf.set(RMRecommenderDriver.cassandraTableOut, cassandraTableOut);
 		conf.set(RMRecommenderDriver.cassandraTTL, cassandraTTL);
 		conf.setFloat(RMRecommenderDriver.lambda, 0.5f);
+		conf.setInt(RMRecommenderDriver.clusterSplit, 2);
 
 		return conf;
 	}
@@ -441,8 +442,8 @@ public abstract class HadoopIntegrationTest {
 		}
 
 		if (count != data.length) {
-			fail("Data length does not match (" + count + " vs " + data.length
-					+ ")");
+			fail("Data length does not match (" + count + " and expected "
+					+ data.length + ")");
 		}
 
 	}

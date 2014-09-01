@@ -20,10 +20,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.IntWritable;
-import org.apache.mahout.common.IntPairWritable;
 
-import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
+import es.udc.fi.dc.irlab.common.AbstractByClusterAndCountMapper;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.StringIntPairWritable;
 
 /**
  * Emit &lt;(k, 1), (j, sum_i A_{i,j})> from &lt;j, sum_i A_{i,j}> where j is a
@@ -31,14 +31,16 @@ import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
  */
 public class UserSumByClusterMapper
 		extends
-		AbstractByClusterMapper<IntWritable, DoubleWritable, IntPairWritable, IntDoubleOrPrefWritable> {
+		AbstractByClusterAndCountMapper<IntWritable, DoubleWritable, StringIntPairWritable, IntDoubleOrPrefWritable> {
 
 	@Override
 	protected void map(IntWritable key, DoubleWritable column, Context context)
 			throws IOException, InterruptedException {
 
-		context.write(new IntPairWritable(getCluster(key.get()), 0),
-				new IntDoubleOrPrefWritable(key.get(), column.get()));
+		for (String split : getSplits(key.get())) {
+			context.write(new StringIntPairWritable(split, 0),
+					new IntDoubleOrPrefWritable(key.get(), column.get()));
+		}
 
 	}
 

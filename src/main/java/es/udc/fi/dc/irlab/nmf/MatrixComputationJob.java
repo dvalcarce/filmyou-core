@@ -41,6 +41,8 @@ public abstract class MatrixComputationJob extends AbstractJob {
 	protected static final String maxSplitSize = "mapred.max.split.size";
 	protected static final String minSplitSize = "mapred.min.split.size";
 	protected static final String dfsSize = "dfs.block.size";
+	protected static final String javaOpts = "mapred.child.java.opts";
+	protected static final String GB5gc = "-Xmx5000m -XX:+UseParNewGC -XX:+UseConcMarkSweepGC";
 	protected static final String MB4096 = "4294967296";
 	protected static final String MB16 = "16777216";
 	protected static final String MB8 = "8388608";

@@ -20,10 +20,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Map;
 
-import org.apache.mahout.common.IntPairWritable;
-
-import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
+import es.udc.fi.dc.irlab.common.AbstractByClusterAndCountMapper;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
+import es.udc.fi.dc.irlab.util.StringIntPairWritable;
 
 /**
  * Emit &lt;(k, 1), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
@@ -31,7 +30,7 @@ import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
  */
 public class ScoreByClusterCassandraMapper
 		extends
-		AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, IntDoubleOrPrefWritable> {
+		AbstractByClusterAndCountMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, StringIntPairWritable, IntDoubleOrPrefWritable> {
 
 	@Override
 	protected void map(Map<String, ByteBuffer> keys,
@@ -42,9 +41,12 @@ public class ScoreByClusterCassandraMapper
 
 		if (score > 0) {
 			int user = keys.get("user").getInt();
-			context.write(new IntPairWritable(getCluster(user), 1),
-					new IntDoubleOrPrefWritable(user,
-							keys.get("item").getInt(), score));
+			for (String split : getSplits(user)) {
+				context.write(new StringIntPairWritable(split, 1),
+						new IntDoubleOrPrefWritable(user, keys.get("item")
+								.getInt(), score));
+			}
+
 		}
 
 	}

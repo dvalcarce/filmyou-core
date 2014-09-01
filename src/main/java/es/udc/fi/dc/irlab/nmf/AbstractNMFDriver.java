@@ -125,9 +125,9 @@ public abstract class AbstractNMFDriver extends AbstractJob {
 							Path.class }).newInstance(H, W, H2, W2);
 
 			conf.setInt(RMRecommenderDriver.iteration, i);
-			LOG.info("Launching H" + i);
+			LOG.info("Launching H-it" + i);
 			ToolRunner.run(conf, hJob, args);
-			LOG.info("Launching W" + i);
+			LOG.info("Launching W-it" + i);
 			ToolRunner.run(conf, wJob, args);
 
 			fs.delete(H, true);

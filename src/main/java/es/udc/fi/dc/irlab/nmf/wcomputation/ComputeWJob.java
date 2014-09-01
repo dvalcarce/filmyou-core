@@ -238,6 +238,7 @@ public class ComputeWJob extends MatrixComputationJob {
 
 		Configuration jobConf = job.getConfiguration();
 		jobConf.set(maxSplitSize, MB4);
+		jobConf.set(javaOpts, GB5gc);
 
 		boolean succeeded = job.waitForCompletion(true);
 		if (!succeeded) {

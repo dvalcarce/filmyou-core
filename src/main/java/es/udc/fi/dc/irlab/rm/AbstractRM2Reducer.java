@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.PriorityQueue;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,7 +19,6 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.mahout.common.IntPairWritable;
 
 import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
@@ -25,6 +26,7 @@ import es.udc.fi.dc.irlab.util.IntDouble;
 import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
 import es.udc.fi.dc.irlab.util.IntKeyPartitioner;
 import es.udc.fi.dc.irlab.util.MapFileOutputFormat;
+import es.udc.fi.dc.irlab.util.StringIntPairWritable;
 import gnu.trove.map.TIntDoubleMap;
 import gnu.trove.map.TIntIntMap;
 import gnu.trove.map.TIntObjectMap;
@@ -45,7 +47,7 @@ import gnu.trove.set.hash.TIntHashSet;
  *            Output value
  */
 public abstract class AbstractRM2Reducer<A, B> extends
-		Reducer<IntPairWritable, IntDoubleOrPrefWritable, A, B> {
+		Reducer<StringIntPairWritable, IntDoubleOrPrefWritable, A, B> {
 
 	private static final Log LOG = LogFactory.getLog(AbstractRM2Reducer.class);
 
@@ -72,6 +74,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	private double[][] cache;
 
 	private int newItemId;
+
+	private int group;
+	private int numberOfSplits;
 
 	@Override
 	public void setup(Context context) throws IOException, InterruptedException {
@@ -113,15 +118,32 @@ public abstract class AbstractRM2Reducer<A, B> extends
 				RMRecommenderDriver.numberOfRecommendations, -1);
 	}
 
+	private int parseCluster(String str) {
+		if (!str.contains("-")) {
+			int cluster = Integer.valueOf(str);
+			numberOfSplits = 1;
+			group = 0;
+			return cluster;
+		}
+
+		Pattern pattern = Pattern.compile("([0-9]+)-([0-9]+)-([0-9]+)");
+		Matcher matcher = pattern.matcher(str);
+		matcher.find();
+		numberOfSplits = Integer.valueOf(matcher.group(3));
+		group = Integer.valueOf(matcher.group(2));
+		return Integer.valueOf(matcher.group(1));
+	}
+
 	@Override
-	protected void reduce(IntPairWritable key,
+	protected void reduce(StringIntPairWritable key,
 			Iterable<IntDoubleOrPrefWritable> values, Context context)
 			throws IOException, InterruptedException {
 
 		int userId, itemId;
 		float score;
 		IntDoubleOrPrefWritable entry;
-		int thisCluster = key.getFirst();
+		String cluster = key.getKey();
+		int thisCluster = parseCluster(cluster);
 
 		Iterator<IntDoubleOrPrefWritable> it = values.iterator();
 
@@ -157,7 +179,6 @@ public abstract class AbstractRM2Reducer<A, B> extends
 				sparsePreferences.put(itemId, new TIntDoubleHashMap());
 			}
 			sparsePreferences.get(itemId).put(userId, (double) score);
-
 		}
 
 		createUserAndItemMappings();
@@ -192,8 +213,9 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		TIntSet ratedItems;
 		TIntSet neighbours;
 
-		LOG.info("Cluster " + key.getFirst() + " (" + numberOfUsersInCluster
-				+ " users, " + numberOfItemsInCluster + " items)");
+		LOG.info("Cluster " + thisCluster + "-" + group + ": "
+				+ numberOfUsersInCluster + "\tusers and "
+				+ numberOfItemsInCluster + "\titems");
 
 		Configuration conf = context.getConfiguration();
 		int userFilter = conf.getInt(RMRecommenderDriver.filterUsers, 0);
@@ -201,7 +223,10 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		long time = System.nanoTime();
 
 		// For each user
-		for (int user = 0; user < users.length; user++) {
+		for (int user = 0; user < numberOfUsersInCluster; user++) {
+			if (users[user] % numberOfSplits != group) {
+				continue;
+			}
 			ratedItems = userItemsMap.get(user);
 			unratedItems = new TIntHashSet(itemsSet);
 			unratedItems.removeAll(ratedItems);
@@ -221,16 +246,14 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			if (users[user] < userFilter) {
 				continue;
 			}
-
 			buildRecommendations(context, user, ratedItems.toArray(),
-					unratedItems.toArray(), neighbours.toArray(),
-					key.getFirst());
+					unratedItems.toArray(), neighbours.toArray(), thisCluster);
 		}
 
 		time = System.nanoTime() - time;
 
-		LOG.info("Cluster " + key.getFirst() + ": " + (time / 1000000000.0)
-				+ "\t seconds");
+		LOG.info("Cluster " + thisCluster + "-" + group + ": "
+				+ (time / 1000000000.0) + "\t seconds");
 
 	}
 
