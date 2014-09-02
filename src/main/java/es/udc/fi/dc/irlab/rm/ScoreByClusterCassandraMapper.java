@@ -41,10 +41,10 @@ public class ScoreByClusterCassandraMapper
 
 		if (score > 0) {
 			int user = keys.get("user").getInt();
+			int item = keys.get("item").getInt();
 			for (String split : getSplits(user)) {
 				context.write(new StringIntPairWritable(split, 1),
-						new IntDoubleOrPrefWritable(user, keys.get("item")
-								.getInt(), score));
+						new IntDoubleOrPrefWritable(user, item, score));
 			}
 
 		}
