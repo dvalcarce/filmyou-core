@@ -68,6 +68,7 @@ public class RMRecommenderDriver extends AbstractJob {
 	public static final String clusteringCount = "clusteringCount";
 	public static final String lambda = "lambda";
 	public static final String clusterSplit = "clusterSplit";
+	public static final String splitSize = "splitSize";
 	public static final String iteration = "iteration";
 	public static final String subClustering = "subClustering";
 	public static final String normalizationFrequency = "normalizationFrequency";
@@ -121,7 +122,9 @@ public class RMRecommenderDriver extends AbstractJob {
 		addOption(normalizationFrequency, "normFreq",
 				"PCC Normalization Frequency", "12");
 		addOption(clusterSplit, "split",
-				"Split computation of bigger clusters", "500");
+				"Split computation of big clusters (cluster size threshold)",
+				"400");
+		addOption(splitSize, "splitSize", "Size of each cluster split", "100");
 		addOption(filterUsers, "filter",
 				"Skip users with IDs below given threshold", "0");
 	}

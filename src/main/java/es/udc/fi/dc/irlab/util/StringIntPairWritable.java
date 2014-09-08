@@ -166,6 +166,7 @@ public class StringIntPairWritable implements
 		}
 
 		@Override
+		@SuppressWarnings("rawtypes")
 		public int compare(WritableComparable a, WritableComparable b) {
 			if (a instanceof StringIntPairWritable
 					&& b instanceof StringIntPairWritable) {

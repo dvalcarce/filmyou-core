@@ -129,8 +129,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		Pattern pattern = Pattern.compile("([0-9]+)-([0-9]+)-([0-9]+)");
 		Matcher matcher = pattern.matcher(str);
 		matcher.find();
-		numberOfSplits = Integer.valueOf(matcher.group(3));
 		group = Integer.valueOf(matcher.group(2));
+		numberOfSplits = Integer.valueOf(matcher.group(3));
 		return Integer.valueOf(matcher.group(1));
 	}
 

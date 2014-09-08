@@ -95,15 +95,17 @@ public abstract class AbstractByClusterAndCountMapper<A, B, C, D> extends
 		int cluster = getCluster(user);
 		int size = clusterSizes[cluster];
 		int clusterSplit = conf.getInt(RMRecommenderDriver.clusterSplit, -1);
-		if (clusterSplit < 0) {
+		int splitSize = conf.getInt(RMRecommenderDriver.splitSize, -1);
+
+		if (size < clusterSplit) {
 			return new String[] { String.valueOf(cluster) };
 		}
 		List<String> splits = new ArrayList<String>();
 		int numberOfSplits = (int) Math.round(Math.ceil(size
-				/ (double) clusterSplit));
-		for (int i = 0; i < numberOfSplits; i++) {
-			splits.add(String.format(Locale.ENGLISH, "%d-%d-%d", cluster, i,
-					numberOfSplits));
+				/ (double) splitSize));
+		for (int split = 0; split < numberOfSplits; split++) {
+			splits.add(String.format(Locale.ENGLISH, "%d-%d-%d", cluster,
+					split, numberOfSplits));
 		}
 
 		return splits.toArray(new String[0]);

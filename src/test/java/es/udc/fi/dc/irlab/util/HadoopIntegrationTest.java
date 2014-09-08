@@ -93,7 +93,8 @@ public abstract class HadoopIntegrationTest {
 		conf.set(RMRecommenderDriver.cassandraTableOut, cassandraTableOut);
 		conf.set(RMRecommenderDriver.cassandraTTL, cassandraTTL);
 		conf.setFloat(RMRecommenderDriver.lambda, 0.5f);
-		conf.setInt(RMRecommenderDriver.clusterSplit, 2);
+		conf.setInt(RMRecommenderDriver.clusterSplit, 5);
+		conf.setInt(RMRecommenderDriver.splitSize, 3);
 
 		return conf;
 	}

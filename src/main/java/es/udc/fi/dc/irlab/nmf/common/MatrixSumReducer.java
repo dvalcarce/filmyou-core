@@ -19,8 +19,6 @@ package es.udc.fi.dc.irlab.nmf.common;
 import java.io.IOException;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.mahout.math.Matrix;
@@ -35,16 +33,12 @@ import es.udc.fi.dc.irlab.util.MahoutMathUtils;
 public class MatrixSumReducer extends
 		Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
 
-	private static final Log LOG = LogFactory.getLog(MatrixSumReducer.class);
-
 	@Override
 	protected void reduce(NullWritable key, Iterable<MatrixWritable> values,
 			Context context) throws IOException, InterruptedException {
 
 		Iterator<MatrixWritable> it = values.iterator();
 		Matrix output = it.next().get();
-
-		int i = 0;
 
 		while (it.hasNext()) {
 			MahoutMathUtils.matrixAddInPlace(output, it.next().get());
