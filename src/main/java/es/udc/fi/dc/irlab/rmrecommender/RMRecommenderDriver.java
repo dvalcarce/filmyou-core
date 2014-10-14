@@ -307,7 +307,12 @@ public class RMRecommenderDriver extends AbstractJob {
 	private void doMappings(Configuration conf, String[] args) throws Exception {
 
 		int numberOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, 0);
+				RMRecommenderDriver.numberOfClusters, -1);
+
+		if (numberOfClusters <= 0) {
+			throw new IllegalArgumentException("Invalid number of clusters ("
+					+ numberOfClusters + ")");
+		}
 
 		/* Create new IDs for the users and items of each cluster */
 		if (ToolRunner.run(conf, new SubClusterMappingJob(), args) < 0) {

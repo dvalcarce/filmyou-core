@@ -144,7 +144,7 @@ public abstract class MatrixComputationJob extends AbstractJob {
 		Path[] paths = FileUtil.stat2Paths(fs.listStatus(folder, filter));
 
 		if (paths.length != 1) {
-			throw new FileNotFoundException();
+			throw new FileNotFoundException(folder + " not found!");
 		}
 
 		Configuration jobConf = job.getConfiguration();
