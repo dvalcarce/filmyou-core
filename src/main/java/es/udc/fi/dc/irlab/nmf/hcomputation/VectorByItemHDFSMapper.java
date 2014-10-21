@@ -26,8 +26,8 @@ import org.apache.mahout.math.VectorWritable;
 import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
 
 /**
- * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (<(j, i), A_{i,j}>) and from H
- * matrix (w_i) obtained by DistributedCache.
+ * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (&lt;(j, i), A_{i,j}>) and from
+ * W matrix (w_i) obtained by DistributedCache.
  */
 public class VectorByItemHDFSMapper extends
 		AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {

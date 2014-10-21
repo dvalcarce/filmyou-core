@@ -24,10 +24,10 @@ public class SubClusteringTestData {
 
 	public static final int numberOfUsers = 30;
 	public static final int numberOfClusters = 2;
-	public static final int numberOfSubClusters = 5;
+	public static final int numberOfSubClusters = 3;
 
 	public static final int[] clustering = new int[] { 1, 3, 0, 3, 2, 2, 2, 2,
-			1, 3, 0, 1, 0, 3, 1, 4, 0, 8, 7, 5, 7, 8, 5, 9, 7, 6, 6, 6, 8, 5 };
+			1, 3, 0, 1, 0, 3, 1, 4, 0, 18, 17, 15, 17, 18, 15, 19, 17, 16, 16, 16, 18, 15 };
 
 	public static final int[] clusteringCount = new int[] { 7, 7, 7, 7, 2 };
 

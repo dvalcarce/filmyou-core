@@ -38,6 +38,8 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 public abstract class MatrixComputationJob extends AbstractJob {
 
 	public static final String numberOfFiles = "numberOfFiles";
+	public static final double eps = 1e-12; //Math.pow(2.0, -52.0);
+
 	protected static final String maxSplitSize = "mapred.max.split.size";
 	protected static final String minSplitSize = "mapred.min.split.size";
 	protected static final String dfsSize = "dfs.block.size";

@@ -75,7 +75,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 	private int newItemId;
 
-	private int group;
+	private int split;
 	private int numberOfSplits;
 
 	@Override
@@ -88,13 +88,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			throw new FileNotFoundException();
 		}
 
-		int nubmerOfClusters = conf.getInt(
+		final int nubmerOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
-		final int numberOfSubClusters = conf.getInt(
-				RMRecommenderDriver.numberOfSubClusters, -1);
-		if (numberOfSubClusters > 0) {
-			nubmerOfClusters *= numberOfSubClusters;
-		}
 
 		clusterSizes = new int[nubmerOfClusters];
 
@@ -118,18 +113,18 @@ public abstract class AbstractRM2Reducer<A, B> extends
 				RMRecommenderDriver.numberOfRecommendations, -1);
 	}
 
-	private int parseCluster(String str) {
+	final private int parseCluster(String str) {
 		if (!str.contains("-")) {
 			int cluster = Integer.valueOf(str);
 			numberOfSplits = 1;
-			group = 0;
+			split = 0;
 			return cluster;
 		}
 
 		Pattern pattern = Pattern.compile("([0-9]+)-([0-9]+)-([0-9]+)");
 		Matcher matcher = pattern.matcher(str);
 		matcher.find();
-		group = Integer.valueOf(matcher.group(2));
+		split = Integer.valueOf(matcher.group(2));
 		numberOfSplits = Integer.valueOf(matcher.group(3));
 		return Integer.valueOf(matcher.group(1));
 	}
@@ -150,7 +145,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		// Read the number of users in the cluster
 		numberOfUsersInCluster = clusterSizes[thisCluster];
 
-		// Initialize collections
+		// Initialise collections
 		sparsePreferences = new TIntObjectHashMap<TIntDoubleMap>();
 		userItemsMap = new TIntObjectHashMap<TIntSet>(numberOfUsersInCluster);
 
@@ -167,7 +162,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 			userSums[j] = entry.getValue();
 		}
 
-		// Read the neighborhood preferences in order to build preferences
+		// Read the neighbourhood preferences in order to build preferences
 		// matrix
 		while (it.hasNext()) {
 			entry = it.next();
@@ -183,29 +178,17 @@ public abstract class AbstractRM2Reducer<A, B> extends
 
 		createUserAndItemMappings();
 
+		LOG.info("Cluster " + thisCluster + "-" + split + ": " + users.length
+				+ "\tusers (" + numberOfUsersInCluster + ") and "
+				+ items.length + "\titems (" + numberOfItemsInCluster + ")");
+
 		buildItemCollMap(context);
 
 		// Preload p(a|b)
 		cache = new double[numberOfUsersInCluster][numberOfItemsInCluster];
-		for (int user = 0; user < users.length; user++) {
-			for (int item = 0; item < items.length; item++) {
-				cache[user][item] = probItemGivenUser(item, user);
-
-				if (cache[user][item] == 0.0) {
-
-					double rating = sparsePreferences.get(items[item]).get(
-							users[user]);
-					double sum = userSums[user];
-
-					throw new IllegalArgumentException("CLUSTER: "
-							+ thisCluster + " user " + users[user] + ", item "
-							+ items[item] + " = " + cache[user][item]
-							+ "| lambda = " + lambda + "| rating = " + rating
-							+ "| sum = " + sum + "| p(i|C) = "
-							+ itemProbInColl[item]);
-
-				}
-
+		for (int userID = 0; userID < numberOfUsersInCluster; userID++) {
+			for (int itemID = 0; itemID < numberOfItemsInCluster; itemID++) {
+				cache[userID][itemID] = probItemGivenUser(itemID, userID);
 			}
 		}
 
@@ -213,46 +196,42 @@ public abstract class AbstractRM2Reducer<A, B> extends
 		TIntSet ratedItems;
 		TIntSet neighbours;
 
-		LOG.info("Cluster " + thisCluster + "-" + group + ": "
-				+ numberOfUsersInCluster + "\tusers and "
-				+ numberOfItemsInCluster + "\titems");
-
 		Configuration conf = context.getConfiguration();
 		int userFilter = conf.getInt(RMRecommenderDriver.filterUsers, 0);
 
 		long time = System.nanoTime();
 
 		// For each user
-		for (int user = 0; user < numberOfUsersInCluster; user++) {
-			if (users[user] % numberOfSplits != group) {
+		for (int userID = 0; userID < numberOfUsersInCluster; userID++) {
+			if (users[userID] % numberOfSplits != split) {
 				continue;
 			}
-			ratedItems = userItemsMap.get(user);
+			ratedItems = userItemsMap.get(userID);
 			unratedItems = new TIntHashSet(itemsSet);
 			unratedItems.removeAll(ratedItems);
 
 			if (unratedItems.size() == 0) {
-				LOG.warn("User " + users[user]
+				LOG.warn("User " + users[userID]
 						+ "does not have any unrated item in the cluster");
 				continue;
 			}
 
 			neighbours = new TIntHashSet(usersMap.values());
-			neighbours.remove(user);
+			neighbours.remove(userID);
 
 			context.progress();
 
 			// Skip users
-			if (users[user] < userFilter) {
+			if (users[userID] < userFilter) {
 				continue;
 			}
-			buildRecommendations(context, user, ratedItems.toArray(),
+			buildRecommendations(context, userID, ratedItems.toArray(),
 					unratedItems.toArray(), neighbours.toArray(), thisCluster);
 		}
 
 		time = System.nanoTime() - time;
 
-		LOG.info("Cluster " + thisCluster + "-" + group + ": "
+		LOG.info("Cluster " + thisCluster + "-" + split + ": "
 				+ (time / 1000000000.0) + "\t seconds");
 
 	}
@@ -260,7 +239,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	/**
 	 * Create usersMap and items structures
 	 */
-	private void createUserAndItemMappings() {
+	final private void createUserAndItemMappings() {
 		newItemId = 0;
 		numberOfItemsInCluster = sparsePreferences.size();
 		items = new int[numberOfItemsInCluster];
@@ -307,7 +286,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	 * @param numberOfClusterItems
 	 * @throws IOException
 	 */
-	protected void buildItemCollMap(Context context) throws IOException {
+	final private void buildItemCollMap(Context context) throws IOException {
 
 		final Configuration conf = context.getConfiguration();
 		final Reader[] readers = MapFileOutputFormat.getLocalReaders(itemColl,
@@ -350,8 +329,8 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	 * @param cluster
 	 *            cluster ID
 	 */
-	private void buildRecommendations(final Context context, final int userId,
-			final int[] ratedItems, final int[] unratedItems,
+	final private void buildRecommendations(final Context context,
+			final int userId, final int[] ratedItems, final int[] unratedItems,
 			final int[] neighbours, final int cluster) {
 
 		final PriorityQueue<IntDouble> prefs = new PriorityQueue<IntDouble>(
@@ -415,7 +394,7 @@ public abstract class AbstractRM2Reducer<A, B> extends
 	 *            userId
 	 * @return
 	 */
-	private double probItemGivenUser(final int item, final int user) {
+	final private double probItemGivenUser(final int item, final int user) {
 		final double rating = sparsePreferences.get(items[item]).get(
 				users[user]);
 		final double sum = userSums[user];

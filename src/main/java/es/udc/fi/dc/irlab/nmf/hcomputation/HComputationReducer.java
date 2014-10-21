@@ -27,6 +27,7 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 
+import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.nmf.common.MappingsReducer;
 import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 
@@ -52,10 +53,10 @@ public class HComputationReducer
 					"User %d has not rated any item", key.getFirst()));
 		}
 
-		// Performs (X ./ Y)
+		// XY = X ./ (Y + eps)
 		Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
 			public double apply(double a, double b) {
-				return a / b;
+				return a / (b + MatrixComputationJob.eps);
 			}
 		});
 

@@ -49,8 +49,9 @@ public class FindSubClusterMapper extends
 
 		Configuration conf = context.getConfiguration();
 
-		numberOfSubClusters = conf.getInt(
-				RMRecommenderDriver.numberOfSubClusters, -1);
+		int numberOfUsers = conf.getInt(RMRecommenderDriver.numberOfUsers, -1);
+		int numberOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, -1);
+		numberOfSubClusters = (int) Math.ceil(numberOfUsers / (double) numberOfClusters);
 
 	}
 

@@ -36,6 +36,8 @@ import org.apache.mahout.math.MatrixWritable;
 import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 
+import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
+
 /**
  * Utility class for initializing random structures in HDFS.
  * 
@@ -79,7 +81,8 @@ public final class DataInitialization {
 		try {
 			for (int i = 1; i <= rows; i++) {
 				for (int j = 0; j < cols; j++) {
-					vector.setQuick(j, randomGenerator.nextDouble());
+					vector.setQuick(j, randomGenerator.nextDouble()
+							+ MatrixComputationJob.eps);
 				}
 				vector = vector.normalize(1);
 				writer.append(new IntWritable(i), new VectorWritable(vector));

@@ -16,6 +16,7 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
+import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 import es.udc.fi.dc.irlab.util.HadoopUtils;
 import gnu.trove.map.TIntObjectMap;
@@ -97,10 +98,16 @@ public class WComputationMapper extends
 					"Item %d has not been rated by anybody", key.get()));
 		}
 
-		// Performs (X ./ Y)
+		// XY = X ./ (Y + eps)
 		Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
 			public double apply(double a, double b) {
-				return a / b;
+				if (Double.isInfinite(a) ) {
+					a = Double.MAX_VALUE;
+				}
+				if (Double.isInfinite(b)) { 
+					b = Double.MAX_VALUE;
+				}
+				return a / (b + MatrixComputationJob.eps);
 			}
 		});
 

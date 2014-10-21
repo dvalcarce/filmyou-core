@@ -229,6 +229,10 @@ public class RMRecommenderDriver extends AbstractJob {
 	private void clusterRefinement(Configuration conf, String[] args)
 			throws Exception {
 
+		int subClusters;
+		int count = 0;
+		int numberOfUsers;
+		
 		final int numberOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
 		final int numberOfSubClusters = conf.getInt(
@@ -245,12 +249,16 @@ public class RMRecommenderDriver extends AbstractJob {
 
 			/* For each cluster, find subclusters */
 			for (int cluster = 0; cluster < numberOfClusters; cluster++) {
+				/* Get number of subclusters */
+				numberOfUsers = usersInCluster.get(cluster);
+				subClusters = (int) Math.ceil(numberOfUsers / (float) numberOfSubClusters);
+				count += subClusters;
+				
 				/* Set properties */
 				jobConf.setInt(RMRecommenderDriver.subClustering, cluster);
 				jobConf.setInt(RMRecommenderDriver.numberOfClusters,
-						numberOfSubClusters);
-				jobConf.setInt(RMRecommenderDriver.numberOfUsers,
-						usersInCluster.get(cluster));
+						subClusters);
+				jobConf.setInt(RMRecommenderDriver.numberOfUsers, numberOfUsers);
 				jobConf.setInt(RMRecommenderDriver.numberOfItems,
 						itemsInCluster.get(cluster));
 
@@ -267,6 +275,8 @@ public class RMRecommenderDriver extends AbstractJob {
 			if (ToolRunner.run(conf, new ClusterAssignmentJob(true), args) < 0) {
 				throw new RuntimeException("ClusterAssignmentJob failed!");
 			}
+			
+			conf.setInt(RMRecommenderDriver.numberOfClusters, count);
 
 		}
 

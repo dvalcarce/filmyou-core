@@ -250,15 +250,8 @@ public class RM2Job extends AbstractJob {
 			SequenceFileOutputFormat.setOutputPath(job, outputPath);
 		}
 
-		int nubmerOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, -1);
-		final int numberOfSubClusters = conf.getInt(
-				RMRecommenderDriver.numberOfSubClusters, -1);
-		if (numberOfSubClusters > 0) {
-			nubmerOfClusters *= numberOfSubClusters;
-		}
-
-		job.setNumReduceTasks(nubmerOfClusters);
+		job.setNumReduceTasks(conf.getInt(RMRecommenderDriver.numberOfClusters,
+				-1));
 
 		job.setMapOutputKeyClass(StringIntPairWritable.class);
 		job.setMapOutputValueClass(IntDoubleOrPrefWritable.class);

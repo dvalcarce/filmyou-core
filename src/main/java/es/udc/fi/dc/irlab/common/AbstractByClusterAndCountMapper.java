@@ -59,13 +59,8 @@ public abstract class AbstractByClusterAndCountMapper<A, B, C, D> extends
 
 		super.setup(context);
 
-		int nubmerOfClusters = conf.getInt(
+		final int nubmerOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
-		final int numberOfSubClusters = conf.getInt(
-				RMRecommenderDriver.numberOfSubClusters, -1);
-		if (numberOfSubClusters > 0) {
-			nubmerOfClusters *= numberOfSubClusters;
-		}
 
 		clusterSizes = new int[nubmerOfClusters];
 
@@ -92,19 +87,18 @@ public abstract class AbstractByClusterAndCountMapper<A, B, C, D> extends
 	 * @return cluster split
 	 */
 	protected String[] getSplits(int user) {
-		int cluster = getCluster(user);
-		int size = clusterSizes[cluster];
+		int clusterID = getCluster(user);
+		int clusterSize = clusterSizes[clusterID];
 		int clusterSplit = conf.getInt(RMRecommenderDriver.clusterSplit, -1);
 		int splitSize = conf.getInt(RMRecommenderDriver.splitSize, -1);
 
-		if (size < clusterSplit) {
-			return new String[] { String.valueOf(cluster) };
+		if (clusterSize < clusterSplit) {
+			return new String[] { String.valueOf(clusterID) };
 		}
 		List<String> splits = new ArrayList<String>();
-		int numberOfSplits = (int) Math.round(Math.ceil(size
-				/ (double) splitSize));
+		int numberOfSplits = (int) Math.ceil(clusterSize/ (double) splitSize);
 		for (int split = 0; split < numberOfSplits; split++) {
-			splits.add(String.format(Locale.ENGLISH, "%d-%d-%d", cluster,
+			splits.add(String.format(Locale.ENGLISH, "%d-%d-%d", clusterID,
 					split, numberOfSplits));
 		}
 
