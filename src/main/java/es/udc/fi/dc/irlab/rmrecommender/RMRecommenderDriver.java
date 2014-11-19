@@ -51,7 +51,7 @@ public class RMRecommenderDriver extends AbstractJob {
 	public static final String numberOfUsers = "numberOfUsers";
 	public static final String numberOfItems = "numberOfItems";
 	public static final String numberOfClusters = "numberOfClusters";
-	public static final String numberOfSubClusters = "numberOfSubClusters";
+	public static final String usersPerSubCluster = "usersPerSubCluster";
 	public static final String numberOfIterations = "numberOfIterations";
 	public static final String numberOfRecommendations = "numberOfRecommendations";
 	public static final String directory = "directory";
@@ -90,8 +90,8 @@ public class RMRecommenderDriver extends AbstractJob {
 		addOption(numberOfUsers, "n", "Number of users", true);
 		addOption(numberOfItems, "m", "Number of items", true);
 		addOption(numberOfClusters, "k", "Number of clusters", true);
-		addOption(numberOfSubClusters, "k2", "Number of subclusters",
-				String.valueOf(0));
+		addOption(usersPerSubCluster, "k2", "Number of users per subclusters",
+				String.valueOf(-1));
 		addOption(numberOfIterations, "i", "Number of iterations", "10");
 		addOption(numberOfRecommendations, "r", "Number of recommendations",
 				"1000");
@@ -197,7 +197,7 @@ public class RMRecommenderDriver extends AbstractJob {
 			}
 
 			/* Launch cluster refinement if required */
-			if (conf.getInt(RMRecommenderDriver.numberOfSubClusters, -1) > 0) {
+			if (conf.getInt(RMRecommenderDriver.usersPerSubCluster, -1) > 0) {
 				clusterRefinement(conf, args);
 			}
 
@@ -232,13 +232,13 @@ public class RMRecommenderDriver extends AbstractJob {
 		int subClusters;
 		int count = 0;
 		int numberOfUsers;
-		
+
 		final int numberOfClusters = conf.getInt(
 				RMRecommenderDriver.numberOfClusters, -1);
-		final int numberOfSubClusters = conf.getInt(
-				RMRecommenderDriver.numberOfSubClusters, 0);
+		final int usersPerSubCluster = conf.getInt(
+				RMRecommenderDriver.usersPerSubCluster, 0);
 
-		if (numberOfSubClusters > 0) {
+		if (usersPerSubCluster > 0) {
 
 			doMappings(conf, args);
 
@@ -251,9 +251,10 @@ public class RMRecommenderDriver extends AbstractJob {
 			for (int cluster = 0; cluster < numberOfClusters; cluster++) {
 				/* Get number of subclusters */
 				numberOfUsers = usersInCluster.get(cluster);
-				subClusters = (int) Math.ceil(numberOfUsers / (float) numberOfSubClusters);
+				subClusters = (int) Math.ceil(numberOfUsers
+						/ (double) usersPerSubCluster);
 				count += subClusters;
-				
+
 				/* Set properties */
 				jobConf.setInt(RMRecommenderDriver.subClustering, cluster);
 				jobConf.setInt(RMRecommenderDriver.numberOfClusters,
@@ -275,7 +276,7 @@ public class RMRecommenderDriver extends AbstractJob {
 			if (ToolRunner.run(conf, new ClusterAssignmentJob(true), args) < 0) {
 				throw new RuntimeException("ClusterAssignmentJob failed!");
 			}
-			
+
 			conf.setInt(RMRecommenderDriver.numberOfClusters, count);
 
 		}

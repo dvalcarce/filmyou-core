@@ -98,7 +98,7 @@ public class TestClusterAssignment extends HadoopIntegrationTest {
 		/* Run job */
 		conf = buildConf(null, "clustering", "clusteringCount", numberOfUsers,
 				numberOfClusters);
-		conf.setInt(RMRecommenderDriver.numberOfSubClusters,
+		conf.setInt(RMRecommenderDriver.usersPerSubCluster,
 				SubClusteringTestData.numberOfSubClusters);
 
 		ToolRunner.run(conf, new ClusterAssignmentJob(true), null);
