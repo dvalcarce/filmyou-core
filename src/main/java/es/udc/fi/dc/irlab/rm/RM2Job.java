@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.cassandra.hadoop.cql3.CqlOutputFormat;
-import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
+import org.apache.cassandra.hadoop.cql3.CqlInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
@@ -118,7 +118,7 @@ public class RM2Job extends AbstractJob {
 		Configuration jobConf = job.getConfiguration();
 
 		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
-			job.setInputFormatClass(CqlPagingInputFormat.class);
+			job.setInputFormatClass(CqlInputFormat.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 			job.setMapperClass(SimpleScoreByUserCassandraMapper.class);
 		} else {
@@ -172,7 +172,7 @@ public class RM2Job extends AbstractJob {
 		Configuration jobConf = job.getConfiguration();
 
 		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
-			job.setInputFormatClass(CqlPagingInputFormat.class);
+			job.setInputFormatClass(CqlInputFormat.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 			job.setMapperClass(SimpleScoreByItemCassandraMapper.class);
 		} else {
@@ -227,7 +227,7 @@ public class RM2Job extends AbstractJob {
 
 		if (jobConf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
 			MultipleInputs.addInputPath(job, new Path("unused"),
-					CqlPagingInputFormat.class,
+					CqlInputFormat.class,
 					ScoreByClusterCassandraMapper.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 		} else {

@@ -19,7 +19,7 @@ package es.udc.fi.dc.irlab.nmf.hcomputation;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
+import org.apache.cassandra.hadoop.cql3.CqlInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
@@ -119,7 +119,7 @@ public class ComputeHJob extends MatrixComputationJob {
 		Configuration jobConf = job.getConfiguration();
 
 		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
-			job.setInputFormatClass(CqlPagingInputFormat.class);
+			job.setInputFormatClass(CqlInputFormat.class);
 			job.setMapperClass(VectorByItemCassandraMapper.class);
 			CassandraSetup.updateConfForInput(conf, jobConf);
 		} else {

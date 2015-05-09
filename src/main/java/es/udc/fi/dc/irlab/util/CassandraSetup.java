@@ -59,6 +59,8 @@ public class CassandraSetup {
 		ConfigHelper.setInputColumnFamily(jobConf, keyspace, tableIn, true);
 		ConfigHelper.setReadConsistencyLevel(jobConf, "ONE");
 
+		CqlConfigHelper.setInputCQLPageRowSize(jobConf, "1000");
+
 		return jobConf;
 
 	}

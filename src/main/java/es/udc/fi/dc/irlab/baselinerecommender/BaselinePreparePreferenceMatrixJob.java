@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.cassandra.hadoop.ConfigHelper;
-import org.apache.cassandra.hadoop.cql3.CqlPagingInputFormat;
+import org.apache.cassandra.hadoop.cql3.CqlInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -87,7 +87,7 @@ public class BaselinePreparePreferenceMatrixJob extends
 		toUserVectors.setOutputKeyClass(VarLongWritable.class);
 		toUserVectors.setOutputValueClass(VectorWritable.class);
 
-		toUserVectors.setInputFormatClass(CqlPagingInputFormat.class);
+		toUserVectors.setInputFormatClass(CqlInputFormat.class);
 		toUserVectors.setOutputFormatClass(SequenceFileOutputFormat.class);
 
 		toUserVectors.setNumReduceTasks(5);
@@ -171,7 +171,7 @@ public class BaselinePreparePreferenceMatrixJob extends
 		itemIDIndex.setOutputKeyClass(VarIntWritable.class);
 		itemIDIndex.setOutputValueClass(VarLongWritable.class);
 
-		itemIDIndex.setInputFormatClass(CqlPagingInputFormat.class);
+		itemIDIndex.setInputFormatClass(CqlInputFormat.class);
 		itemIDIndex.setOutputFormatClass(SequenceFileOutputFormat.class);
 
 		itemIDIndex.setCombinerClass(ItemIDIndexReducer.class);
