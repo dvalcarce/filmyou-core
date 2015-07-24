@@ -29,33 +29,31 @@ import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
  * Emit &lt;j, A_{i,j}w_i^T)> from HDFS ratings (&lt;(j, i), A_{i,j}>) and from
  * W matrix (w_i) obtained by DistributedCache.
  */
-public class VectorByItemHDFSMapper extends
-		AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
+public class VectorByItemHDFSMapper
+        extends AbstractJoinVectorMapper<IntPairWritable, FloatWritable> {
 
-	@Override
-	protected void map(IntPairWritable key, FloatWritable column,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntPairWritable key, final FloatWritable column, final Context context)
+            throws IOException, InterruptedException {
 
-		float score = column.get();
+        final float score = column.get();
 
-		if (score <= 0) {
-			return;
-		}
+        if (score <= 0) {
+            return;
+        }
 
-		int user = key.getFirst();
-		int item = key.getSecond();
+        int user = key.getFirst();
+        int item = key.getSecond();
 
-		if (existsMapping()) {
-			if ((user = getNewUserId(user)) != -1
-					&& (item = getNewItemId(item)) != -1) {
-				context.write(new IntWritable(user), new VectorWritable(
-						getCache(item).times(score)));
-			}
-		} else {
-			context.write(new IntWritable(user),
-					new VectorWritable(getCache(item).times(score)));
-		}
+        if (existsMapping()) {
+            if ((user = getNewUserId(user)) != -1 && (item = getNewItemId(item)) != -1) {
+                context.write(new IntWritable(user),
+                        new VectorWritable(getCache(item).times(score)));
+            }
+        } else {
+            context.write(new IntWritable(user), new VectorWritable(getCache(item).times(score)));
+        }
 
-	}
+    }
 
 }

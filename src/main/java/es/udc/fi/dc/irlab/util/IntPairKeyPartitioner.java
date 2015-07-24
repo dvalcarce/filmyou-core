@@ -7,16 +7,14 @@ import org.apache.mahout.common.IntPairWritable;
 /**
  * Partition the data set according to the first element of the (int, int) key.
  */
-public class IntPairKeyPartitioner extends
-		Partitioner<IntPairWritable, Writable> {
+public class IntPairKeyPartitioner extends Partitioner<IntPairWritable, Writable> {
 
-	@Override
-	public int getPartition(final IntPairWritable key, final Writable value,
-			final int numPartitions) {
+    @Override
+    public int getPartition(final IntPairWritable key, final Writable value,
+            final int numPartitions) {
 
-		return (Integer.valueOf(key.getFirst()).hashCode() & Integer.MAX_VALUE)
-				% numPartitions;
+        return (Integer.valueOf(key.getFirst()).hashCode() & Integer.MAX_VALUE) % numPartitions;
 
-	}
+    }
 
 }

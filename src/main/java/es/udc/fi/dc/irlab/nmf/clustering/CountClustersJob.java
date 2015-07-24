@@ -22,8 +22,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.map.InverseMapper;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
@@ -32,49 +34,49 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Count the number of elements in each cluster.
- * 
+ *
  */
 public class CountClustersJob extends AbstractJob {
 
-	@Override
-	public int run(String[] args) throws Exception {
-		Path clustering;
-		Path clusteringCount;
-		Configuration conf = getConf();
+    @Override
+    public int run(final String[] args) throws Exception {
+        Path clustering;
+        Path clusteringCount;
+        final Configuration conf = getConf();
 
-		/* Prepare paths */
-		String directory = conf.get(RMRecommenderDriver.directory);
-		clustering = new Path(directory + File.separator
-				+ conf.get(RMRecommenderDriver.clustering));
-		clusteringCount = new Path(directory + File.separator
-				+ RMRecommenderDriver.clusteringCountPath);
-		HadoopUtils.removeData(conf, clusteringCount.toString());
+        /* Prepare paths */
+        final String directory = conf.get(RMRecommenderDriver.directory);
+        clustering = new Path(
+                directory + File.separator + conf.get(RMRecommenderDriver.clustering));
+        clusteringCount = new Path(
+                directory + File.separator + RMRecommenderDriver.clusteringCountPath);
+        HadoopUtils.removeData(conf, clusteringCount.toString());
 
-		/* Prepare job */
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), this.getClass()
-				.getSimpleName());
-		job.setJarByClass(this.getClass());
+        /* Prepare job */
+        final Job job = new Job(HadoopUtils.sanitizeConf(getConf()),
+                this.getClass().getSimpleName());
+        job.setJarByClass(this.getClass());
 
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		SequenceFileInputFormat.addInputPath(job, clustering);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        FileInputFormat.addInputPath(job, clustering);
 
-		job.setMapperClass(InverseMapper.class);
-		job.setReducerClass(CountReducer.class);
+        job.setMapperClass(InverseMapper.class);
+        job.setReducerClass(CountReducer.class);
 
-		job.setMapOutputKeyClass(IntWritable.class);
-		job.setMapOutputValueClass(IntWritable.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
 
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		SequenceFileOutputFormat.setOutputPath(job, clusteringCount);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        FileOutputFormat.setOutputPath(job, clusteringCount);
 
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(IntWritable.class);
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(IntWritable.class);
 
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
-		return 0;
-	}
+        final boolean succeeded = job.waitForCompletion(true);
+        if (!succeeded) {
+            throw new RuntimeException(job.getJobName() + " failed!");
+        }
+        return 0;
+    }
 
 }

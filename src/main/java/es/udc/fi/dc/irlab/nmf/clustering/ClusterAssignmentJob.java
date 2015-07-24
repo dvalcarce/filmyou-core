@@ -23,7 +23,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.mahout.common.AbstractJob;
 
@@ -32,98 +34,95 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Assign each user to a cluster after NMF/PPC execution.
- * 
+ *
  */
 public class ClusterAssignmentJob extends AbstractJob {
 
-	private final boolean doSubClustering;
+    private final boolean doSubClustering;
 
-	public ClusterAssignmentJob(boolean doSubClustering) {
-		this.doSubClustering = doSubClustering;
-	}
+    public ClusterAssignmentJob(final boolean doSubClustering) {
+        this.doSubClustering = doSubClustering;
+    }
 
-	@Override
-	public int run(String[] args) throws ClassNotFoundException, IOException,
-			InterruptedException {
+    @Override
+    public int run(final String[] args)
+            throws ClassNotFoundException, IOException, InterruptedException {
 
-		Path clustering;
-		Configuration conf = getConf();
+        Path clustering;
+        final Configuration conf = getConf();
 
-		/* Prepare paths */
-		String directory = conf.get(RMRecommenderDriver.directory);
-		clustering = new Path(directory + File.separator
-				+ conf.get(RMRecommenderDriver.clustering));
+        /* Prepare paths */
+        final String directory = conf.get(RMRecommenderDriver.directory);
+        clustering = new Path(
+                directory + File.separator + conf.get(RMRecommenderDriver.clustering));
 
-		HadoopUtils.removeData(conf, clustering.toString());
+        HadoopUtils.removeData(conf, clustering.toString());
 
-		if (doSubClustering) {
-			Path H_join = new Path(directory + File.separator
-					+ RMRecommenderDriver.joinPath);
-			findSubClusters(H_join, clustering);
-		} else {
-			Path H = new Path(conf.get(RMRecommenderDriver.H));
-			findClusters(H, clustering);
-		}
+        if (doSubClustering) {
+            final Path H_join = new Path(directory + File.separator + RMRecommenderDriver.joinPath);
+            findSubClusters(H_join, clustering);
+        } else {
+            final Path H = new Path(conf.get(RMRecommenderDriver.H));
+            findClusters(H, clustering);
+        }
 
-		return 0;
+        return 0;
 
-	}
+    }
 
-	public void findClusters(Path inputPath, Path outputPath)
-			throws ClassNotFoundException, IOException, InterruptedException {
+    public void findClusters(final Path inputPath, final Path outputPath)
+            throws ClassNotFoundException, IOException, InterruptedException {
 
-		Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "Find Clusters");
-		job.setJarByClass(this.getClass());
+        final Job job = new Job(HadoopUtils.sanitizeConf(getConf()), "Find Clusters");
+        job.setJarByClass(this.getClass());
 
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		SequenceFileInputFormat.addInputPath(job, inputPath);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        FileInputFormat.addInputPath(job, inputPath);
 
-		job.setMapperClass(FindClusterMapper.class);
-		job.setNumReduceTasks(0);
+        job.setMapperClass(FindClusterMapper.class);
+        job.setNumReduceTasks(0);
 
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		SequenceFileOutputFormat.setOutputPath(job, outputPath);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        FileOutputFormat.setOutputPath(job, outputPath);
 
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(IntWritable.class);
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(IntWritable.class);
 
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
-	}
+        final boolean succeeded = job.waitForCompletion(true);
+        if (!succeeded) {
+            throw new RuntimeException(job.getJobName() + " failed!");
+        }
+    }
 
-	public void findSubClusters(Path inputPaths, Path outputPath)
-			throws IOException, ClassNotFoundException, InterruptedException {
+    public void findSubClusters(final Path inputPaths, final Path outputPath)
+            throws IOException, ClassNotFoundException, InterruptedException {
 
-		Configuration conf = getConf();
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "Find SubClusters");
-		job.setJarByClass(this.getClass());
+        final Configuration conf = getConf();
+        final Job job = new Job(HadoopUtils.sanitizeConf(conf), "Find SubClusters");
+        job.setJarByClass(this.getClass());
 
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		int numberOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, -1);
-		Path path;
-		for (int i = 0; i < numberOfClusters; i++) {
-			path = new Path(inputPaths.toString() + File.separator + "cluster"
-					+ i);
-			SequenceFileInputFormat.addInputPath(job, path);
-		}
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        final int numberOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, -1);
+        Path path;
+        for (int i = 0; i < numberOfClusters; i++) {
+            path = new Path(inputPaths.toString() + File.separator + "cluster" + i);
+            FileInputFormat.addInputPath(job, path);
+        }
 
-		job.setMapperClass(FindSubClusterMapper.class);
-		job.setNumReduceTasks(0);
+        job.setMapperClass(FindSubClusterMapper.class);
+        job.setNumReduceTasks(0);
 
-		job.setOutputFormatClass(SequenceFileOutputFormat.class);
-		SequenceFileOutputFormat.setOutputPath(job, outputPath);
+        job.setOutputFormatClass(SequenceFileOutputFormat.class);
+        FileOutputFormat.setOutputPath(job, outputPath);
 
-		job.setOutputKeyClass(IntWritable.class);
-		job.setOutputValueClass(IntWritable.class);
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(IntWritable.class);
 
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
+        final boolean succeeded = job.waitForCompletion(true);
+        if (!succeeded) {
+            throw new RuntimeException(job.getJobName() + " failed!");
+        }
 
-	}
+    }
 
 }

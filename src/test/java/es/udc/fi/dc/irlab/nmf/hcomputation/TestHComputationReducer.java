@@ -31,33 +31,30 @@ import org.junit.Test;
 
 public class TestHComputationReducer {
 
-	private ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
+    private ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
 
-	@Before
-	public void setup() {
-		reduceDriver = new ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable>();
-	}
+    @Before
+    public void setup() {
+        reduceDriver = new ReduceDriver<IntPairWritable, VectorWritable, IntWritable, VectorWritable>();
+    }
 
-	@Test
-	public void testReducer() throws IOException {
-		IntPairWritable inputKey = new IntPairWritable(1, 0);
-		List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
+    @Test
+    public void testReducer() throws IOException {
+        final IntPairWritable inputKey = new IntPairWritable(1, 0);
+        final List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
 
-		inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0,
-				2.0, 3.0 })));
-		inputValues.add(new VectorWritable(new DenseVector(new double[] { 3.0,
-				10.0, 20.0 })));
-		inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0,
-				5.0, 4.0 })));
+        inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0, 2.0, 3.0 })));
+        inputValues.add(new VectorWritable(new DenseVector(new double[] { 3.0, 10.0, 20.0 })));
+        inputValues.add(new VectorWritable(new DenseVector(new double[] { 1.0, 5.0, 4.0 })));
 
-		IntWritable outputKey = new IntWritable(1);
-		Vector outputVector = new DenseVector(new double[] { 3.0, 4.0, 15.0 });
+        final IntWritable outputKey = new IntWritable(1);
+        final Vector outputVector = new DenseVector(new double[] { 3.0, 4.0, 15.0 });
 
-		reduceDriver.withReducer(new HComputationReducer());
-		reduceDriver.withInput(inputKey, inputValues);
-		reduceDriver.withOutput(outputKey, new VectorWritable(outputVector));
+        reduceDriver.withReducer(new HComputationReducer());
+        reduceDriver.withInput(inputKey, inputValues);
+        reduceDriver.withOutput(outputKey, new VectorWritable(outputVector));
 
-		reduceDriver.runTest();
-	}
+        reduceDriver.runTest();
+    }
 
 }

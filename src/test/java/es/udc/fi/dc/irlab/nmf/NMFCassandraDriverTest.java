@@ -29,42 +29,40 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Integration test for ten iterations of NMF algorithm
- * 
+ *
  */
 public class NMFCassandraDriverTest extends HadoopIntegrationTest {
 
-	@Test
-	public void integrationTest() throws Exception {
-		int numberOfUsers = NMFTestData.numberOfUsers;
-		int numberOfItems = NMFTestData.numberOfItems;
-		int numberOfClusters = NMFTestData.numberOfClusters;
-		int numberOfIterations = 10;
+    @Test
+    public void integrationTest() throws Exception {
+        final int numberOfUsers = NMFTestData.numberOfUsers;
+        final int numberOfItems = NMFTestData.numberOfItems;
+        final int numberOfClusters = NMFTestData.numberOfClusters;
+        final int numberOfIterations = 10;
 
-		Configuration conf = buildConf();
-		HadoopUtils.removeData(conf, conf.get("directory"));
+        Configuration conf = buildConf();
+        HadoopUtils.removeData(conf, conf.get("directory"));
 
-		/* Data initialization */
-		Path H = DataInitialization.createDoubleMatrix(conf,
-				NMFTestData.H_init, baseDirectory, "H", 1);
-		Path W = DataInitialization.createDoubleMatrix(conf,
-				NMFTestData.W_init, baseDirectory, "W", 1);
+        /* Data initialization */
+        final Path H = DataInitialization.createDoubleMatrix(conf, NMFTestData.H_init,
+                baseDirectory, "H", 1);
+        final Path W = DataInitialization.createDoubleMatrix(conf, NMFTestData.W_init,
+                baseDirectory, "W", 1);
 
-		/* Insert data in Cassandra */
-		CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
-				cassandraPartitioner);
-		cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace,
-				cassandraTableIn);
+        /* Insert data in Cassandra */
+        final CassandraUtils cassandraUtils = new CassandraUtils(cassandraHost,
+                cassandraPartitioner);
+        cassandraUtils.insertData(NMFTestData.A, cassandraKeyspace, cassandraTableIn);
 
-		/* Run job */
-		conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
-				numberOfIterations);
-		ToolRunner.run(conf, new NMFDriver(), null);
+        /* Run job */
+        conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters, numberOfIterations);
+        ToolRunner.run(conf, new NMFDriver(), null);
 
-		/* Run asserts */
-		compareIntVectorData(conf, NMFTestData.H_ten, baseDirectory, H);
-		compareIntVectorData(conf, NMFTestData.W_ten, baseDirectory, W);
+        /* Run asserts */
+        compareIntVectorData(conf, NMFTestData.H_ten, baseDirectory, H);
+        compareIntVectorData(conf, NMFTestData.W_ten, baseDirectory, W);
 
-		HadoopUtils.removeData(conf, conf.get("directory"));
-	}
+        HadoopUtils.removeData(conf, conf.get("directory"));
+    }
 
 }

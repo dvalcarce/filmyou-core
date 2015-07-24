@@ -28,16 +28,14 @@ import es.udc.fi.dc.irlab.util.IntDoubleOrPrefWritable;
  * Emit &lt;(k, 0), |k|)> from &lt;k, |k|}> where |k| = size of cluster k.
  */
 public class CountClusterMapper
-		extends
-		Mapper<IntWritable, IntWritable, IntPairWritable, IntDoubleOrPrefWritable> {
+        extends Mapper<IntWritable, IntWritable, IntPairWritable, IntDoubleOrPrefWritable> {
 
-	@Override
-	protected void map(IntWritable key, IntWritable column, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final IntWritable column, final Context context)
+            throws IOException, InterruptedException {
 
-		context.write(new IntPairWritable(key.get(), 0),
-				new IntDoubleOrPrefWritable(column.get()));
+        context.write(new IntPairWritable(key.get(), 0), new IntDoubleOrPrefWritable(column.get()));
 
-	}
+    }
 
 }

@@ -28,19 +28,19 @@ import org.apache.mahout.math.VectorWritable;
 
 /**
  * Emit &lt;NULL, a_i^T a_i> from &lt;i, a_i> (the cross product).
- * 
+ *
  */
-public class CrossProductMapper extends
-		Mapper<IntWritable, VectorWritable, NullWritable, MatrixWritable> {
+public class CrossProductMapper
+        extends Mapper<IntWritable, VectorWritable, NullWritable, MatrixWritable> {
 
-	@Override
-	protected void map(IntWritable key, VectorWritable value, Context context)
-			throws IOException, InterruptedException {
-		Vector vector = value.get();
+    @Override
+    protected void map(final IntWritable key, final VectorWritable value, final Context context)
+            throws IOException, InterruptedException {
+        final Vector vector = value.get();
 
-		Matrix matrix = vector.cross(vector);
+        final Matrix matrix = vector.cross(vector);
 
-		context.write(NullWritable.get(), new MatrixWritable(matrix));
-	}
+        context.write(NullWritable.get(), new MatrixWritable(matrix));
+    }
 
 }

@@ -32,149 +32,140 @@ import org.apache.hadoop.mapreduce.Partitioner;
  * Custom Writable that stores a pair of a string and an integer.
  *
  */
-public class StringIntPairWritable implements
-		WritableComparable<StringIntPairWritable> {
+public class StringIntPairWritable implements WritableComparable<StringIntPairWritable> {
 
-	private Text key;
-	private IntWritable value;
+    private Text key;
+    private IntWritable value;
 
-	public StringIntPairWritable() {
-		this.key = new Text();
-		this.value = new IntWritable();
-	}
+    public StringIntPairWritable() {
+        this.key = new Text();
+        this.value = new IntWritable();
+    }
 
-	public StringIntPairWritable(String k, int v) {
-		this.key = new Text(k);
-		this.value = new IntWritable(v);
-	}
+    public StringIntPairWritable(final String k, final int v) {
+        this.key = new Text(k);
+        this.value = new IntWritable(v);
+    }
 
-	public void setKey(String k) {
-		this.key = new Text(k);
-	}
+    public void setKey(final String k) {
+        this.key = new Text(k);
+    }
 
-	public void setValue(int v) {
-		this.value = new IntWritable(v);
-	}
+    public void setValue(final int v) {
+        this.value = new IntWritable(v);
+    }
 
-	@Override
-	public void readFields(DataInput in) throws IOException {
-		key.readFields(in);
-		value.readFields(in);
-	}
+    @Override
+    public void readFields(final DataInput in) throws IOException {
+        key.readFields(in);
+        value.readFields(in);
+    }
 
-	@Override
-	public void write(DataOutput out) throws IOException {
-		key.write(out);
-		value.write(out);
-	}
+    @Override
+    public void write(final DataOutput out) throws IOException {
+        key.write(out);
+        value.write(out);
+    }
 
-	public String getKey() {
-		return key.toString();
-	}
+    public String getKey() {
+        return key.toString();
+    }
 
-	public int getValue() {
-		return value.get();
-	}
+    public int getValue() {
+        return value.get();
+    }
 
-	@Override
-	public int compareTo(StringIntPairWritable o) {
-		int cmp = key.compareTo(o.key);
-		if (cmp != 0) {
-			return cmp;
-		}
-		return value.compareTo(o.value);
-	}
+    @Override
+    public int compareTo(final StringIntPairWritable o) {
+        final int cmp = key.compareTo(o.key);
+        if (cmp != 0) {
+            return cmp;
+        }
+        return value.compareTo(o.value);
+    }
 
-	@Override
-	public String toString() {
-		return key + "\t" + value;
-	}
+    @Override
+    public String toString() {
+        return key + "\t" + value;
+    }
 
-	@Override
-	public int hashCode() {
-		return key.hashCode() * 163 + value.hashCode();
-	}
+    @Override
+    public int hashCode() {
+        return key.hashCode() * 163 + value.hashCode();
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof StringIntPairWritable) {
-			StringIntPairWritable tp = (StringIntPairWritable) obj;
-			return key.equals(tp.key) && value.equals(tp.value);
-		}
-		return false;
-	}
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj instanceof StringIntPairWritable) {
+            final StringIntPairWritable tp = (StringIntPairWritable) obj;
+            return key.equals(tp.key) && value.equals(tp.value);
+        }
+        return false;
+    }
 
-	public static class KeyPartitioner extends
-			Partitioner<StringIntPairWritable, Writable> {
+    public static class KeyPartitioner extends Partitioner<StringIntPairWritable, Writable> {
 
-		@Override
-		public int getPartition(final StringIntPairWritable key,
-				final Writable value, final int numPartitions) {
+        @Override
+        public int getPartition(final StringIntPairWritable key, final Writable value,
+                final int numPartitions) {
 
-			return (key.getKey().hashCode() & Integer.MAX_VALUE)
-					% numPartitions;
+            return (key.getKey().hashCode() & Integer.MAX_VALUE) % numPartitions;
 
-		}
-	}
+        }
+    }
 
-	public static class Comparator extends WritableComparator {
-		private static final Text.Comparator TEXT_COMPARATOR = new Text.Comparator();
+    public static class Comparator extends WritableComparator {
+        private static final Text.Comparator TEXT_COMPARATOR = new Text.Comparator();
 
-		public Comparator() {
-			super(StringIntPairWritable.class);
-		}
+        public Comparator() {
+            super(StringIntPairWritable.class);
+        }
 
-		@Override
-		public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-			try {
-				int firstL1 = WritableUtils.decodeVIntSize(b1[s1])
-						+ readVInt(b1, s1);
-				int firstL2 = WritableUtils.decodeVIntSize(b2[s2])
-						+ readVInt(b2, s2);
-				int cmp = TEXT_COMPARATOR.compare(b1, s1, firstL1, b2, s2,
-						firstL2);
-				if (cmp != 0) {
-					return cmp;
-				}
-				return TEXT_COMPARATOR.compare(b1, s1 + firstL1, l1 - firstL1,
-						b2, s2 + firstL2, l2 - firstL2);
-			} catch (IOException e) {
-				throw new IllegalArgumentException(e);
-			}
-		}
-	}
+        @Override
+        public int compare(final byte[] b1, final int s1, final int l1, final byte[] b2,
+                final int s2, final int l2) {
+            try {
+                final int firstL1 = WritableUtils.decodeVIntSize(b1[s1]) + readVInt(b1, s1);
+                final int firstL2 = WritableUtils.decodeVIntSize(b2[s2]) + readVInt(b2, s2);
+                final int cmp = TEXT_COMPARATOR.compare(b1, s1, firstL1, b2, s2, firstL2);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                return TEXT_COMPARATOR.compare(b1, s1 + firstL1, l1 - firstL1, b2, s2 + firstL2,
+                        l2 - firstL2);
+            } catch (final IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
+    }
 
-	public static class KeyComparator extends WritableComparator {
-		private static final Text.Comparator TEXT_COMPARATOR = new Text.Comparator();
+    public static class KeyComparator extends WritableComparator {
+        private static final Text.Comparator TEXT_COMPARATOR = new Text.Comparator();
 
-		public KeyComparator() {
-			super(StringIntPairWritable.class);
-		}
+        public KeyComparator() {
+            super(StringIntPairWritable.class);
+        }
 
-		@Override
-		public int compare(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
-			try {
-				int firstL1 = WritableUtils.decodeVIntSize(b1[s1])
-						+ readVInt(b1, s1);
-				int firstL2 = WritableUtils.decodeVIntSize(b2[s2])
-						+ readVInt(b2, s2);
-				return TEXT_COMPARATOR
-						.compare(b1, s1, firstL1, b2, s2, firstL2);
-			} catch (IOException e) {
-				throw new IllegalArgumentException(e);
-			}
-		}
+        @Override
+        public int compare(final byte[] b1, final int s1, final int l1, final byte[] b2,
+                final int s2, final int l2) {
+            try {
+                final int firstL1 = WritableUtils.decodeVIntSize(b1[s1]) + readVInt(b1, s1);
+                final int firstL2 = WritableUtils.decodeVIntSize(b2[s2]) + readVInt(b2, s2);
+                return TEXT_COMPARATOR.compare(b1, s1, firstL1, b2, s2, firstL2);
+            } catch (final IOException e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
 
-		@Override
-		@SuppressWarnings("rawtypes")
-		public int compare(WritableComparable a, WritableComparable b) {
-			if (a instanceof StringIntPairWritable
-					&& b instanceof StringIntPairWritable) {
-				return ((StringIntPairWritable) a).key
-						.compareTo(((StringIntPairWritable) b).key);
-			}
-			return super.compare(a, b);
-		}
-	}
+        @Override
+        @SuppressWarnings("rawtypes")
+        public int compare(final WritableComparable a, final WritableComparable b) {
+            if (a instanceof StringIntPairWritable && b instanceof StringIntPairWritable) {
+                return ((StringIntPairWritable) a).key.compareTo(((StringIntPairWritable) b).key);
+            }
+            return super.compare(a, b);
+        }
+    }
 
 }

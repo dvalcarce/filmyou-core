@@ -29,18 +29,16 @@ import org.apache.mahout.math.VectorWritable;
  * Emit &lt;(j, 0), h_j> from H matrix ({h_j}).
  */
 public class HSecondaryMapper
-		extends
-		Mapper<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> {
+        extends Mapper<IntWritable, VectorWritable, IntPairWritable, VectorOrPrefWritable> {
 
-	@Override
-	protected void map(IntWritable key, VectorWritable value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final VectorWritable value, final Context context)
+            throws IOException, InterruptedException {
 
-		int user = key.get();
-		Vector vector = value.get();
-		context.write(new IntPairWritable(user, 0), new VectorOrPrefWritable(
-				vector));
+        final int user = key.get();
+        final Vector vector = value.get();
+        context.write(new IntPairWritable(user, 0), new VectorOrPrefWritable(vector));
 
-	}
+    }
 
 }

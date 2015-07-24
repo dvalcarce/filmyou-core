@@ -33,76 +33,72 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Abstract mapper for reading clustering data as a SequenceFile in HDFS.
- * 
+ *
  * @param <A>
  *            Mapper input key class
  * @param <B>
  *            Mapper input value class
  */
-public abstract class AbstractByClusterAndCountMapper<A, B, C, D> extends
-		AbstractByClusterMapper<A, B, C, D> {
+public abstract class AbstractByClusterAndCountMapper<A, B, C, D>
+        extends AbstractByClusterMapper<A, B, C, D> {
 
-	private int[] clusterSizes;
-	private Configuration conf;
+    private int[] clusterSizes;
+    private Configuration conf;
 
-	@Override
-	protected void setup(Context context) throws IOException,
-			InterruptedException {
+    @Override
+    protected void setup(final Context context) throws IOException, InterruptedException {
 
-		conf = context.getConfiguration();
+        conf = context.getConfiguration();
 
-		Path[] paths = DistributedCache.getLocalCacheFiles(conf);
+        final Path[] paths = DistributedCache.getLocalCacheFiles(conf);
 
-		if (paths == null || paths.length < 2) {
-			throw new FileNotFoundException();
-		}
+        if (paths == null || paths.length < 2) {
+            throw new FileNotFoundException();
+        }
 
-		super.setup(context);
+        super.setup(context);
 
-		final int nubmerOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, -1);
+        final int nubmerOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, -1);
 
-		clusterSizes = new int[nubmerOfClusters];
+        clusterSizes = new int[nubmerOfClusters];
 
-		SequenceFile.Reader[] readers = HadoopUtils.getLocalSequenceReaders(
-				paths[1], conf);
+        final SequenceFile.Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[1], conf);
 
-		IntWritable key = new IntWritable();
-		IntWritable val = new IntWritable();
+        final IntWritable key = new IntWritable();
+        final IntWritable val = new IntWritable();
 
-		// Read cluster count
-		for (SequenceFile.Reader reader : readers) {
-			while (reader.next(key, val)) {
-				clusterSizes[key.get()] = val.get();
-			}
-		}
+        // Read cluster count
+        for (final SequenceFile.Reader reader : readers) {
+            while (reader.next(key, val)) {
+                clusterSizes[key.get()] = val.get();
+            }
+        }
 
-	}
+    }
 
-	/**
-	 * Get the cluster split for the given user.
-	 * 
-	 * @param user
-	 *            user id
-	 * @return cluster split
-	 */
-	protected String[] getSplits(int user) {
-		int clusterID = getCluster(user);
-		int clusterSize = clusterSizes[clusterID];
-		int clusterSplit = conf.getInt(RMRecommenderDriver.clusterSplit, -1);
-		int splitSize = conf.getInt(RMRecommenderDriver.splitSize, -1);
+    /**
+     * Get the cluster split for the given user.
+     *
+     * @param user
+     *            user id
+     * @return cluster split
+     */
+    protected String[] getSplits(final int user) {
+        final int clusterID = getCluster(user);
+        final int clusterSize = clusterSizes[clusterID];
+        final int clusterSplit = conf.getInt(RMRecommenderDriver.clusterSplit, -1);
+        final int splitSize = conf.getInt(RMRecommenderDriver.splitSize, -1);
 
-		if (clusterSize < clusterSplit) {
-			return new String[] { String.valueOf(clusterID) };
-		}
-		List<String> splits = new ArrayList<String>();
-		int numberOfSplits = (int) Math.ceil(clusterSize/ (double) splitSize);
-		for (int split = 0; split < numberOfSplits; split++) {
-			splits.add(String.format(Locale.ENGLISH, "%d-%d-%d", clusterID,
-					split, numberOfSplits));
-		}
+        if (clusterSize < clusterSplit) {
+            return new String[] { String.valueOf(clusterID) };
+        }
+        final List<String> splits = new ArrayList<String>();
+        final int numberOfSplits = (int) Math.ceil(clusterSize / (double) splitSize);
+        for (int split = 0; split < numberOfSplits; split++) {
+            splits.add(String.format(Locale.ENGLISH, "%d-%d-%d", clusterID, split, numberOfSplits));
+        }
 
-		return splits.toArray(new String[0]);
-	}
+        return splits.toArray(new String[0]);
+    }
 
 }

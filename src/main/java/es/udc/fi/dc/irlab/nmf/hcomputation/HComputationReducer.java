@@ -35,46 +35,44 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
  * Emit &lt;j, a_j · x_j / y_j> from &lt;j, {a_j, x_j, y_j}>.
  */
 public class HComputationReducer
-		extends
-		MappingsReducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
+        extends MappingsReducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
 
-	@Override
-	protected void reduce(IntPairWritable key, Iterable<VectorWritable> values,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final IntPairWritable key, final Iterable<VectorWritable> values,
+            final Context context) throws IOException, InterruptedException {
 
-		Vector vectorX, vectorH, vectorY;
-		Iterator<VectorWritable> it = values.iterator();
-		try {
-			vectorH = it.next().get();
-			vectorX = it.next().get();
-			vectorY = it.next().get();
-		} catch (NoSuchElementException e) {
-			throw new NoSuchElementException(String.format(
-					"User %d has not rated any item", key.getFirst()));
-		}
+        Vector vectorX, vectorH, vectorY;
+        final Iterator<VectorWritable> it = values.iterator();
+        try {
+            vectorH = it.next().get();
+            vectorX = it.next().get();
+            vectorY = it.next().get();
+        } catch (final NoSuchElementException e) {
+            throw new NoSuchElementException(
+                    String.format("User %d has not rated any item", key.getFirst()));
+        }
 
-		// XY = X ./ (Y + eps)
-		Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
-			public double apply(double a, double b) {
-				return a / (b + MatrixComputationJob.eps);
-			}
-		});
+        // XY = X ./ (Y + eps)
+        final Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
+            @Override
+            public double apply(final double a, final double b) {
+                return a / (b + MatrixComputationJob.eps);
+            }
+        });
 
-		Configuration conf = context.getConfiguration();
-		int iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
-		int numberOfIterations = conf.getInt(
-				RMRecommenderDriver.numberOfIterations, -1);
-		int userId;
+        final Configuration conf = context.getConfiguration();
+        final int iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
+        final int numberOfIterations = conf.getInt(RMRecommenderDriver.numberOfIterations, -1);
+        int userId;
 
-		if (iteration < numberOfIterations) {
-			userId = key.getFirst();
-		} else {
-			userId = getOldUserId(key.getFirst());
-		}
+        if (iteration < numberOfIterations) {
+            userId = key.getFirst();
+        } else {
+            userId = getOldUserId(key.getFirst());
+        }
 
-		context.write(new IntWritable(userId),
-				new VectorWritable(vectorH.times(vectorXY)));
+        context.write(new IntWritable(userId), new VectorWritable(vectorH.times(vectorXY)));
 
-	}
+    }
 
 }

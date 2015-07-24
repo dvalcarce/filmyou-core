@@ -31,42 +31,41 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Integration test for one iteration of HComputation (PPC)
- * 
+ *
  */
 public class TestHDFSPPCHComputation extends HadoopIntegrationTest {
 
-	@Test
-	public void integrationTest() throws Exception {
-		int numberOfUsers = PPCTestData.numberOfUsers;
-		int numberOfItems = PPCTestData.numberOfItems;
-		int numberOfClusters = PPCTestData.numberOfClusters;
-		int numberOfIterations = 1;
+    @Test
+    public void integrationTest() throws Exception {
+        final int numberOfUsers = PPCTestData.numberOfUsers;
+        final int numberOfItems = PPCTestData.numberOfItems;
+        final int numberOfClusters = PPCTestData.numberOfClusters;
+        final int numberOfIterations = 1;
 
-		Configuration conf = buildConf();
-		HadoopUtils.removeData(conf, conf.get("directory"));
+        Configuration conf = buildConf();
+        HadoopUtils.removeData(conf, conf.get("directory"));
 
-		/* Data initialization */
-		Path H = DataInitialization.createDoubleMatrix(conf,
-				PPCTestData.H_init, baseDirectory, "H", 1);
-		Path W = DataInitialization.createDoubleMatrix(conf,
-				PPCTestData.W_init, baseDirectory, "W", 1);
-		Path H2 = new Path(baseDirectory + File.separator + "H2");
-		Path W2 = new Path(baseDirectory + File.separator + "W2");
-		Path input = DataInitialization.createIntPairFloatFile(conf,
-				PPCTestData.A, baseDirectory, "A");
+        /* Data initialization */
+        final Path H = DataInitialization.createDoubleMatrix(conf, PPCTestData.H_init,
+                baseDirectory, "H", 1);
+        final Path W = DataInitialization.createDoubleMatrix(conf, PPCTestData.W_init,
+                baseDirectory, "W", 1);
+        final Path H2 = new Path(baseDirectory + File.separator + "H2");
+        final Path W2 = new Path(baseDirectory + File.separator + "W2");
+        final Path input = DataInitialization.createIntPairFloatFile(conf, PPCTestData.A,
+                baseDirectory, "A");
 
-		/* Run job */
-		conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters,
-				numberOfIterations);
-		conf.setBoolean(RMRecommenderDriver.useCassandraInput, false);
-		conf.setBoolean(RMRecommenderDriver.useCassandraOutput, false);
-		conf.set(HadoopUtils.inputPathName, input.toString());
-		ToolRunner.run(conf, new PPCComputeHJob(H, W, H2, W2), null);
+        /* Run job */
+        conf = buildConf(H, W, numberOfUsers, numberOfItems, numberOfClusters, numberOfIterations);
+        conf.setBoolean(RMRecommenderDriver.useCassandraInput, false);
+        conf.setBoolean(RMRecommenderDriver.useCassandraOutput, false);
+        conf.set(HadoopUtils.inputPathName, input.toString());
+        ToolRunner.run(conf, new PPCComputeHJob(H, W, H2, W2), null);
 
-		/* Run asserts */
-		compareIntVectorData(conf, PPCTestData.H_one, baseDirectory, H2);
+        /* Run asserts */
+        compareIntVectorData(conf, PPCTestData.H_one, baseDirectory, H2);
 
-		HadoopUtils.removeData(conf, conf.get("directory"));
-	}
+        HadoopUtils.removeData(conf, conf.get("directory"));
+    }
 
 }

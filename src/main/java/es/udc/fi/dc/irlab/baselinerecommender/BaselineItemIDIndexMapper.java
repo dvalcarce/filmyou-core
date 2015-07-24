@@ -29,18 +29,16 @@ import org.apache.mahout.math.VarLongWritable;
  * Initial stage of the baseline recommendation algorithm. Modified because of
  * Cassandra integration.
  */
-public final class BaselineItemIDIndexMapper
-		extends
-		Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, VarIntWritable, VarLongWritable> {
+public final class BaselineItemIDIndexMapper extends
+        Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, VarIntWritable, VarLongWritable> {
 
-	@Override
-	protected void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final Map<String, ByteBuffer> keys, final Map<String, ByteBuffer> columns,
+            final Context context) throws IOException, InterruptedException {
 
-		long itemID = keys.get("item").getInt();
-		int index = TasteHadoopUtils.idToIndex(itemID);
-		context.write(new VarIntWritable(index), new VarLongWritable(itemID));
-	}
+        final long itemID = keys.get("item").getInt();
+        final int index = TasteHadoopUtils.idToIndex(itemID);
+        context.write(new VarIntWritable(index), new VarLongWritable(itemID));
+    }
 
 }

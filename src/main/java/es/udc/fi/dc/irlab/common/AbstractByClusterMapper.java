@@ -16,10 +16,6 @@
 
 package es.udc.fi.dc.irlab.common;
 
-import es.udc.fi.dc.irlab.util.HadoopUtils;
-import gnu.trove.map.TIntIntMap;
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
@@ -30,54 +26,56 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.mapreduce.Mapper;
 
+import es.udc.fi.dc.irlab.util.HadoopUtils;
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
+
 /**
  * Abstract mapper for reading clustering data as a SequenceFile in HDFS.
- * 
+ *
  * @param <A>
  *            Mapper input key class
  * @param <B>
  *            Mapper input value class
  */
-public abstract class AbstractByClusterMapper<A, B, C, D> extends
-		Mapper<A, B, C, D> {
+public abstract class AbstractByClusterMapper<A, B, C, D> extends Mapper<A, B, C, D> {
 
-	private Path[] paths;
-	private TIntIntMap userClusterMap = new TIntIntHashMap();
+    private Path[] paths;
+    private final TIntIntMap userClusterMap = new TIntIntHashMap();
 
-	@Override
-	protected void setup(Context context) throws IOException,
-			InterruptedException {
+    @Override
+    protected void setup(final Context context) throws IOException, InterruptedException {
 
-		Configuration conf = context.getConfiguration();
+        final Configuration conf = context.getConfiguration();
 
-		paths = DistributedCache.getLocalCacheFiles(conf);
+        paths = DistributedCache.getLocalCacheFiles(conf);
 
-		if (paths == null || paths.length < 1) {
-			throw new FileNotFoundException();
-		}
+        if (paths == null || paths.length < 1) {
+            throw new FileNotFoundException();
+        }
 
-		Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
+        final Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
 
-		IntWritable key = new IntWritable();
-		IntWritable val = new IntWritable();
+        final IntWritable key = new IntWritable();
+        final IntWritable val = new IntWritable();
 
-		for (Reader reader : readers) {
-			while (reader.next(key, val)) {
-				userClusterMap.put(key.get(), val.get());
-			}
-		}
+        for (final Reader reader : readers) {
+            while (reader.next(key, val)) {
+                userClusterMap.put(key.get(), val.get());
+            }
+        }
 
-	}
+    }
 
-	/**
-	 * Get the cluster for the given user.
-	 * 
-	 * @param user
-	 *            user id
-	 * @return cluster
-	 */
-	protected int getCluster(int user) {
-		return userClusterMap.get(user);
-	}
+    /**
+     * Get the cluster for the given user.
+     *
+     * @param user
+     *            user id
+     * @return cluster
+     */
+    protected int getCluster(final int user) {
+        return userClusterMap.get(user);
+    }
 
 }

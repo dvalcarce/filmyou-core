@@ -9,12 +9,11 @@ import org.apache.hadoop.mapreduce.Partitioner;
  */
 public class IntKeyPartitioner extends Partitioner<IntWritable, Writable> {
 
-	@Override
-	public int getPartition(final IntWritable key, final Writable value,
-			final int numPartitions) {
+    @Override
+    public int getPartition(final IntWritable key, final Writable value, final int numPartitions) {
 
-		return key.get() % numPartitions;
+        return key.get() % numPartitions;
 
-	}
+    }
 
 }

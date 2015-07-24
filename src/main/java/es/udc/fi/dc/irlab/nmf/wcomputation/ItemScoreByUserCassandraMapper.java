@@ -28,35 +28,30 @@ import es.udc.fi.dc.irlab.nmf.common.MappingsMapper;
 /**
  * Emit &lt;(j, 1), (i, A_{i,j})> from Cassandra ratings ({A_{i,j}}).
  */
-public class ItemScoreByUserCassandraMapper
-		extends
-		MappingsMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
+public class ItemScoreByUserCassandraMapper extends
+        MappingsMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntPairWritable, VectorOrPrefWritable> {
 
-	@Override
-	protected void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final Map<String, ByteBuffer> keys, final Map<String, ByteBuffer> columns,
+            final Context context) throws IOException, InterruptedException {
 
-		float score = columns.get("score").getFloat();
+        final float score = columns.get("score").getFloat();
 
-		if (score <= 0) {
-			return;
-		}
+        if (score <= 0) {
+            return;
+        }
 
-		int user = keys.get("user").getInt();
-		int item = keys.get("item").getInt();
+        int user = keys.get("user").getInt();
+        int item = keys.get("item").getInt();
 
-		if (existsMapping()) {
-			if ((user = getNewUserId(user)) != -1
-					&& (item = getNewItemId(item)) != -1) {
-				context.write(new IntPairWritable(user, 1),
-						new VectorOrPrefWritable(item, score));
-			}
-		} else {
-			context.write(new IntPairWritable(user, 1),
-					new VectorOrPrefWritable(item, score));
-		}
+        if (existsMapping()) {
+            if ((user = getNewUserId(user)) != -1 && (item = getNewItemId(item)) != -1) {
+                context.write(new IntPairWritable(user, 1), new VectorOrPrefWritable(item, score));
+            }
+        } else {
+            context.write(new IntPairWritable(user, 1), new VectorOrPrefWritable(item, score));
+        }
 
-	}
+    }
 
 }

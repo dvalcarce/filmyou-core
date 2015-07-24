@@ -34,36 +34,35 @@ import org.junit.Test;
 
 public class TestCrossProductMapper {
 
-	private MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable> mapDriver;
+    private MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable> mapDriver;
 
-	@Before
-	public void setup() {
-		mapDriver = new MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable>();
-	}
+    @Before
+    public void setup() {
+        mapDriver = new MapDriver<IntWritable, VectorWritable, NullWritable, MatrixWritable>();
+    }
 
-	@Test
-	public void testMap() throws IOException {
-		IntWritable inputKey = new IntWritable(1);
-		Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
-		VectorWritable inputValue = new VectorWritable(inputVector);
+    @Test
+    public void testMap() throws IOException {
+        final IntWritable inputKey = new IntWritable(1);
+        final Vector inputVector = new DenseVector(new double[] { 1.0, 2.0, 3.0 });
+        final VectorWritable inputValue = new VectorWritable(inputVector);
 
-		NullWritable outputKey = NullWritable.get();
-		double[][] outputRows = { { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 },
-				{ 3.0, 6.0, 9.0 } };
+        final NullWritable outputKey = NullWritable.get();
+        final double[][] outputRows = { { 1.0, 2.0, 3.0 }, { 2.0, 4.0, 6.0 }, { 3.0, 6.0, 9.0 } };
 
-		mapDriver.withMapper(new CrossProductMapper());
-		mapDriver.withInput(inputKey, inputValue);
+        mapDriver.withMapper(new CrossProductMapper());
+        mapDriver.withInput(inputKey, inputValue);
 
-		List<Pair<NullWritable, MatrixWritable>> list = mapDriver.run();
-		Pair<NullWritable, MatrixWritable> pair = list.get(0);
+        final List<Pair<NullWritable, MatrixWritable>> list = mapDriver.run();
+        final Pair<NullWritable, MatrixWritable> pair = list.get(0);
 
-		assertEquals(outputKey, pair.getFirst());
+        assertEquals(outputKey, pair.getFirst());
 
-		int i = 0;
-		for (Vector row : pair.getSecond().get()) {
-			assertEquals(new DenseVector(outputRows[i]), row);
-			i++;
-		}
-	}
+        int i = 0;
+        for (final Vector row : pair.getSecond().get()) {
+            assertEquals(new DenseVector(outputRows[i]), row);
+            i++;
+        }
+    }
 
 }

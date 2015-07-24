@@ -16,12 +16,6 @@
 
 package es.udc.fi.dc.irlab.nmf.wcomputation;
 
-import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
-import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
-import es.udc.fi.dc.irlab.util.HadoopUtils;
-import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.NoSuchElementException;
@@ -36,83 +30,89 @@ import org.apache.mahout.math.Vector;
 import org.apache.mahout.math.VectorWritable;
 import org.apache.mahout.math.function.DoubleDoubleFunction;
 
+import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
+import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
+import es.udc.fi.dc.irlab.util.HadoopUtils;
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
+
 /**
  * Emit &lt;i, w_i · x_i / y_i> from &lt;i, {w_i, x_i, y_i}>.
  */
-public class WComputationMapper extends
-		Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class WComputationMapper
+        extends Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-	private Path[] paths;
-	private TIntObjectMap<Vector> mapX;
-	private TIntObjectMap<Vector> mapY;
+    private Path[] paths;
+    private TIntObjectMap<Vector> mapX;
+    private TIntObjectMap<Vector> mapY;
 
-	/**
-	 * Build HashMaps with DistributedCache data.
-	 */
-	@Override
-	protected void setup(Context context) throws IOException,
-			InterruptedException {
+    /**
+     * Build HashMaps with DistributedCache data.
+     */
+    @Override
+    protected void setup(final Context context) throws IOException, InterruptedException {
 
-		Configuration conf = context.getConfiguration();
+        final Configuration conf = context.getConfiguration();
 
-		paths = DistributedCache.getLocalCacheFiles(conf);
+        paths = DistributedCache.getLocalCacheFiles(conf);
 
-		if (paths == null || paths.length != 2) {
-			throw new FileNotFoundException();
-		}
+        if (paths == null || paths.length != 2) {
+            throw new FileNotFoundException();
+        }
 
-		IntWritable key = new IntWritable();
-		VectorWritable val = new VectorWritable();
+        final IntWritable key = new IntWritable();
+        final VectorWritable val = new VectorWritable();
 
-		int numberOfItems = conf.getInt(RMRecommenderDriver.numberOfItems, -1);
-		mapX = new TIntObjectHashMap<Vector>(numberOfItems);
-		mapY = new TIntObjectHashMap<Vector>(numberOfItems);
+        final int numberOfItems = conf.getInt(RMRecommenderDriver.numberOfItems, -1);
+        mapX = new TIntObjectHashMap<Vector>(numberOfItems);
+        mapY = new TIntObjectHashMap<Vector>(numberOfItems);
 
-		Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
-		for (Reader reader : readers) {
-			while (reader.next(key, val)) {
-				mapX.put(key.get(), val.get());
-			}
-		}
+        Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
+        for (final Reader reader : readers) {
+            while (reader.next(key, val)) {
+                mapX.put(key.get(), val.get());
+            }
+        }
 
-		readers = HadoopUtils.getLocalSequenceReaders(paths[1], conf);
-		for (Reader reader : readers) {
-			while (reader.next(key, val)) {
-				mapY.put(key.get(), val.get());
-			}
-		}
+        readers = HadoopUtils.getLocalSequenceReaders(paths[1], conf);
+        for (final Reader reader : readers) {
+            while (reader.next(key, val)) {
+                mapY.put(key.get(), val.get());
+            }
+        }
 
-	}
+    }
 
-	@Override
-	protected void map(IntWritable key, VectorWritable value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final VectorWritable value, final Context context)
+            throws IOException, InterruptedException {
 
-		int index = key.get();
-		Vector vectorW = value.get();
-		Vector vectorX = mapX.get(index);
-		Vector vectorY = mapY.get(index);
+        final int index = key.get();
+        final Vector vectorW = value.get();
+        final Vector vectorX = mapX.get(index);
+        final Vector vectorY = mapY.get(index);
 
-		if (vectorX == null || vectorY == null) {
-			throw new NoSuchElementException(String.format(
-					"Item %d has not been rated by anybody", key.get()));
-		}
+        if (vectorX == null || vectorY == null) {
+            throw new NoSuchElementException(
+                    String.format("Item %d has not been rated by anybody", key.get()));
+        }
 
-		// XY = X ./ (Y + eps)
-		Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
-			public double apply(double a, double b) {
-				if (Double.isInfinite(a) ) {
-					a = Double.MAX_VALUE;
-				}
-				if (Double.isInfinite(b)) { 
-					b = Double.MAX_VALUE;
-				}
-				return a / (b + MatrixComputationJob.eps);
-			}
-		});
+        // XY = X ./ (Y + eps)
+        final Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
+            @Override
+            public double apply(double a, double b) {
+                if (Double.isInfinite(a)) {
+                    a = Double.MAX_VALUE;
+                }
+                if (Double.isInfinite(b)) {
+                    b = Double.MAX_VALUE;
+                }
+                return a / (b + MatrixComputationJob.eps);
+            }
+        });
 
-		context.write(key, new VectorWritable(vectorW.times(vectorXY)));
+        context.write(key, new VectorWritable(vectorW.times(vectorXY)));
 
-	}
+    }
 
 }

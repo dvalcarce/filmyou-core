@@ -26,23 +26,22 @@ import org.apache.hadoop.mapreduce.Reducer;
 /**
  * Count number of values for each key.
  */
-public class CountReducer extends
-		Reducer<Writable, Writable, Writable, IntWritable> {
+public class CountReducer extends Reducer<Writable, Writable, Writable, IntWritable> {
 
-	@Override
-	protected void reduce(Writable key, Iterable<Writable> values,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final Writable key, final Iterable<Writable> values,
+            final Context context) throws IOException, InterruptedException {
 
-		Iterator<Writable> it = values.iterator();
+        final Iterator<Writable> it = values.iterator();
 
-		int count = 0;
-		while (it.hasNext()) {
-			it.next();
-			count++;
-		}
+        int count = 0;
+        while (it.hasNext()) {
+            it.next();
+            count++;
+        }
 
-		context.write(key, new IntWritable(count));
+        context.write(key, new IntWritable(count));
 
-	}
+    }
 
 }

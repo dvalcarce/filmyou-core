@@ -25,31 +25,28 @@ import org.apache.mahout.common.IntPairWritable;
  * Emit &lt;(j, i), A_{i,j}> to HDFS from &lt;k, {|k|} U {(j, sum_i A_{i,j})} U
  * {(i, j, A_{i,j})}>.
  */
-public class RM2HDFSReducer extends
-		AbstractRM2Reducer<IntPairWritable, FloatWritable> {
+public class RM2HDFSReducer extends AbstractRM2Reducer<IntPairWritable, FloatWritable> {
 
-	/**
-	 * Write preference to HDFS SequenceFile<IntPairWritable, FloatWritable>.
-	 * 
-	 * @param context
-	 *            reduce context
-	 * @param userId
-	 *            user ID
-	 * @param itemId
-	 *            item ID
-	 * @param score
-	 *            predicted score
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	@Override
-	protected void writePreference(final Context context, final int userId,
-			final int itemId, final double score, final int cluster)
-			throws IOException, InterruptedException {
+    /**
+     * Write preference to HDFS SequenceFile<IntPairWritable, FloatWritable>.
+     *
+     * @param context
+     *            reduce context
+     * @param userId
+     *            user ID
+     * @param itemId
+     *            item ID
+     * @param score
+     *            predicted score
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Override
+    protected void writePreference(final Context context, final int userId, final int itemId,
+            final double score, final int cluster) throws IOException, InterruptedException {
 
-		context.write(new IntPairWritable(userId, itemId), new FloatWritable(
-				(float) score));
+        context.write(new IntPairWritable(userId, itemId), new FloatWritable((float) score));
 
-	}
+    }
 
 }

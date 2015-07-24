@@ -40,224 +40,219 @@ import es.udc.fi.dc.irlab.nmf.MatrixComputationJob;
 
 /**
  * Utility class for initializing random structures in HDFS.
- * 
+ *
  */
 public final class DataInitialization {
 
-	private DataInitialization() {
+    private DataInitialization() {
 
-	}
+    }
 
-	/**
-	 * Create a (rows x cols) matrix of random values. Each row is normalized
-	 * according to the L_1 norm.
-	 * 
-	 * @param conf
-	 *            Configuration file
-	 * @param baseDirectory
-	 *            working directory
-	 * @param filename
-	 *            name of the file where the matrix is going to be stored.
-	 * @param rows
-	 *            number of rows
-	 * @param cols
-	 *            number of columns
-	 * @return Path of the matrix
-	 * @throws IOException
-	 */
-	public static Path createMatrix(Configuration conf, String baseDirectory,
-			String filename, int rows, int cols) throws IOException {
+    /**
+     * Create a (rows x cols) matrix of random values. Each row is normalized
+     * according to the L_1 norm.
+     *
+     * @param conf
+     *            Configuration file
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @param rows
+     *            number of rows
+     * @param cols
+     *            number of columns
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createMatrix(final Configuration conf, final String baseDirectory,
+            final String filename, final int rows, final int cols) throws IOException {
 
-		String uri = baseDirectory + File.separator + filename;
-		FileSystem fs = FileSystem.get(URI.create(uri), conf);
-		Path path = new Path(uri);
+        final String uri = baseDirectory + File.separator + filename;
+        final FileSystem fs = FileSystem.get(URI.create(uri), conf);
+        final Path path = new Path(uri);
 
-		HadoopUtils.removeData(conf, uri);
-		SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-				IntWritable.class, VectorWritable.class);
+        HadoopUtils.removeData(conf, uri);
+        final SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+                IntWritable.class, VectorWritable.class);
 
-		Vector vector = new DenseVector(cols);
-		Random randomGenerator = new Random();
-		try {
-			for (int i = 1; i <= rows; i++) {
-				for (int j = 0; j < cols; j++) {
-					vector.setQuick(j, randomGenerator.nextDouble()
-							+ MatrixComputationJob.eps);
-				}
-				vector = vector.normalize(1);
-				writer.append(new IntWritable(i), new VectorWritable(vector));
-			}
-		} finally {
-			IOUtils.closeStream(writer);
-		}
+        Vector vector = new DenseVector(cols);
+        final Random randomGenerator = new Random();
+        try {
+            for (int i = 1; i <= rows; i++) {
+                for (int j = 0; j < cols; j++) {
+                    vector.setQuick(j, randomGenerator.nextDouble() + MatrixComputationJob.eps);
+                }
+                vector = vector.normalize(1);
+                writer.append(new IntWritable(i), new VectorWritable(vector));
+            }
+        } finally {
+            IOUtils.closeStream(writer);
+        }
 
-		return path;
+        return path;
 
-	}
+    }
 
-	/**
-	 * Create a (rows x cols) matrix from double data.
-	 * 
-	 * @param conf
-	 *            Configuration file
-	 * @param data
-	 *            matrix data
-	 * @param baseDirectory
-	 *            working directory
-	 * @param filename
-	 *            name of the file where the matrix is going to be stored.
-	 * @param start
-	 *            start index
-	 * @return Path of the matrix
-	 * @throws IOException
-	 */
-	public static Path createDoubleMatrix(Configuration conf, double[][] data,
-			String baseDirectory, String filename, int start)
-			throws IOException {
+    /**
+     * Create a (rows x cols) matrix from double data.
+     *
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            matrix data
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @param start
+     *            start index
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createDoubleMatrix(final Configuration conf, final double[][] data,
+            final String baseDirectory, final String filename, final int start) throws IOException {
 
-		String uri = baseDirectory + File.separator + filename;
-		FileSystem fs = FileSystem.get(URI.create(uri), conf);
-		Path path = new Path(uri);
+        final String uri = baseDirectory + File.separator + filename;
+        final FileSystem fs = FileSystem.get(URI.create(uri), conf);
+        final Path path = new Path(uri);
 
-		SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-				IntWritable.class, VectorWritable.class);
+        final SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+                IntWritable.class, VectorWritable.class);
 
-		int cols = data[0].length;
-		Vector vector = new DenseVector(cols);
-		int i = start;
-		try {
-			for (double[] row : data) {
-				vector.assign(row);
-				writer.append(new IntWritable(i), new VectorWritable(vector));
-				i++;
-			}
-		} finally {
-			IOUtils.closeStream(writer);
-		}
+        final int cols = data[0].length;
+        final Vector vector = new DenseVector(cols);
+        int i = start;
+        try {
+            for (final double[] row : data) {
+                vector.assign(row);
+                writer.append(new IntWritable(i), new VectorWritable(vector));
+                i++;
+            }
+        } finally {
+            IOUtils.closeStream(writer);
+        }
 
-		return path;
+        return path;
 
-	}
+    }
 
-	/**
-	 * Create a SequenceFile&lt;IntPairWritable, FloatWritable> from double[][]
-	 * data.
-	 * 
-	 * @param conf
-	 *            Configuration file
-	 * @param data
-	 *            vector data
-	 * @param baseDirectory
-	 *            working directory
-	 * @param filename
-	 *            name of the file where the matrix is going to be stored.
-	 * @return Path of the matrix
-	 * @throws IOException
-	 */
-	public static Path createIntPairFloatFile(Configuration conf,
-			double[][] data, String baseDirectory, String filename)
-			throws IOException {
+    /**
+     * Create a SequenceFile&lt;IntPairWritable, FloatWritable> from double[][]
+     * data.
+     *
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            vector data
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createIntPairFloatFile(final Configuration conf, final double[][] data,
+            final String baseDirectory, final String filename) throws IOException {
 
-		String parentUri = baseDirectory + File.separator + filename;
-		String uri = parentUri + File.separator + "data";
-		FileSystem fs = FileSystem.get(URI.create(uri), conf);
-		Path path = new Path(uri);
-		Path parent = new Path(parentUri);
+        final String parentUri = baseDirectory + File.separator + filename;
+        final String uri = parentUri + File.separator + "data";
+        final FileSystem fs = FileSystem.get(URI.create(uri), conf);
+        final Path path = new Path(uri);
+        final Path parent = new Path(parentUri);
 
-		SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-				IntPairWritable.class, FloatWritable.class);
+        final SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+                IntPairWritable.class, FloatWritable.class);
 
-		try {
-			for (int i = 0; i < data.length; i++) {
-				for (int j = 0; j < data[i].length; j++) {
-					if (data[i][j] > 0) {
-						writer.append(new IntPairWritable(j + 1, i + 1),
-								new FloatWritable((float) data[i][j]));
-					}
-				}
-			}
-		} finally {
-			IOUtils.closeStream(writer);
-		}
+        try {
+            for (int i = 0; i < data.length; i++) {
+                for (int j = 0; j < data[i].length; j++) {
+                    if (data[i][j] > 0) {
+                        writer.append(new IntPairWritable(j + 1, i + 1),
+                                new FloatWritable((float) data[i][j]));
+                    }
+                }
+            }
+        } finally {
+            IOUtils.closeStream(writer);
+        }
 
-		return parent;
+        return parent;
 
-	}
+    }
 
-	/**
-	 * Create a SequenceFile&lt;IntWritable, IntWritable> from int[] data.
-	 * 
-	 * @param conf
-	 *            Configuration file
-	 * @param data
-	 *            vector data
-	 * @param baseDirectory
-	 *            working directory
-	 * @param filename
-	 *            name of the file where the matrix is going to be stored.
-	 * @param start
-	 *            start index
-	 * @return Path of the matrix
-	 * @throws IOException
-	 */
-	public static Path createIntIntFileParent(Configuration conf, int[] data,
-			String baseDirectory, String filename, int start)
-			throws IOException {
+    /**
+     * Create a SequenceFile&lt;IntWritable, IntWritable> from int[] data.
+     *
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            vector data
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @param start
+     *            start index
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createIntIntFileParent(final Configuration conf, final int[] data,
+            final String baseDirectory, final String filename, final int start) throws IOException {
 
-		String parentUri = baseDirectory + File.separator + filename;
-		String uri = parentUri + File.separator + "data";
-		FileSystem fs = FileSystem.get(URI.create(uri), conf);
-		Path path = new Path(uri);
-		Path parent = new Path(parentUri);
+        final String parentUri = baseDirectory + File.separator + filename;
+        final String uri = parentUri + File.separator + "data";
+        final FileSystem fs = FileSystem.get(URI.create(uri), conf);
+        final Path path = new Path(uri);
+        final Path parent = new Path(parentUri);
 
-		SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-				IntWritable.class, IntWritable.class);
+        final SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+                IntWritable.class, IntWritable.class);
 
-		try {
-			for (int i = 0; i < data.length; i++) {
-				writer.append(new IntWritable(i + start), new IntWritable(
-						data[i]));
-			}
-		} finally {
-			IOUtils.closeStream(writer);
-		}
+        try {
+            for (int i = 0; i < data.length; i++) {
+                writer.append(new IntWritable(i + start), new IntWritable(data[i]));
+            }
+        } finally {
+            IOUtils.closeStream(writer);
+        }
 
-		return parent;
+        return parent;
 
-	}
+    }
 
-	/**
-	 * Create a SequenceFile&lt;NullWritable, MatrixWritable> from Matrix data.
-	 * 
-	 * @param conf
-	 *            Configuration file
-	 * @param data
-	 *            Matrix data
-	 * @param baseDirectory
-	 *            working directory
-	 * @param filename
-	 *            name of the file where the matrix is going to be stored.
-	 * @return Path of the matrix
-	 * @throws IOException
-	 */
-	public static Path createMapNullMatrix(Configuration conf, Matrix data,
-			String baseDirectory, String filename) throws IOException {
+    /**
+     * Create a SequenceFile&lt;NullWritable, MatrixWritable> from Matrix data.
+     *
+     * @param conf
+     *            Configuration file
+     * @param data
+     *            Matrix data
+     * @param baseDirectory
+     *            working directory
+     * @param filename
+     *            name of the file where the matrix is going to be stored.
+     * @return Path of the matrix
+     * @throws IOException
+     */
+    public static Path createMapNullMatrix(final Configuration conf, final Matrix data,
+            final String baseDirectory, final String filename) throws IOException {
 
-		String uri = baseDirectory + File.separator + filename;
-		FileSystem fs = FileSystem.get(URI.create(uri), conf);
-		Path path = new Path(uri);
+        final String uri = baseDirectory + File.separator + filename;
+        final FileSystem fs = FileSystem.get(URI.create(uri), conf);
+        final Path path = new Path(uri);
 
-		SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
-				NullWritable.class, MatrixWritable.class);
+        final SequenceFile.Writer writer = SequenceFile.createWriter(fs, conf, path,
+                NullWritable.class, MatrixWritable.class);
 
-		try {
-			writer.append(NullWritable.get(), new MatrixWritable(data));
-		} finally {
-			IOUtils.closeStream(writer);
-		}
+        try {
+            writer.append(NullWritable.get(), new MatrixWritable(data));
+        } finally {
+            IOUtils.closeStream(writer);
+        }
 
-		return path;
+        return path;
 
-	}
+    }
 
 }

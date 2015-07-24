@@ -34,47 +34,45 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Load matrix from DistributedCache in the setup phase.
- * 
+ *
  */
-public abstract class AbstractDistributedMatrixMapper extends
-		Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public abstract class AbstractDistributedMatrixMapper
+        extends Mapper<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-	protected Matrix C;
+    protected Matrix C;
 
-	/**
-	 * Load matrix from DistributedCache.
-	 * 
-	 * @param context
-	 *            Context
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	@Override
-	protected void setup(Context context) throws IOException,
-			InterruptedException {
+    /**
+     * Load matrix from DistributedCache.
+     *
+     * @param context
+     *            Context
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Override
+    protected void setup(final Context context) throws IOException, InterruptedException {
 
-		Configuration conf = context.getConfiguration();
+        final Configuration conf = context.getConfiguration();
 
-		Path[] paths = DistributedCache.getLocalCacheFiles(conf);
+        final Path[] paths = DistributedCache.getLocalCacheFiles(conf);
 
-		if (paths == null || paths.length < 1) {
-			throw new FileNotFoundException();
-		}
+        if (paths == null || paths.length < 1) {
+            throw new FileNotFoundException();
+        }
 
-		Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
+        final Reader[] readers = HadoopUtils.getLocalSequenceReaders(paths[0], conf);
 
-		NullWritable key = NullWritable.get();
-		MatrixWritable val = new MatrixWritable();
+        final NullWritable key = NullWritable.get();
+        final MatrixWritable val = new MatrixWritable();
 
-		for (Reader reader : readers) {
-			if (reader.next(key, val)) {
-				C = val.get();
-			} else {
-				throw new FileNotFoundException(getClass()
-						+ ": Invalid C file.");
-			}
-		}
+        for (final Reader reader : readers) {
+            if (reader.next(key, val)) {
+                C = val.get();
+            } else {
+                throw new FileNotFoundException(getClass() + ": Invalid C file.");
+            }
+        }
 
-	}
+    }
 
 }

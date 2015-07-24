@@ -27,34 +27,30 @@ import es.udc.fi.dc.irlab.nmf.common.MappingsMapper;
 /**
  * Emit &lt;(j, 1), (i, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>).
  */
-public class ItemScoreByUserHDFSMapper
-		extends
-		MappingsMapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
+public class ItemScoreByUserHDFSMapper extends
+        MappingsMapper<IntPairWritable, FloatWritable, IntPairWritable, VectorOrPrefWritable> {
 
-	@Override
-	protected void map(IntPairWritable keys, FloatWritable columns,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntPairWritable keys, final FloatWritable columns,
+            final Context context) throws IOException, InterruptedException {
 
-		float score = columns.get();
+        final float score = columns.get();
 
-		if (score <= 0) {
-			return;
-		}
+        if (score <= 0) {
+            return;
+        }
 
-		int user = keys.getFirst();
-		int item = keys.getSecond();
+        int user = keys.getFirst();
+        int item = keys.getSecond();
 
-		if (existsMapping()) {
-			if ((user = getNewUserId(user)) != -1
-					&& (item = getNewItemId(item)) != -1) {
-				context.write(new IntPairWritable(user, 1),
-						new VectorOrPrefWritable(item, score));
-			}
-		} else {
-			context.write(new IntPairWritable(user, 1),
-					new VectorOrPrefWritable(item, score));
-		}
+        if (existsMapping()) {
+            if ((user = getNewUserId(user)) != -1 && (item = getNewItemId(item)) != -1) {
+                context.write(new IntPairWritable(user, 1), new VectorOrPrefWritable(item, score));
+            }
+        } else {
+            context.write(new IntPairWritable(user, 1), new VectorOrPrefWritable(item, score));
+        }
 
-	}
+    }
 
 }

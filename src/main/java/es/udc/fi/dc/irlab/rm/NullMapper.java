@@ -26,15 +26,14 @@ import org.apache.hadoop.mapreduce.Mapper;
 /**
  * Emit &lt;NULL, x> from &lt;i, x> where x = sum_j A_{i, j}.
  */
-public class NullMapper extends
-		Mapper<IntWritable, DoubleWritable, NullWritable, DoubleWritable> {
+public class NullMapper extends Mapper<IntWritable, DoubleWritable, NullWritable, DoubleWritable> {
 
-	@Override
-	protected void map(IntWritable key, DoubleWritable value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final DoubleWritable value, final Context context)
+            throws IOException, InterruptedException {
 
-		context.write(NullWritable.get(), value);
+        context.write(NullWritable.get(), value);
 
-	}
+    }
 
 }

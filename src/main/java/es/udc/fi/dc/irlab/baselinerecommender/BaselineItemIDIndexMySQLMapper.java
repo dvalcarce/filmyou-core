@@ -28,17 +28,16 @@ import org.apache.mahout.math.VarLongWritable;
  * Initial stage of the baseline recommendation algorithm. Modified because of
  * MySQL integration.
  */
-public final class BaselineItemIDIndexMySQLMapper extends
-		Mapper<LongWritable, MySQLRecord, VarIntWritable, VarLongWritable> {
+public final class BaselineItemIDIndexMySQLMapper
+        extends Mapper<LongWritable, MySQLRecord, VarIntWritable, VarLongWritable> {
 
-	@Override
-	protected void map(LongWritable key, MySQLRecord value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final LongWritable key, final MySQLRecord value, final Context context)
+            throws IOException, InterruptedException {
 
-		int index = TasteHadoopUtils.idToIndex(value.item);
-		context.write(new VarIntWritable(index),
-				new VarLongWritable(value.item));
+        final int index = TasteHadoopUtils.idToIndex(value.item);
+        context.write(new VarIntWritable(index), new VarLongWritable(value.item));
 
-	}
+    }
 
 }

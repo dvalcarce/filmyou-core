@@ -25,20 +25,20 @@ import org.apache.mahout.math.VectorWritable;
 
 /**
  * Find the cluster of each user.
- * 
+ *
  * Emit &lt;j, k> from &lt;j, h_j> where k = arg max (h_j).
  */
-public class FindClusterMapper extends
-		Mapper<IntWritable, VectorWritable, IntWritable, IntWritable> {
+public class FindClusterMapper
+        extends Mapper<IntWritable, VectorWritable, IntWritable, IntWritable> {
 
-	@Override
-	protected void map(IntWritable user, VectorWritable value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable user, final VectorWritable value, final Context context)
+            throws IOException, InterruptedException {
 
-		Vector vector = value.get();
-		int cluster = vector.maxValueIndex();
-		context.write(user, new IntWritable(cluster));
+        final Vector vector = value.get();
+        final int cluster = vector.maxValueIndex();
+        context.write(user, new IntWritable(cluster));
 
-	}
+    }
 
 }

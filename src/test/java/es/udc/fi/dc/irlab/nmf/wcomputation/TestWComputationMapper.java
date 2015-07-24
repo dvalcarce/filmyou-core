@@ -33,43 +33,41 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 public class TestWComputationMapper {
 
-	private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
+    private MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> mapDriver;
 
-	@Before
-	public void setup() {
-		mapDriver = new MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
-	}
+    @Before
+    public void setup() {
+        mapDriver = new MapDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
+    }
 
-	@Test
-	public void testReducer() throws IOException {
-		String baseDirectory = "TestWComputationMapper";
-		Configuration conf = new Configuration();
+    @Test
+    public void testReducer() throws IOException {
+        final String baseDirectory = "TestWComputationMapper";
+        final Configuration conf = new Configuration();
 
-		HadoopUtils.removeData(conf, baseDirectory);
-		IntWritable inputKey = new IntWritable(1);
-		VectorWritable inputValue = new VectorWritable(new DenseVector(
-				new double[] { 1.0, 2.0, 3.0 }));
+        HadoopUtils.removeData(conf, baseDirectory);
+        final IntWritable inputKey = new IntWritable(1);
+        final VectorWritable inputValue = new VectorWritable(
+                new DenseVector(new double[] { 1.0, 2.0, 3.0 }));
 
-		IntWritable outputKey = new IntWritable(1);
-		Vector outputVector = new DenseVector(new double[] { 3.0, 4.0, 15.0 });
+        final IntWritable outputKey = new IntWritable(1);
+        final Vector outputVector = new DenseVector(new double[] { 3.0, 4.0, 15.0 });
 
-		Path xPath = DataInitialization.createDoubleMatrix(conf,
-				new double[][] { { 3.0, 10.0, 20.0 } }, baseDirectory,
-				"x-merged", 1);
+        final Path xPath = DataInitialization.createDoubleMatrix(conf,
+                new double[][] { { 3.0, 10.0, 20.0 } }, baseDirectory, "x-merged", 1);
 
-		Path yPath = DataInitialization.createDoubleMatrix(conf,
-				new double[][] { { 1.0, 5.0, 4.0 } }, baseDirectory,
-				"y-merged", 1);
+        final Path yPath = DataInitialization.createDoubleMatrix(conf,
+                new double[][] { { 1.0, 5.0, 4.0 } }, baseDirectory, "y-merged", 1);
 
-		mapDriver.withCacheFile(xPath.toString());
-		mapDriver.withCacheFile(yPath.toString());
+        mapDriver.withCacheFile(xPath.toString());
+        mapDriver.withCacheFile(yPath.toString());
 
-		mapDriver.withMapper(new WComputationMapper());
-		mapDriver.withInput(inputKey, inputValue);
-		mapDriver.withOutput(outputKey, new VectorWritable(outputVector));
+        mapDriver.withMapper(new WComputationMapper());
+        mapDriver.withInput(inputKey, inputValue);
+        mapDriver.withOutput(outputKey, new VectorWritable(outputVector));
 
-		mapDriver.runTest();
+        mapDriver.runTest();
 
-		HadoopUtils.removeData(conf, baseDirectory);
-	}
+        HadoopUtils.removeData(conf, baseDirectory);
+    }
 }

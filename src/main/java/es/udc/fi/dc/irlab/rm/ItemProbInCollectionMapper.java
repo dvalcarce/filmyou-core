@@ -25,21 +25,21 @@ import org.apache.hadoop.mapreduce.Mapper;
 /**
  * Emit <NULL, x> from <i, x> where x = sum_j A_{i, j}.
  */
-public class ItemProbInCollectionMapper extends
-		Mapper<IntWritable, DoubleWritable, IntWritable, DoubleWritable> {
+public class ItemProbInCollectionMapper
+        extends Mapper<IntWritable, DoubleWritable, IntWritable, DoubleWritable> {
 
-	@Override
-	protected void map(IntWritable key, DoubleWritable value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final DoubleWritable value, final Context context)
+            throws IOException, InterruptedException {
 
-		double result;
-		double globalSum = Double.valueOf(context.getConfiguration().get(
-				RM2Job.TOTAL_SUM_NAME));
+        double result;
+        final double globalSum = Double
+                .valueOf(context.getConfiguration().get(RM2Job.TOTAL_SUM_NAME));
 
-		result = value.get() / globalSum;
+        result = value.get() / globalSum;
 
-		context.write(key, new DoubleWritable(result));
+        context.write(key, new DoubleWritable(result));
 
-	}
+    }
 
 }

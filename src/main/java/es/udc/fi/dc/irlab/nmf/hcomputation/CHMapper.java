@@ -26,18 +26,18 @@ import es.udc.fi.dc.irlab.nmf.common.AbstractDistributedMatrixMapper;
 
 /**
  * Emit &lt;j, y_j> from &lt;j, h_j> where y_j = C·h_j
- * 
+ *
  */
 public class CHMapper extends AbstractDistributedMatrixMapper {
 
-	@Override
-	protected void map(IntWritable key, VectorWritable value, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final VectorWritable value, final Context context)
+            throws IOException, InterruptedException {
 
-		Vector vector = value.get();
+        final Vector vector = value.get();
 
-		context.write(key, new VectorWritable(C.times(vector)));
+        context.write(key, new VectorWritable(C.times(vector)));
 
-	}
+    }
 
 }

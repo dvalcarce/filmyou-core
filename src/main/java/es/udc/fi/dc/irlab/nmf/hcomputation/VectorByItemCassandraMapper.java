@@ -30,34 +30,30 @@ import es.udc.fi.dc.irlab.nmf.common.AbstractJoinVectorMapper;
  * (w_i) obtained by DistributedCache.
  */
 public class VectorByItemCassandraMapper
-		extends
-		AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
+        extends AbstractJoinVectorMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>> {
 
-	@Override
-	protected void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final Map<String, ByteBuffer> keys, final Map<String, ByteBuffer> columns,
+            final Context context) throws IOException, InterruptedException {
 
-		float score = columns.get("score").getFloat();
+        final float score = columns.get("score").getFloat();
 
-		if (score <= 0) {
-			return;
-		}
+        if (score <= 0) {
+            return;
+        }
 
-		int user = keys.get("user").getInt();
-		int item = keys.get("item").getInt();
+        int user = keys.get("user").getInt();
+        int item = keys.get("item").getInt();
 
-		if (existsMapping()) {
-			if ((user = getNewUserId(user)) != -1
-					&& (item = getNewItemId(item)) != -1) {
-				context.write(new IntWritable(user), new VectorWritable(
-						getCache(item).times(score)));
-			}
-		} else {
-			context.write(new IntWritable(user),
-					new VectorWritable(getCache(item).times(score)));
-		}
+        if (existsMapping()) {
+            if ((user = getNewUserId(user)) != -1 && (item = getNewItemId(item)) != -1) {
+                context.write(new IntWritable(user),
+                        new VectorWritable(getCache(item).times(score)));
+            }
+        } else {
+            context.write(new IntWritable(user), new VectorWritable(getCache(item).times(score)));
+        }
 
-	}
+    }
 
 }

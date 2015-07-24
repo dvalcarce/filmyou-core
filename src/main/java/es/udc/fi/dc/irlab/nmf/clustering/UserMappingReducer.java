@@ -28,50 +28,47 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 /**
  * Generate new IDs for each cluster. This reducer use MultipleOutputs to write
  * cluster info in different files.
- * 
+ *
  * Input: &lt;clusterId, oldId>.
- * 
+ *
  * Outputs: &lt;oldId, newId> and &lt;cluster, numberOfObject>.
  */
-public class UserMappingReducer extends
-		Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
+public class UserMappingReducer
+        extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
 
-	private MultipleOutputs<IntWritable, IntWritable> mos;
+    private MultipleOutputs<IntWritable, IntWritable> mos;
 
-	@Override
-	public void setup(Context context) throws IOException, InterruptedException {
-		mos = new MultipleOutputs<IntWritable, IntWritable>(context);
-	}
+    @Override
+    public void setup(final Context context) throws IOException, InterruptedException {
+        mos = new MultipleOutputs<IntWritable, IntWritable>(context);
+    }
 
-	@Override
-	protected void reduce(IntWritable key, Iterable<IntWritable> users,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final IntWritable key, final Iterable<IntWritable> users,
+            final Context context) throws IOException, InterruptedException {
 
-		int cluster = key.get();
-		int count = 0;
+        final int cluster = key.get();
+        int count = 0;
 
-		/* Write new user IDs */
-		String mapping = RMRecommenderDriver.mappingPath + File.separator
-				+ cluster;
+        /* Write new user IDs */
+        final String mapping = RMRecommenderDriver.mappingPath + File.separator + cluster;
 
-		for (IntWritable u : users) {
-			mos.write(SubClusterMappingJob.output, u, new IntWritable(++count),
-					mapping);
-		}
+        for (final IntWritable u : users) {
+            mos.write(SubClusterMappingJob.output, u, new IntWritable(++count), mapping);
+        }
 
-		/* Write number of users in cluster */
-		String clusteringCountOutput = RMRecommenderDriver.clusteringCountPath
-				+ File.separator + "count";
+        /* Write number of users in cluster */
+        final String clusteringCountOutput = RMRecommenderDriver.clusteringCountPath
+                + File.separator + "count";
 
-		mos.write(SubClusterMappingJob.output, new IntWritable(cluster),
-				new IntWritable(count), clusteringCountOutput);
+        mos.write(SubClusterMappingJob.output, new IntWritable(cluster), new IntWritable(count),
+                clusteringCountOutput);
 
-	}
+    }
 
-	@Override
-	protected void cleanup(Context context) throws IOException,
-			InterruptedException {
-		mos.close();
-	}
+    @Override
+    protected void cleanup(final Context context) throws IOException, InterruptedException {
+        mos.close();
+    }
 
 }

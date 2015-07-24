@@ -28,41 +28,36 @@ import org.apache.mahout.math.VarLongWritable;
 
 /**
  * Reads ratings data from Cassandra database and outputs to Hadoop environment.
- * 
+ *
  */
-public class BaselineToItemPrefsMapper
-		extends
-		Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, VarLongWritable, VarLongWritable> {
+public class BaselineToItemPrefsMapper extends
+        Mapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, VarLongWritable, VarLongWritable> {
 
-	public static final String RATING_SHIFT = BaselineToItemPrefsMapper.class
-			+ "shiftRatings";
+    public static final String RATING_SHIFT = BaselineToItemPrefsMapper.class + "shiftRatings";
 
-	private boolean booleanData;
-	private float ratingShift;
+    private boolean booleanData;
+    private float ratingShift;
 
-	@Override
-	public void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    public void map(final Map<String, ByteBuffer> keys, final Map<String, ByteBuffer> columns,
+            final Context context) throws IOException, InterruptedException {
 
-		long userID = keys.get("user").getInt();
-		long itemID = keys.get("item").getInt();
+        final long userID = keys.get("user").getInt();
+        final long itemID = keys.get("item").getInt();
 
-		if (booleanData) {
-			context.write(new VarLongWritable(userID), new VarLongWritable(
-					itemID));
-		} else {
-			float prefValue = columns.get("score").getInt() + ratingShift;
-			context.write(new VarLongWritable(userID), new EntityPrefWritable(
-					itemID, prefValue));
-		}
-	}
+        if (booleanData) {
+            context.write(new VarLongWritable(userID), new VarLongWritable(itemID));
+        } else {
+            final float prefValue = columns.get("score").getInt() + ratingShift;
+            context.write(new VarLongWritable(userID), new EntityPrefWritable(itemID, prefValue));
+        }
+    }
 
-	@Override
-	protected void setup(Context context) {
-		Configuration jobConf = context.getConfiguration();
-		booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
-		ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
-	}
+    @Override
+    protected void setup(final Context context) {
+        final Configuration jobConf = context.getConfiguration();
+        booleanData = jobConf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
+        ratingShift = Float.parseFloat(jobConf.get(RATING_SHIFT, "0.0"));
+    }
 
 }

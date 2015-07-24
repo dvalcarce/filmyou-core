@@ -25,21 +25,20 @@ import org.apache.hadoop.mapreduce.Reducer;
 /**
  * Emit <x, sum_y A_xy> from <x, {A_xy}>.
  */
-public class DoubleSumReducer extends
-		Reducer<Writable, DoubleWritable, Writable, DoubleWritable> {
+public class DoubleSumReducer extends Reducer<Writable, DoubleWritable, Writable, DoubleWritable> {
 
-	@Override
-	protected void reduce(Writable key, Iterable<DoubleWritable> values,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final Writable key, final Iterable<DoubleWritable> values,
+            final Context context) throws IOException, InterruptedException {
 
-		double sum = 0;
+        double sum = 0;
 
-		for (DoubleWritable val : values) {
-			sum += val.get();
-		}
+        for (final DoubleWritable val : values) {
+            sum += val.get();
+        }
 
-		context.write(key, new DoubleWritable(sum));
+        context.write(key, new DoubleWritable(sum));
 
-	}
+    }
 
 }

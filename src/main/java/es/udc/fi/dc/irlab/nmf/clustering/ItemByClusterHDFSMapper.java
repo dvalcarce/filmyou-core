@@ -29,20 +29,19 @@ import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
  * of user j.
  */
 public class ItemByClusterHDFSMapper
-		extends
-		AbstractByClusterMapper<IntPairWritable, FloatWritable, IntWritable, IntWritable> {
+        extends AbstractByClusterMapper<IntPairWritable, FloatWritable, IntWritable, IntWritable> {
 
-	@Override
-	protected void map(IntPairWritable key, FloatWritable column,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntPairWritable key, final FloatWritable column, final Context context)
+            throws IOException, InterruptedException {
 
-		float score = column.get();
+        final float score = column.get();
 
-		if (score > 0) {
-			context.write(new IntWritable(getCluster(key.getFirst())),
-					new IntWritable(key.getSecond()));
-		}
+        if (score > 0) {
+            context.write(new IntWritable(getCluster(key.getFirst())),
+                    new IntWritable(key.getSecond()));
+        }
 
-	}
+    }
 
 }

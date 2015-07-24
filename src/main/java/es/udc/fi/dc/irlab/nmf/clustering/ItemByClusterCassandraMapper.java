@@ -28,23 +28,20 @@ import es.udc.fi.dc.irlab.common.AbstractByClusterMapper;
  * Emit &lt;k, i> from Cassandra ratings ({A_{i,j}}) where k is the cluster of
  * user j.
  */
-public class ItemByClusterCassandraMapper
-		extends
-		AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, IntWritable> {
+public class ItemByClusterCassandraMapper extends
+        AbstractByClusterMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, IntWritable, IntWritable> {
 
-	@Override
-	protected void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final Map<String, ByteBuffer> keys, final Map<String, ByteBuffer> columns,
+            final Context context) throws IOException, InterruptedException {
 
-		float score = columns.get("score").getFloat();
+        final float score = columns.get("score").getFloat();
 
-		if (score > 0) {
-			context.write(
-					new IntWritable(getCluster(keys.get("user").getInt())),
-					new IntWritable(keys.get("item").getInt()));
-		}
+        if (score > 0) {
+            context.write(new IntWritable(getCluster(keys.get("user").getInt())),
+                    new IntWritable(keys.get("item").getInt()));
+        }
 
-	}
+    }
 
 }

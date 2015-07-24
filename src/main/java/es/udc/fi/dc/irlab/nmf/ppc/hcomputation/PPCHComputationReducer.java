@@ -33,74 +33,73 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 
 /**
  * Emits <j^(old), h_j^(new)> from <j^(new), {h_j, x_j, y_j}>.
- * 
+ *
  * h_j^(new) = h_j .* (x_j + d_j) ./ (y_j + e_j)
  */
 public class PPCHComputationReducer
-		extends
-		MappingsReducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
+        extends MappingsReducer<IntPairWritable, VectorWritable, IntWritable, VectorWritable> {
 
-	@Override
-	protected void reduce(IntPairWritable key, Iterable<VectorWritable> values,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final IntPairWritable key, final Iterable<VectorWritable> values,
+            final Context context) throws IOException, InterruptedException {
 
-		Vector result, vectorX, vectorH, vectorY;
-		double d_j, e_j;
-		Iterator<VectorWritable> it = values.iterator();
+        Vector result, vectorX, vectorH, vectorY;
+        double d_j, e_j;
+        final Iterator<VectorWritable> it = values.iterator();
 
-		try {
-			vectorH = it.next().get();
-			vectorX = it.next().get();
-			vectorY = it.next().get();
-		} catch (NoSuchElementException e) {
-			throw new NoSuchElementException(String.format(
-					"User %d has not rated any item", key.getFirst()));
-		}
+        try {
+            vectorH = it.next().get();
+            vectorX = it.next().get();
+            vectorY = it.next().get();
+        } catch (final NoSuchElementException e) {
+            throw new NoSuchElementException(
+                    String.format("User %d has not rated any item", key.getFirst()));
+        }
 
-		// Calculate diagonal elements
-		d_j = vectorH.dot(vectorY);
-		e_j = vectorH.dot(vectorX);
+        // Calculate diagonal elements
+        d_j = vectorH.dot(vectorY);
+        e_j = vectorH.dot(vectorX);
 
-		// X = X + d_j
-		vectorX = vectorX.plus(d_j);
+        // X = X + d_j
+        vectorX = vectorX.plus(d_j);
 
-		// Y = Y + e_j
-		vectorY = vectorY.plus(e_j);
+        // Y = Y + e_j
+        vectorY = vectorY.plus(e_j);
 
-		// XY = X ./ (Y + eps)
-		Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
-			public double apply(double a, double b) {
-				if (Double.isInfinite(a)) {
-					a = Double.MAX_VALUE;
-				}
-				if (Double.isInfinite(b)) { 
-					b = Double.MAX_VALUE;
-				}
-				return a / (b + MatrixComputationJob.eps);
-			}
-		});
+        // XY = X ./ (Y + eps)
+        final Vector vectorXY = vectorX.assign(vectorY, new DoubleDoubleFunction() {
+            @Override
+            public double apply(double a, double b) {
+                if (Double.isInfinite(a)) {
+                    a = Double.MAX_VALUE;
+                }
+                if (Double.isInfinite(b)) {
+                    b = Double.MAX_VALUE;
+                }
+                return a / (b + MatrixComputationJob.eps);
+            }
+        });
 
-		// H = H .* XY
-		result = vectorH.times(vectorXY);
+        // H = H .* XY
+        result = vectorH.times(vectorXY);
 
-		// Enforce the constraints
-		Configuration conf = context.getConfiguration();
-		int iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
-		int numberOfIterations = conf.getInt(
-				RMRecommenderDriver.numberOfIterations, -1);
-		int normalizationFrequency = conf.getInt(
-				RMRecommenderDriver.normalizationFrequency, -1);
-		if (iteration % normalizationFrequency == 0) {
-			result.normalize(1);
-		}
-		int userId;
-		if (iteration < numberOfIterations) {
-			userId = key.getFirst();
-		} else {
-			userId = getOldUserId(key.getFirst());
-		}
-		context.write(new IntWritable(userId), new VectorWritable(result));
+        // Enforce the constraints
+        final Configuration conf = context.getConfiguration();
+        final int iteration = conf.getInt(RMRecommenderDriver.iteration, -1);
+        final int numberOfIterations = conf.getInt(RMRecommenderDriver.numberOfIterations, -1);
+        final int normalizationFrequency = conf.getInt(RMRecommenderDriver.normalizationFrequency,
+                -1);
+        if (iteration % normalizationFrequency == 0) {
+            result.normalize(1);
+        }
+        int userId;
+        if (iteration < numberOfIterations) {
+            userId = key.getFirst();
+        } else {
+            userId = getOldUserId(key.getFirst());
+        }
+        context.write(new IntWritable(userId), new VectorWritable(result));
 
-	}
+    }
 
 }

@@ -28,46 +28,50 @@ import org.apache.hadoop.mapreduce.lib.db.DBWritable;
 
 /**
  * Input record for MySQL.
- * 
+ *
  */
 public class MySQLRecord implements Writable, DBWritable {
 
-	int user;
-	int item;
-	float score;
+    int user;
+    int item;
+    float score;
 
-	public MySQLRecord() {
+    public MySQLRecord() {
 
-	}
+    }
 
-	public MySQLRecord(int user, int item, float score) {
-		this.user = user;
-		this.item = item;
-		this.score = score;
-	}
+    public MySQLRecord(final int user, final int item, final float score) {
+        this.user = user;
+        this.item = item;
+        this.score = score;
+    }
 
-	public void readFields(DataInput in) throws IOException {
-		user = in.readInt();
-		item = in.readInt();
-		score = in.readFloat();
-	}
+    @Override
+    public void readFields(final DataInput in) throws IOException {
+        user = in.readInt();
+        item = in.readInt();
+        score = in.readFloat();
+    }
 
-	public void readFields(ResultSet resultSet) throws SQLException {
-		user = resultSet.getInt(1);
-		item = resultSet.getInt(2);
-		score = resultSet.getFloat(3);
-	}
+    @Override
+    public void readFields(final ResultSet resultSet) throws SQLException {
+        user = resultSet.getInt(1);
+        item = resultSet.getInt(2);
+        score = resultSet.getFloat(3);
+    }
 
-	public void write(DataOutput out) throws IOException {
-		out.writeInt(user);
-		out.writeInt(item);
-		out.writeFloat(score);
-	}
+    @Override
+    public void write(final DataOutput out) throws IOException {
+        out.writeInt(user);
+        out.writeInt(item);
+        out.writeFloat(score);
+    }
 
-	public void write(PreparedStatement stmt) throws SQLException {
-		stmt.setInt(1, user);
-		stmt.setInt(2, item);
-		stmt.setFloat(3, score);
-	}
+    @Override
+    public void write(final PreparedStatement stmt) throws SQLException {
+        stmt.setInt(1, user);
+        stmt.setInt(2, item);
+        stmt.setFloat(3, score);
+    }
 
 }

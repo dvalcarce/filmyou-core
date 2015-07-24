@@ -28,24 +28,24 @@ import es.udc.fi.dc.irlab.util.MahoutMathUtils;
 
 /**
  * Emit &lt;i, sum_i(matrix_i)> from &lt;NULL, matrix_i>.
- * 
+ *
  */
-public class MatrixSumReducer extends
-		Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
+public class MatrixSumReducer
+        extends Reducer<NullWritable, MatrixWritable, NullWritable, MatrixWritable> {
 
-	@Override
-	protected void reduce(NullWritable key, Iterable<MatrixWritable> values,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final NullWritable key, final Iterable<MatrixWritable> values,
+            final Context context) throws IOException, InterruptedException {
 
-		Iterator<MatrixWritable> it = values.iterator();
-		Matrix output = it.next().get();
+        final Iterator<MatrixWritable> it = values.iterator();
+        final Matrix output = it.next().get();
 
-		while (it.hasNext()) {
-			MahoutMathUtils.matrixAddInPlace(output, it.next().get());
-		}
+        while (it.hasNext()) {
+            MahoutMathUtils.matrixAddInPlace(output, it.next().get());
+        }
 
-		context.write(NullWritable.get(), new MatrixWritable(output));
+        context.write(NullWritable.get(), new MatrixWritable(output));
 
-	}
+    }
 
 }

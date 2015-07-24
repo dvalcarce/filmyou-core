@@ -25,24 +25,24 @@ import org.apache.hadoop.mapreduce.Reducer;
 /**
  * Emit <x, sum_y A_xy> from <x, {A_xy}>.
  */
-public class DoubleSumAndDividerReducer extends
-		Reducer<Writable, DoubleWritable, Writable, DoubleWritable> {
+public class DoubleSumAndDividerReducer
+        extends Reducer<Writable, DoubleWritable, Writable, DoubleWritable> {
 
-	@Override
-	protected void reduce(Writable key, Iterable<DoubleWritable> values,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void reduce(final Writable key, final Iterable<DoubleWritable> values,
+            final Context context) throws IOException, InterruptedException {
 
-		double sum = 0;
+        double sum = 0;
 
-		for (DoubleWritable val : values) {
-			sum += val.get();
-		}
+        for (final DoubleWritable val : values) {
+            sum += val.get();
+        }
 
-		final double globalSum = Double.valueOf(context.getConfiguration().get(
-				RM2Job.TOTAL_SUM_NAME));
+        final double globalSum = Double
+                .valueOf(context.getConfiguration().get(RM2Job.TOTAL_SUM_NAME));
 
-		context.write(key, new DoubleWritable(sum / globalSum));
+        context.write(key, new DoubleWritable(sum / globalSum));
 
-	}
+    }
 
 }

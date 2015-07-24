@@ -29,38 +29,37 @@ import org.apache.cassandra.utils.ByteBufferUtil;
  * Emit &lt;j, i, A_{i,j}> to Cassandra from &lt;k, {|k|} U {(j, sum_i A_{i,j})}
  * U {(i, j, A_{i,j})}>.
  */
-public class RM2CassandraReducer extends
-		AbstractRM2Reducer<Map<String, ByteBuffer>, List<ByteBuffer>> {
+public class RM2CassandraReducer
+        extends AbstractRM2Reducer<Map<String, ByteBuffer>, List<ByteBuffer>> {
 
-	/**
-	 * Write preference to Cassandra.
-	 * 
-	 * @param context
-	 *            reduce context
-	 * @param userId
-	 *            user ID
-	 * @param itemId
-	 *            item ID
-	 * @param score
-	 *            predicted score
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	@Override
-	protected void writePreference(final Context context, final int userId,
-			final int itemId, final double score, final int cluster)
-			throws IOException, InterruptedException {
+    /**
+     * Write preference to Cassandra.
+     *
+     * @param context
+     *            reduce context
+     * @param userId
+     *            user ID
+     * @param itemId
+     *            item ID
+     * @param score
+     *            predicted score
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Override
+    protected void writePreference(final Context context, final int userId, final int itemId,
+            final double score, final int cluster) throws IOException, InterruptedException {
 
-		Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
-		keys.put("user", ByteBufferUtil.bytes(userId));
-		keys.put("item", ByteBufferUtil.bytes(itemId));
-		keys.put("relevance", ByteBufferUtil.bytes((float) score));
+        final Map<String, ByteBuffer> keys = new LinkedHashMap<String, ByteBuffer>();
+        keys.put("user", ByteBufferUtil.bytes(userId));
+        keys.put("item", ByteBufferUtil.bytes(itemId));
+        keys.put("relevance", ByteBufferUtil.bytes((float) score));
 
-		List<ByteBuffer> value = new LinkedList<ByteBuffer>();
-		value.add(ByteBufferUtil.bytes(cluster));
+        final List<ByteBuffer> value = new LinkedList<ByteBuffer>();
+        value.add(ByteBufferUtil.bytes(cluster));
 
-		context.write(keys, value);
+        context.write(keys, value);
 
-	}
+    }
 
 }

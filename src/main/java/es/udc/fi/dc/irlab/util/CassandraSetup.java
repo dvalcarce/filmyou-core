@@ -24,80 +24,77 @@ import es.udc.fi.dc.irlab.rmrecommender.RMRecommenderDriver;
 
 /**
  * Utility class for setting up configuration for Cassandra input/output.
- * 
+ *
  */
 public class CassandraSetup {
 
-	private CassandraSetup() {
+    private CassandraSetup() {
 
-	}
+    }
 
-	/**
-	 * Update Cassandra settings of jobConf with myConf info for reading data
-	 * from Cassandra.
-	 * 
-	 * 
-	 * @param myConf
-	 *            configuration of the present class
-	 * @param jobConf
-	 *            configuration of the job to be launched
-	 * @return jobConf
-	 */
-	public static Configuration updateConfForInput(Configuration myConf,
-			Configuration jobConf) {
+    /**
+     * Update Cassandra settings of jobConf with myConf info for reading data
+     * from Cassandra.
+     *
+     *
+     * @param myConf
+     *            configuration of the present class
+     * @param jobConf
+     *            configuration of the job to be launched
+     * @return jobConf
+     */
+    public static Configuration updateConfForInput(final Configuration myConf,
+            final Configuration jobConf) {
 
-		String host = myConf.get(RMRecommenderDriver.cassandraHost);
-		String keyspace = myConf.get(RMRecommenderDriver.cassandraKeyspace);
-		String tableIn = myConf.get(RMRecommenderDriver.cassandraTableIn);
-		String port = myConf.get(RMRecommenderDriver.cassandraPort);
-		String partitioner = myConf
-				.get(RMRecommenderDriver.cassandraPartitioner);
+        final String host = myConf.get(RMRecommenderDriver.cassandraHost);
+        final String keyspace = myConf.get(RMRecommenderDriver.cassandraKeyspace);
+        final String tableIn = myConf.get(RMRecommenderDriver.cassandraTableIn);
+        final String port = myConf.get(RMRecommenderDriver.cassandraPort);
+        final String partitioner = myConf.get(RMRecommenderDriver.cassandraPartitioner);
 
-		ConfigHelper.setInputRpcPort(jobConf, port);
-		ConfigHelper.setInputInitialAddress(jobConf, host);
-		ConfigHelper.setInputPartitioner(jobConf, partitioner);
-		ConfigHelper.setInputColumnFamily(jobConf, keyspace, tableIn, true);
-		ConfigHelper.setReadConsistencyLevel(jobConf, "ONE");
+        ConfigHelper.setInputRpcPort(jobConf, port);
+        ConfigHelper.setInputInitialAddress(jobConf, host);
+        ConfigHelper.setInputPartitioner(jobConf, partitioner);
+        ConfigHelper.setInputColumnFamily(jobConf, keyspace, tableIn, true);
+        ConfigHelper.setReadConsistencyLevel(jobConf, "ONE");
 
-		CqlConfigHelper.setInputCQLPageRowSize(jobConf, "1000");
+        CqlConfigHelper.setInputCQLPageRowSize(jobConf, "1000");
 
-		return jobConf;
+        return jobConf;
 
-	}
+    }
 
-	/**
-	 * Update Cassandra settings of jobConf with myConf info for writing data to
-	 * Cassandra.
-	 * 
-	 * @param myConf
-	 *            configuration of the present class
-	 * @param jobConf
-	 *            configuration of the job to be launched
-	 * @return jobConf
-	 */
-	public static Configuration updateConfForOutput(Configuration myConf,
-			Configuration jobConf) {
+    /**
+     * Update Cassandra settings of jobConf with myConf info for writing data to
+     * Cassandra.
+     *
+     * @param myConf
+     *            configuration of the present class
+     * @param jobConf
+     *            configuration of the job to be launched
+     * @return jobConf
+     */
+    public static Configuration updateConfForOutput(final Configuration myConf,
+            final Configuration jobConf) {
 
-		String host = myConf.get(RMRecommenderDriver.cassandraHost);
-		String keyspace = myConf.get(RMRecommenderDriver.cassandraKeyspace);
-		String tableOut = myConf.get(RMRecommenderDriver.cassandraTableOut);
-		String port = myConf.get(RMRecommenderDriver.cassandraPort);
-		String partitioner = myConf
-				.get(RMRecommenderDriver.cassandraPartitioner);
-		String ttl = myConf.get(RMRecommenderDriver.cassandraTTL);
+        final String host = myConf.get(RMRecommenderDriver.cassandraHost);
+        final String keyspace = myConf.get(RMRecommenderDriver.cassandraKeyspace);
+        final String tableOut = myConf.get(RMRecommenderDriver.cassandraTableOut);
+        final String port = myConf.get(RMRecommenderDriver.cassandraPort);
+        final String partitioner = myConf.get(RMRecommenderDriver.cassandraPartitioner);
+        final String ttl = myConf.get(RMRecommenderDriver.cassandraTTL);
 
-		ConfigHelper.setOutputRpcPort(jobConf, port);
-		ConfigHelper.setOutputInitialAddress(jobConf, host);
-		ConfigHelper.setOutputPartitioner(jobConf, partitioner);
-		ConfigHelper.setOutputColumnFamily(jobConf, keyspace, tableOut);
+        ConfigHelper.setOutputRpcPort(jobConf, port);
+        ConfigHelper.setOutputInitialAddress(jobConf, host);
+        ConfigHelper.setOutputPartitioner(jobConf, partitioner);
+        ConfigHelper.setOutputColumnFamily(jobConf, keyspace, tableOut);
 
-		String query = String.format(
-				"UPDATE %s.%s USING TTL %s SET cluster = ?", keyspace,
-				tableOut, ttl);
-		CqlConfigHelper.setOutputCql(jobConf, query);
+        final String query = String.format("UPDATE %s.%s USING TTL %s SET cluster = ?", keyspace,
+                tableOut, ttl);
+        CqlConfigHelper.setOutputCql(jobConf, query);
 
-		return jobConf;
+        return jobConf;
 
-	}
+    }
 
 }

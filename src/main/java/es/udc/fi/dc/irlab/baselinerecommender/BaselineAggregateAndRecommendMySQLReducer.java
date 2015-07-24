@@ -45,189 +45,183 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Final stage of the baseline recommendation algorithm.
- * 
+ *
  */
-public class BaselineAggregateAndRecommendMySQLReducer
-		extends
-		Reducer<VarLongWritable, PrefAndSimilarityColumnWritable, MySQLRecord, NullWritable> {
-	private static final Logger log = LoggerFactory
-			.getLogger(AggregateAndRecommendReducer.class);
+public class BaselineAggregateAndRecommendMySQLReducer extends
+        Reducer<VarLongWritable, PrefAndSimilarityColumnWritable, MySQLRecord, NullWritable> {
+    private static final Logger log = LoggerFactory.getLogger(AggregateAndRecommendReducer.class);
 
-	final static String ITEMID_INDEX_PATH = "itemIDIndexPath";
-	final static String NUM_RECOMMENDATIONS = "numRecommendations";
-	final static int DEFAULT_NUM_RECOMMENDATIONS = 10;
-	final static String ITEMS_FILE = "itemsFile";
+    final static String ITEMID_INDEX_PATH = "itemIDIndexPath";
+    final static String NUM_RECOMMENDATIONS = "numRecommendations";
+    final static int DEFAULT_NUM_RECOMMENDATIONS = 10;
+    final static String ITEMS_FILE = "itemsFile";
 
-	private boolean booleanData;
-	private int recommendationsPerUser;
-	private FastIDSet itemsToRecommendFor;
-	private OpenIntLongHashMap indexItemIDMap;
+    private boolean booleanData;
+    private int recommendationsPerUser;
+    private FastIDSet itemsToRecommendFor;
+    private OpenIntLongHashMap indexItemIDMap;
 
-	private static final float BOOLEAN_PREF_VALUE = 1.0f;
+    private static final float BOOLEAN_PREF_VALUE = 1.0f;
 
-	@Override
-	protected void reduce(VarLongWritable userID,
-			Iterable<PrefAndSimilarityColumnWritable> values, Context context)
-			throws IOException, InterruptedException {
-		if (booleanData) {
-			reduceBooleanData(userID, values, context);
-		} else {
-			reduceNonBooleanData(userID, values, context);
-		}
-	}
+    @Override
+    protected void reduce(final VarLongWritable userID,
+            final Iterable<PrefAndSimilarityColumnWritable> values, final Context context)
+                    throws IOException, InterruptedException {
+        if (booleanData) {
+            reduceBooleanData(userID, values, context);
+        } else {
+            reduceNonBooleanData(userID, values, context);
+        }
+    }
 
-	private void reduceBooleanData(VarLongWritable userID,
-			Iterable<PrefAndSimilarityColumnWritable> values, Context context)
-			throws IOException, InterruptedException {
-		/*
-		 * having boolean data, each estimated preference can only be 1, however
-		 * we can't use this to rank the recommended items, so we use the sum of
-		 * similarities for that.
-		 */
-		Iterator<PrefAndSimilarityColumnWritable> columns = values.iterator();
-		Vector predictions = columns.next().getSimilarityColumn();
-		while (columns.hasNext()) {
-			predictions.assign(columns.next().getSimilarityColumn(),
-					Functions.PLUS);
-		}
-		writeRecommendedItems(userID, predictions, context);
-	}
+    private void reduceBooleanData(final VarLongWritable userID,
+            final Iterable<PrefAndSimilarityColumnWritable> values, final Context context)
+                    throws IOException, InterruptedException {
+        /*
+         * having boolean data, each estimated preference can only be 1, however
+         * we can't use this to rank the recommended items, so we use the sum of
+         * similarities for that.
+         */
+        final Iterator<PrefAndSimilarityColumnWritable> columns = values.iterator();
+        final Vector predictions = columns.next().getSimilarityColumn();
+        while (columns.hasNext()) {
+            predictions.assign(columns.next().getSimilarityColumn(), Functions.PLUS);
+        }
+        writeRecommendedItems(userID, predictions, context);
+    }
 
-	private void reduceNonBooleanData(VarLongWritable userID,
-			Iterable<PrefAndSimilarityColumnWritable> values, Context context)
-			throws IOException, InterruptedException {
-		/* each entry here is the sum in the numerator of the prediction formula */
-		Vector numerators = null;
-		/*
-		 * each entry here is the sum in the denominator of the prediction
-		 * formula
-		 */
-		Vector denominators = null;
-		/*
-		 * each entry here is the number of similar items used in the prediction
-		 * formula
-		 */
-		Vector numberOfSimilarItemsUsed = new RandomAccessSparseVector(
-				Integer.MAX_VALUE, 100);
+    private void reduceNonBooleanData(final VarLongWritable userID,
+            final Iterable<PrefAndSimilarityColumnWritable> values, final Context context)
+                    throws IOException, InterruptedException {
+        /*
+         * each entry here is the sum in the numerator of the prediction formula
+         */
+        Vector numerators = null;
+        /*
+         * each entry here is the sum in the denominator of the prediction
+         * formula
+         */
+        Vector denominators = null;
+        /*
+         * each entry here is the number of similar items used in the prediction
+         * formula
+         */
+        final Vector numberOfSimilarItemsUsed = new RandomAccessSparseVector(Integer.MAX_VALUE,
+                100);
 
-		for (PrefAndSimilarityColumnWritable prefAndSimilarityColumn : values) {
-			Vector simColumn = prefAndSimilarityColumn.getSimilarityColumn();
-			float prefValue = prefAndSimilarityColumn.getPrefValue();
-			/* count the number of items used for each prediction */
-			for (Element e : simColumn.nonZeroes()) {
-				int itemIDIndex = e.index();
-				numberOfSimilarItemsUsed.setQuick(itemIDIndex,
-						numberOfSimilarItemsUsed.getQuick(itemIDIndex) + 1);
-			}
+        for (final PrefAndSimilarityColumnWritable prefAndSimilarityColumn : values) {
+            final Vector simColumn = prefAndSimilarityColumn.getSimilarityColumn();
+            final float prefValue = prefAndSimilarityColumn.getPrefValue();
+            /* count the number of items used for each prediction */
+            for (final Element e : simColumn.nonZeroes()) {
+                final int itemIDIndex = e.index();
+                numberOfSimilarItemsUsed.setQuick(itemIDIndex,
+                        numberOfSimilarItemsUsed.getQuick(itemIDIndex) + 1);
+            }
 
-			if (denominators == null) {
-				denominators = simColumn.clone();
-			} else {
-				denominators.assign(simColumn, Functions.PLUS_ABS);
-			}
+            if (denominators == null) {
+                denominators = simColumn.clone();
+            } else {
+                denominators.assign(simColumn, Functions.PLUS_ABS);
+            }
 
-			if (numerators == null) {
-				numerators = simColumn.clone();
-				if (prefValue != BOOLEAN_PREF_VALUE) {
-					numerators.assign(Functions.MULT, prefValue);
-				}
-			} else {
-				if (prefValue != BOOLEAN_PREF_VALUE) {
-					simColumn.assign(Functions.MULT, prefValue);
-				}
-				numerators.assign(simColumn, Functions.PLUS);
-			}
+            if (numerators == null) {
+                numerators = simColumn.clone();
+                if (prefValue != BOOLEAN_PREF_VALUE) {
+                    numerators.assign(Functions.MULT, prefValue);
+                }
+            } else {
+                if (prefValue != BOOLEAN_PREF_VALUE) {
+                    simColumn.assign(Functions.MULT, prefValue);
+                }
+                numerators.assign(simColumn, Functions.PLUS);
+            }
 
-		}
+        }
 
-		if (numerators == null) {
-			return;
-		}
+        if (numerators == null) {
+            return;
+        }
 
-		Vector recommendationVector = new RandomAccessSparseVector(
-				Integer.MAX_VALUE, 100);
-		for (Element element : numerators.nonZeroes()) {
-			int itemIDIndex = element.index();
-			/* preference estimations must be based on at least 2 datapoints */
-			if (numberOfSimilarItemsUsed.getQuick(itemIDIndex) > 1) {
-				/* compute normalized prediction */
-				double prediction = element.get()
-						/ denominators.getQuick(itemIDIndex);
-				recommendationVector.setQuick(itemIDIndex, prediction);
-			}
-		}
-		writeRecommendedItems(userID, recommendationVector, context);
-	}
+        final Vector recommendationVector = new RandomAccessSparseVector(Integer.MAX_VALUE, 100);
+        for (final Element element : numerators.nonZeroes()) {
+            final int itemIDIndex = element.index();
+            /* preference estimations must be based on at least 2 datapoints */
+            if (numberOfSimilarItemsUsed.getQuick(itemIDIndex) > 1) {
+                /* compute normalized prediction */
+                final double prediction = element.get() / denominators.getQuick(itemIDIndex);
+                recommendationVector.setQuick(itemIDIndex, prediction);
+            }
+        }
+        writeRecommendedItems(userID, recommendationVector, context);
+    }
 
-	@Override
-	protected void setup(Context context) throws IOException {
-		Configuration conf = context.getConfiguration();
-		recommendationsPerUser = conf.getInt(NUM_RECOMMENDATIONS,
-				DEFAULT_NUM_RECOMMENDATIONS);
-		booleanData = conf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
-		indexItemIDMap = TasteHadoopUtils.readIDIndexMap(
-				conf.get(ITEMID_INDEX_PATH), conf);
+    @Override
+    protected void setup(final Context context) throws IOException {
+        final Configuration conf = context.getConfiguration();
+        recommendationsPerUser = conf.getInt(NUM_RECOMMENDATIONS, DEFAULT_NUM_RECOMMENDATIONS);
+        booleanData = conf.getBoolean(RecommenderJob.BOOLEAN_DATA, false);
+        indexItemIDMap = TasteHadoopUtils.readIDIndexMap(conf.get(ITEMID_INDEX_PATH), conf);
 
-		String itemFilePathString = conf.get(ITEMS_FILE);
-		if (itemFilePathString != null) {
-			itemsToRecommendFor = new FastIDSet();
-			for (String line : new FileLineIterable(HadoopUtil.openStream(
-					new Path(itemFilePathString), conf))) {
-				try {
-					itemsToRecommendFor.add(Long.parseLong(line));
-				} catch (NumberFormatException nfe) {
-					log.warn("itemsFile line ignored: {}", line);
-				}
-			}
-		}
-	}
+        final String itemFilePathString = conf.get(ITEMS_FILE);
+        if (itemFilePathString != null) {
+            itemsToRecommendFor = new FastIDSet();
+            for (final String line : new FileLineIterable(
+                    HadoopUtil.openStream(new Path(itemFilePathString), conf))) {
+                try {
+                    itemsToRecommendFor.add(Long.parseLong(line));
+                } catch (final NumberFormatException nfe) {
+                    log.warn("itemsFile line ignored: {}", line);
+                }
+            }
+        }
+    }
 
-	/**
-	 * Find the top entries in recommendationVector, map them to the real
-	 * itemIDs and write back the result.
-	 * 
-	 * @param userID
-	 *            target user
-	 * @param recommendationVector
-	 * @param context
-	 * @throws IOException
-	 * @throws InterruptedException
-	 */
-	private void writeRecommendedItems(VarLongWritable userID,
-			Vector recommendationVector, Context context) throws IOException,
-			InterruptedException {
+    /**
+     * Find the top entries in recommendationVector, map them to the real
+     * itemIDs and write back the result.
+     *
+     * @param userID
+     *            target user
+     * @param recommendationVector
+     * @param context
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void writeRecommendedItems(final VarLongWritable userID,
+            final Vector recommendationVector, final Context context)
+                    throws IOException, InterruptedException {
 
-		TopItemsQueue topKItems = new TopItemsQueue(recommendationsPerUser);
+        final TopItemsQueue topKItems = new TopItemsQueue(recommendationsPerUser);
 
-		for (Element element : recommendationVector.nonZeroes()) {
-			int index = element.index();
-			long itemID;
-			if (indexItemIDMap != null && !indexItemIDMap.isEmpty()) {
-				itemID = indexItemIDMap.get(index);
-			} else { // we don't have any mappings, so just use the original
-				itemID = index;
-			}
-			if (itemsToRecommendFor == null
-					|| itemsToRecommendFor.contains(itemID)) {
-				float value = (float) element.get();
-				if (!Float.isNaN(value)) {
-					MutableRecommendedItem topItem = topKItems.top();
-					if (value > topItem.getValue()) {
-						topItem.set(itemID, value);
-						topKItems.updateTop();
-					}
-				}
-			}
-		}
+        for (final Element element : recommendationVector.nonZeroes()) {
+            final int index = element.index();
+            long itemID;
+            if (indexItemIDMap != null && !indexItemIDMap.isEmpty()) {
+                itemID = indexItemIDMap.get(index);
+            } else { // we don't have any mappings, so just use the original
+                itemID = index;
+            }
+            if (itemsToRecommendFor == null || itemsToRecommendFor.contains(itemID)) {
+                final float value = (float) element.get();
+                if (!Float.isNaN(value)) {
+                    final MutableRecommendedItem topItem = topKItems.top();
+                    if (value > topItem.getValue()) {
+                        topItem.set(itemID, value);
+                        topKItems.updateTop();
+                    }
+                }
+            }
+        }
 
-		List<RecommendedItem> topItems = topKItems.getTopItems();
-		if (!topItems.isEmpty()) {
-			for (RecommendedItem item : topItems) {
-				MySQLRecord record = new MySQLRecord((int) userID.get(),
-						(int) item.getItemID(), item.getValue());
-				context.write(record, NullWritable.get());
-			}
-		}
-	}
+        final List<RecommendedItem> topItems = topKItems.getTopItems();
+        if (!topItems.isEmpty()) {
+            for (final RecommendedItem item : topItems) {
+                final MySQLRecord record = new MySQLRecord((int) userID.get(),
+                        (int) item.getItemID(), item.getValue());
+                context.write(record, NullWritable.get());
+            }
+        }
+    }
 
 }

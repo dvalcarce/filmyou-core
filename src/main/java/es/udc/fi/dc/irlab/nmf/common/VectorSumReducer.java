@@ -28,23 +28,22 @@ import es.udc.fi.dc.irlab.util.MahoutMathUtils;
 
 /**
  * Emit &lt;i,a_i> from &lt;i, {b_i}> where a_i = sum_i(b_i).
- * 
+ *
  */
-public class VectorSumReducer extends
-		Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class VectorSumReducer
+        extends Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-	@Override
-	protected void reduce(IntWritable key, Iterable<VectorWritable> values,
-			Context context) throws IOException, InterruptedException {
-		Iterator<VectorWritable> it = values.iterator();
-		Vector output = it.next().get();
+    @Override
+    protected void reduce(final IntWritable key, final Iterable<VectorWritable> values,
+            final Context context) throws IOException, InterruptedException {
+        final Iterator<VectorWritable> it = values.iterator();
+        final Vector output = it.next().get();
 
-		while (it.hasNext()) {
-			// output = it.next().get().plus(output);
-			MahoutMathUtils.vectorAddInPlace(output, it.next().get());
-		}
-		context.write(new IntWritable((int) key.get()), new VectorWritable(
-				output));
-	}
+        while (it.hasNext()) {
+            // output = it.next().get().plus(output);
+            MahoutMathUtils.vectorAddInPlace(output, it.next().get());
+        }
+        context.write(new IntWritable((int) key.get()), new VectorWritable(output));
+    }
 
 }

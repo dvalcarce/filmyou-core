@@ -33,112 +33,111 @@ import es.udc.fi.dc.irlab.util.DataInitialization;
 
 /**
  * Abstract NMF algorithm driver.
- * 
+ *
  */
 public abstract class AbstractNMFDriver extends AbstractJob {
 
-	private static final Log LOG = LogFactory.getLog(AbstractNMFDriver.class);
+    private static final Log LOG = LogFactory.getLog(AbstractNMFDriver.class);
 
-	private Class<? extends MatrixComputationJob> hClass;
-	private Class<? extends MatrixComputationJob> wClass;
+    private final Class<? extends MatrixComputationJob> hClass;
+    private final Class<? extends MatrixComputationJob> wClass;
 
-	private int numberOfUsers;
-	private int numberOfItems;
-	private int numberOfClusters;
-	private int numberOfIterations;
+    private int numberOfUsers;
+    private int numberOfItems;
+    private int numberOfClusters;
+    private int numberOfIterations;
 
-	private String baseDirectory;
+    private String baseDirectory;
 
-	private Path H;
-	private Path W;
-	private Path H2;
-	private Path W2;
+    private Path H;
+    private Path W;
+    private Path H2;
+    private Path W2;
 
-	/**
-	 * AbstractNMFDriver constructor.
-	 * 
-	 * @param hClass
-	 *            class of a MatrixComputationJob for h computation
-	 * @param wClass
-	 *            class of a MatrixComputationJob for w computation
-	 */
-	public AbstractNMFDriver(Class<? extends MatrixComputationJob> hClass,
-			Class<? extends MatrixComputationJob> wClass) {
-		this.hClass = hClass;
-		this.wClass = wClass;
-	}
+    /**
+     * AbstractNMFDriver constructor.
+     *
+     * @param hClass
+     *            class of a MatrixComputationJob for h computation
+     * @param wClass
+     *            class of a MatrixComputationJob for w computation
+     */
+    public AbstractNMFDriver(final Class<? extends MatrixComputationJob> hClass,
+            final Class<? extends MatrixComputationJob> wClass) {
+        this.hClass = hClass;
+        this.wClass = wClass;
+    }
 
-	/**
-	 * Create random initial data for H and W.
-	 * 
-	 * @throws IOException
-	 */
-	protected void createInitialMatrices() throws IOException {
-		LOG.info("Creating H (" + numberOfUsers + "x" + numberOfClusters + ")");
-		H = DataInitialization.createMatrix(getConf(), baseDirectory, "H",
-				numberOfUsers, numberOfClusters);
+    /**
+     * Create random initial data for H and W.
+     *
+     * @throws IOException
+     */
+    protected void createInitialMatrices() throws IOException {
+        LOG.info("Creating H (" + numberOfUsers + "x" + numberOfClusters + ")");
+        H = DataInitialization.createMatrix(getConf(), baseDirectory, "H", numberOfUsers,
+                numberOfClusters);
 
-		LOG.info("Creating W(" + numberOfItems + "x" + numberOfClusters + ")");
-		W = DataInitialization.createMatrix(getConf(), baseDirectory, "W",
-				numberOfItems, numberOfClusters);
-	}
+        LOG.info("Creating W(" + numberOfItems + "x" + numberOfClusters + ")");
+        W = DataInitialization.createMatrix(getConf(), baseDirectory, "W", numberOfItems,
+                numberOfClusters);
+    }
 
-	/**
-	 * Compute H and W matrices.
-	 * 
-	 * @param args
-	 */
-	@Override
-	public int run(String[] args) throws Exception {
-		Configuration conf = getConf();
+    /**
+     * Compute H and W matrices.
+     *
+     * @param args
+     */
+    @Override
+    public int run(final String[] args) throws Exception {
+        final Configuration conf = getConf();
 
-		numberOfUsers = conf.getInt(RMRecommenderDriver.numberOfUsers, 0);
-		numberOfItems = conf.getInt(RMRecommenderDriver.numberOfItems, 0);
-		numberOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, 0);
-		numberOfIterations = conf.getInt(
-				RMRecommenderDriver.numberOfIterations, 0);
+        numberOfUsers = conf.getInt(RMRecommenderDriver.numberOfUsers, 0);
+        numberOfItems = conf.getInt(RMRecommenderDriver.numberOfItems, 0);
+        numberOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, 0);
+        numberOfIterations = conf.getInt(RMRecommenderDriver.numberOfIterations, 0);
 
-		baseDirectory = conf.get(RMRecommenderDriver.directory);
+        baseDirectory = conf.get(RMRecommenderDriver.directory);
 
-		/* Matrix initialization */
-		if (conf.get(RMRecommenderDriver.H) != null
-				&& conf.get(RMRecommenderDriver.H).length() > 0) {
-			H = new Path(conf.get(RMRecommenderDriver.H));
-			W = new Path(conf.get(RMRecommenderDriver.W));
-		} else {
-			createInitialMatrices();
-		}
-		H2 = new Path(baseDirectory + File.separator + "H2");
-		W2 = new Path(baseDirectory + File.separator + "W2");
-		FileSystem fs = H.getFileSystem(conf);
+        /* Matrix initialization */
+        if (conf.get(RMRecommenderDriver.H) != null
+                && conf.get(RMRecommenderDriver.H).length() > 0) {
+            H = new Path(conf.get(RMRecommenderDriver.H));
+            W = new Path(conf.get(RMRecommenderDriver.W));
+        } else {
+            createInitialMatrices();
+        }
+        H2 = new Path(baseDirectory + File.separator + "H2");
+        W2 = new Path(baseDirectory + File.separator + "W2");
+        final FileSystem fs = H.getFileSystem(conf);
 
-		LOG.info("Running matrix factorization");
+        LOG.info("Running matrix factorization");
 
-		/* Run algorithm iterations */
-		for (int i = 1; i <= numberOfIterations; i++) {
-			MatrixComputationJob hJob = hClass.getConstructor(
-					new Class[] { Path.class, Path.class, Path.class,
-							Path.class }).newInstance(H, W, H2, W2);
+        /* Run algorithm iterations */
+        for (int i = 1; i <= numberOfIterations; i++) {
+            final MatrixComputationJob hJob = hClass
+                    .getConstructor(new Class[] { Path.class, Path.class, Path.class, Path.class })
+                    .newInstance(H, W, H2, W2);
 
-			MatrixComputationJob wJob = wClass.getConstructor(
-					new Class[] { Path.class, Path.class, Path.class,
-							Path.class }).newInstance(H, W, H2, W2);
+            final MatrixComputationJob wJob = wClass
+                    .getConstructor(new Class[] { Path.class, Path.class, Path.class, Path.class })
+                    .newInstance(H, W, H2, W2);
 
-			conf.setInt(RMRecommenderDriver.iteration, i);
-			LOG.info("Launching H-it" + i);
-			ToolRunner.run(conf, hJob, args);
-			LOG.info("Launching W-it" + i);
-			ToolRunner.run(conf, wJob, args);
+            conf.setInt(RMRecommenderDriver.iteration, i);
+            LOG.info("Launching H-it" + i);
+            ToolRunner.run(conf, hJob, args);
+            LOG.info("Launching W-it" + i);
+            ToolRunner.run(conf, wJob, args);
 
-			fs.delete(H, true);
-			fs.delete(W, true);
-			FileUtil.copy(fs, H2, fs, H, false, false, getConf());
-			FileUtil.copy(fs, W2, fs, W, false, false, getConf());
-			fs.delete(H2, true);
-			fs.delete(W2, true);
-		}
+            fs.delete(H, true);
+            fs.delete(W, true);
+            FileUtil.copy(fs, H2, fs, H, false, false, getConf());
+            FileUtil.copy(fs, W2, fs, W, false, false, getConf());
+            fs.delete(H2, true);
+            fs.delete(W2, true);
+        }
 
-		return 0;
-	}
+        return 0;
+    }
 
 }

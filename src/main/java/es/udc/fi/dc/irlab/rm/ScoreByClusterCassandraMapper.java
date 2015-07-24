@@ -28,27 +28,25 @@ import es.udc.fi.dc.irlab.util.StringIntPairWritable;
  * Emit &lt;(k, 1), (i, j, A_{i,j})> from Cassandra ratings ({A_{i,j}}) where j
  * is a user from the cluster k.
  */
-public class ScoreByClusterCassandraMapper
-		extends
-		AbstractByClusterAndCountMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, StringIntPairWritable, IntDoubleOrPrefWritable> {
+public class ScoreByClusterCassandraMapper extends
+        AbstractByClusterAndCountMapper<Map<String, ByteBuffer>, Map<String, ByteBuffer>, StringIntPairWritable, IntDoubleOrPrefWritable> {
 
-	@Override
-	protected void map(Map<String, ByteBuffer> keys,
-			Map<String, ByteBuffer> columns, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final Map<String, ByteBuffer> keys, final Map<String, ByteBuffer> columns,
+            final Context context) throws IOException, InterruptedException {
 
-		float score = columns.get("score").getFloat();
+        final float score = columns.get("score").getFloat();
 
-		if (score > 0) {
-			int user = keys.get("user").getInt();
-			int item = keys.get("item").getInt();
-			for (String split : getSplits(user)) {
-				context.write(new StringIntPairWritable(split, 1),
-						new IntDoubleOrPrefWritable(user, item, score));
-			}
+        if (score > 0) {
+            final int user = keys.get("user").getInt();
+            final int item = keys.get("item").getInt();
+            for (final String split : getSplits(user)) {
+                context.write(new StringIntPairWritable(split, 1),
+                        new IntDoubleOrPrefWritable(user, item, score));
+            }
 
-		}
+        }
 
-	}
+    }
 
 }

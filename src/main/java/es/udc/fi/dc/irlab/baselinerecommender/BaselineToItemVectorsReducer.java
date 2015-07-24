@@ -26,18 +26,18 @@ import org.apache.mahout.math.VectorWritable;
  * This class is a clone of
  * <code>org.apache.mahout.cf.taste.hadoop.preparation.ToItemVectorsReducer</code>
  * because of default visibility.
- * 
+ *
  */
-public class BaselineToItemVectorsReducer extends
-		Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public class BaselineToItemVectorsReducer
+        extends Reducer<IntWritable, VectorWritable, IntWritable, VectorWritable> {
 
-	private final VectorWritable merged = new VectorWritable();
+    private final VectorWritable merged = new VectorWritable();
 
-	@Override
-	protected void reduce(IntWritable row, Iterable<VectorWritable> vectors,
-			Context ctx) throws IOException, InterruptedException {
-		merged.setWritesLaxPrecision(true);
-		merged.set(VectorWritable.mergeToVector(vectors.iterator()));
-		ctx.write(row, merged);
-	}
+    @Override
+    protected void reduce(final IntWritable row, final Iterable<VectorWritable> vectors,
+            final Context ctx) throws IOException, InterruptedException {
+        merged.setWritesLaxPrecision(true);
+        merged.set(VectorWritable.mergeToVector(vectors.iterator()));
+        ctx.write(row, merged);
+    }
 }

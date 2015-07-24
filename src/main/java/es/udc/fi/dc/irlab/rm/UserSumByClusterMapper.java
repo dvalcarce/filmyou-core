@@ -29,19 +29,18 @@ import es.udc.fi.dc.irlab.util.StringIntPairWritable;
  * Emit &lt;(k, 1), (j, sum_i A_{i,j})> from &lt;j, sum_i A_{i,j}> where j is a
  * user from the cluster k.
  */
-public class UserSumByClusterMapper
-		extends
-		AbstractByClusterAndCountMapper<IntWritable, DoubleWritable, StringIntPairWritable, IntDoubleOrPrefWritable> {
+public class UserSumByClusterMapper extends
+        AbstractByClusterAndCountMapper<IntWritable, DoubleWritable, StringIntPairWritable, IntDoubleOrPrefWritable> {
 
-	@Override
-	protected void map(IntWritable key, DoubleWritable column, Context context)
-			throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntWritable key, final DoubleWritable column, final Context context)
+            throws IOException, InterruptedException {
 
-		for (String split : getSplits(key.get())) {
-			context.write(new StringIntPairWritable(split, 0),
-					new IntDoubleOrPrefWritable(key.get(), column.get()));
-		}
+        for (final String split : getSplits(key.get())) {
+            context.write(new StringIntPairWritable(split, 0),
+                    new IntDoubleOrPrefWritable(key.get(), column.get()));
+        }
 
-	}
+    }
 
 }

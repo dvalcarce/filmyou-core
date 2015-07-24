@@ -30,32 +30,32 @@ import org.junit.Test;
 
 public class TestSumVectorReducer {
 
-	private ReduceDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
+    private ReduceDriver<IntWritable, VectorWritable, IntWritable, VectorWritable> reduceDriver;
 
-	@Before
-	public void setup() {
-		reduceDriver = new ReduceDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
-	}
+    @Before
+    public void setup() {
+        reduceDriver = new ReduceDriver<IntWritable, VectorWritable, IntWritable, VectorWritable>();
+    }
 
-	@Test
-	public void testReduce() throws IOException {
-		IntWritable inputKey = new IntWritable(1);
-		List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
-		Vector inputVector1 = new DenseVector(new double[] { 2.0, 4.0, 6.0 });
-		Vector inputVector2 = new DenseVector(new double[] { 3.0, 6.0, 9.0 });
+    @Test
+    public void testReduce() throws IOException {
+        final IntWritable inputKey = new IntWritable(1);
+        final List<VectorWritable> inputValues = new ArrayList<VectorWritable>();
+        final Vector inputVector1 = new DenseVector(new double[] { 2.0, 4.0, 6.0 });
+        final Vector inputVector2 = new DenseVector(new double[] { 3.0, 6.0, 9.0 });
 
-		inputValues.add(new VectorWritable(inputVector1));
-		inputValues.add(new VectorWritable(inputVector2));
+        inputValues.add(new VectorWritable(inputVector1));
+        inputValues.add(new VectorWritable(inputVector2));
 
-		IntWritable outputKey = new IntWritable(1);
-		Vector outputVector = new DenseVector(new double[] { 5.0, 10.0, 15.0 });
-		VectorWritable outputValue = new VectorWritable(outputVector);
+        final IntWritable outputKey = new IntWritable(1);
+        final Vector outputVector = new DenseVector(new double[] { 5.0, 10.0, 15.0 });
+        final VectorWritable outputValue = new VectorWritable(outputVector);
 
-		reduceDriver.withReducer(new VectorSumReducer());
-		reduceDriver.withInput(inputKey, inputValues);
-		reduceDriver.withOutput(outputKey, outputValue);
+        reduceDriver.withReducer(new VectorSumReducer());
+        reduceDriver.withInput(inputKey, inputValues);
+        reduceDriver.withOutput(outputKey, outputValue);
 
-		reduceDriver.runTest();
-	}
+        reduceDriver.runTest();
+    }
 
 }

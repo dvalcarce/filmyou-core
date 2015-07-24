@@ -25,6 +25,7 @@ import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.map.InverseMapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -39,149 +40,143 @@ import es.udc.fi.dc.irlab.util.HadoopUtils;
 
 /**
  * Make mappings for users and items.
- * 
+ *
  */
 public class SubClusterMappingJob extends AbstractJob {
 
-	public static final String output = "output";
+    public static final String output = "output";
 
-	@Override
-	public int run(String[] args) throws IOException, ClassNotFoundException,
-			InterruptedException {
+    @Override
+    public int run(final String[] args)
+            throws IOException, ClassNotFoundException, InterruptedException {
 
-		Path inputPath;
-		Path clustering;
-		Path subClusteringUser;
-		Path subClusteringItem;
-		String directory;
+        Path inputPath;
+        Path clustering;
+        Path subClusteringUser;
+        Path subClusteringItem;
+        String directory;
 
-		Configuration conf = getConf();
+        final Configuration conf = getConf();
 
-		/* Prepare paths */
-		directory = conf.get(RMRecommenderDriver.directory);
-		clustering = new Path(directory + File.separator
-				+ conf.get(RMRecommenderDriver.clustering));
-		subClusteringUser = new Path(directory + File.separator
-				+ RMRecommenderDriver.subClusteringUserPath);
-		subClusteringItem = new Path(directory + File.separator
-				+ RMRecommenderDriver.subClusteringItemPath);
-		inputPath = HadoopUtils.getInputPath(conf);
+        /* Prepare paths */
+        directory = conf.get(RMRecommenderDriver.directory);
+        clustering = new Path(
+                directory + File.separator + conf.get(RMRecommenderDriver.clustering));
+        subClusteringUser = new Path(
+                directory + File.separator + RMRecommenderDriver.subClusteringUserPath);
+        subClusteringItem = new Path(
+                directory + File.separator + RMRecommenderDriver.subClusteringItemPath);
+        inputPath = HadoopUtils.getInputPath(conf);
 
-		HadoopUtils.removeData(conf, subClusteringUser.toString());
-		HadoopUtils.removeData(conf, subClusteringItem.toString());
+        HadoopUtils.removeData(conf, subClusteringUser.toString());
+        HadoopUtils.removeData(conf, subClusteringItem.toString());
 
-		mapUsers(clustering, subClusteringUser);
-		mapItems(inputPath, subClusteringItem, clustering);
+        mapUsers(clustering, subClusteringUser);
+        mapItems(inputPath, subClusteringItem, clustering);
 
-		return 0;
-	}
+        return 0;
+    }
 
-	/**
-	 * Do user mapping
-	 * 
-	 * @param inputPath
-	 *            input Path
-	 * @param outputPath
-	 *            output Path
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws InterruptedException
-	 */
-	private void mapUsers(Path inputPath, Path outputPath) throws IOException,
-			ClassNotFoundException, InterruptedException {
+    /**
+     * Do user mapping
+     *
+     * @param inputPath
+     *            input Path
+     * @param outputPath
+     *            output Path
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    private void mapUsers(final Path inputPath, final Path outputPath)
+            throws IOException, ClassNotFoundException, InterruptedException {
 
-		Configuration conf = getConf();
+        final Configuration conf = getConf();
 
-		/* Prepare job */
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "User Mapping");
-		job.setJarByClass(this.getClass());
+        /* Prepare job */
+        final Job job = new Job(HadoopUtils.sanitizeConf(conf), "User Mapping");
+        job.setJarByClass(this.getClass());
 
-		job.setInputFormatClass(SequenceFileInputFormat.class);
-		SequenceFileInputFormat.addInputPath(job, inputPath);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
+        FileInputFormat.addInputPath(job, inputPath);
 
-		job.setMapperClass(InverseMapper.class);
-		job.setReducerClass(UserMappingReducer.class);
+        job.setMapperClass(InverseMapper.class);
+        job.setReducerClass(UserMappingReducer.class);
 
-		job.setMapOutputKeyClass(IntWritable.class);
-		job.setMapOutputValueClass(IntWritable.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
 
-		int numberOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, -1);
-		job.setNumReduceTasks(Math.min(numberOfClusters,
-				job.getNumReduceTasks()));
+        final int numberOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, -1);
+        job.setNumReduceTasks(Math.min(numberOfClusters, job.getNumReduceTasks()));
 
-		/* Configure multiple outputs */
-		MultipleOutputs.addNamedOutput(job, output,
-				SequenceFileOutputFormat.class, IntWritable.class,
-				IntWritable.class);
+        /* Configure multiple outputs */
+        MultipleOutputs.addNamedOutput(job, output, SequenceFileOutputFormat.class,
+                IntWritable.class, IntWritable.class);
 
-		FileOutputFormat.setOutputPath(job, outputPath);
+        FileOutputFormat.setOutputPath(job, outputPath);
 
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
+        final boolean succeeded = job.waitForCompletion(true);
+        if (!succeeded) {
+            throw new RuntimeException(job.getJobName() + " failed!");
+        }
 
-	}
+    }
 
-	/**
-	 * Do item mapping
-	 * 
-	 * @param inputPath
-	 *            input Path
-	 * @param outputPath
-	 *            output Path
-	 * @param clustering
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws InterruptedException
-	 */
-	private void mapItems(Path inputPath, Path outputPath, Path clustering)
-			throws IOException, ClassNotFoundException, InterruptedException {
+    /**
+     * Do item mapping
+     *
+     * @param inputPath
+     *            input Path
+     * @param outputPath
+     *            output Path
+     * @param clustering
+     * @throws IOException
+     * @throws ClassNotFoundException
+     * @throws InterruptedException
+     */
+    private void mapItems(final Path inputPath, final Path outputPath, final Path clustering)
+            throws IOException, ClassNotFoundException, InterruptedException {
 
-		Configuration conf = getConf();
+        final Configuration conf = getConf();
 
-		/* Prepare job */
-		Job job = new Job(HadoopUtils.sanitizeConf(conf), "Item Mapping");
-		job.setJarByClass(this.getClass());
+        /* Prepare job */
+        final Job job = new Job(HadoopUtils.sanitizeConf(conf), "Item Mapping");
+        job.setJarByClass(this.getClass());
 
-		Configuration jobConf = job.getConfiguration();
+        final Configuration jobConf = job.getConfiguration();
 
-		if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
-			job.setInputFormatClass(CqlInputFormat.class);
-			job.setMapperClass(ItemByClusterCassandraMapper.class);
-			CassandraSetup.updateConfForInput(conf, jobConf);
-		} else {
-			job.setInputFormatClass(SequenceFileInputFormat.class);
-			job.setMapperClass(ItemByClusterHDFSMapper.class);
-			SequenceFileInputFormat.addInputPath(job, inputPath);
-		}
+        if (conf.getBoolean(RMRecommenderDriver.useCassandraInput, true)) {
+            job.setInputFormatClass(CqlInputFormat.class);
+            job.setMapperClass(ItemByClusterCassandraMapper.class);
+            CassandraSetup.updateConfForInput(conf, jobConf);
+        } else {
+            job.setInputFormatClass(SequenceFileInputFormat.class);
+            job.setMapperClass(ItemByClusterHDFSMapper.class);
+            FileInputFormat.addInputPath(job, inputPath);
+        }
 
-		job.setReducerClass(ItemMappingReducer.class);
+        job.setReducerClass(ItemMappingReducer.class);
 
-		job.setMapOutputKeyClass(IntWritable.class);
-		job.setMapOutputValueClass(IntWritable.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
 
-		int numberOfClusters = conf.getInt(
-				RMRecommenderDriver.numberOfClusters, -1);
-		job.setNumReduceTasks(Math.min(numberOfClusters,
-				job.getNumReduceTasks()));
+        final int numberOfClusters = conf.getInt(RMRecommenderDriver.numberOfClusters, -1);
+        job.setNumReduceTasks(Math.min(numberOfClusters, job.getNumReduceTasks()));
 
-		/* Configure multiple outputs */
-		MultipleOutputs.addNamedOutput(job, output,
-				SequenceFileOutputFormat.class, IntWritable.class,
-				IntWritable.class);
+        /* Configure multiple outputs */
+        MultipleOutputs.addNamedOutput(job, output, SequenceFileOutputFormat.class,
+                IntWritable.class, IntWritable.class);
 
-		FileOutputFormat.setOutputPath(job, outputPath);
+        FileOutputFormat.setOutputPath(job, outputPath);
 
-		DistributedCache.addCacheFile(clustering.toUri(), jobConf);
-		jobConf.setInt(MatrixComputationJob.numberOfFiles, 1);
+        DistributedCache.addCacheFile(clustering.toUri(), jobConf);
+        jobConf.setInt(MatrixComputationJob.numberOfFiles, 1);
 
-		boolean succeeded = job.waitForCompletion(true);
-		if (!succeeded) {
-			throw new RuntimeException(job.getJobName() + " failed!");
-		}
+        final boolean succeeded = job.waitForCompletion(true);
+        if (!succeeded) {
+            throw new RuntimeException(job.getJobName() + " failed!");
+        }
 
-	}
+    }
 
 }

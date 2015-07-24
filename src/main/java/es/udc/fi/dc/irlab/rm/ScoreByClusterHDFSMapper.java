@@ -29,24 +29,22 @@ import es.udc.fi.dc.irlab.util.StringIntPairWritable;
  * Emit &lt;(k, 1), (i, j, A_{i,j})> from HDFS ratings (<(i, j), A_{i,j}>) where
  * j is a user from the cluster k.
  */
-public class ScoreByClusterHDFSMapper
-		extends
-		AbstractByClusterAndCountMapper<IntPairWritable, FloatWritable, StringIntPairWritable, IntDoubleOrPrefWritable> {
+public class ScoreByClusterHDFSMapper extends
+        AbstractByClusterAndCountMapper<IntPairWritable, FloatWritable, StringIntPairWritable, IntDoubleOrPrefWritable> {
 
-	@Override
-	protected void map(IntPairWritable key, FloatWritable column,
-			Context context) throws IOException, InterruptedException {
+    @Override
+    protected void map(final IntPairWritable key, final FloatWritable column, final Context context)
+            throws IOException, InterruptedException {
 
-		float score = column.get();
-		if (score > 0) {
-			int user = key.getFirst();
-			for (String split : getSplits(user)) {
-				context.write(new StringIntPairWritable(split, 1),
-						new IntDoubleOrPrefWritable(user, key.getSecond(),
-								score));
-			}
+        final float score = column.get();
+        if (score > 0) {
+            final int user = key.getFirst();
+            for (final String split : getSplits(user)) {
+                context.write(new StringIntPairWritable(split, 1),
+                        new IntDoubleOrPrefWritable(user, key.getSecond(), score));
+            }
 
-		}
+        }
 
-	}
+    }
 }

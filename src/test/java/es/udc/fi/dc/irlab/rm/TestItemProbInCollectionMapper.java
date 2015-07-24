@@ -27,30 +27,30 @@ import org.junit.Test;
 
 public class TestItemProbInCollectionMapper {
 
-	private MapDriver<IntWritable, DoubleWritable, IntWritable, DoubleWritable> mapDriver;
+    private MapDriver<IntWritable, DoubleWritable, IntWritable, DoubleWritable> mapDriver;
 
-	private static final String parameter = "rm.totalSum";
+    private static final String parameter = "rm.totalSum";
 
-	@Before
-	public void setup() {
-		mapDriver = new MapDriver<IntWritable, DoubleWritable, IntWritable, DoubleWritable>();
-	}
+    @Before
+    public void setup() {
+        mapDriver = new MapDriver<IntWritable, DoubleWritable, IntWritable, DoubleWritable>();
+    }
 
-	@Test
-	public void testMap() throws IOException {
-		IntWritable inputKey = new IntWritable(1);
-		DoubleWritable inputValue = new DoubleWritable(10.0);
+    @Test
+    public void testMap() throws IOException {
+        final IntWritable inputKey = new IntWritable(1);
+        final DoubleWritable inputValue = new DoubleWritable(10.0);
 
-		IntWritable outputKey = new IntWritable(1);
-		DoubleWritable outputValue = new DoubleWritable(5.0);
+        final IntWritable outputKey = new IntWritable(1);
+        final DoubleWritable outputValue = new DoubleWritable(5.0);
 
-		Configuration conf = mapDriver.getConfiguration();
-		conf.set(parameter, "2.0");
+        final Configuration conf = mapDriver.getConfiguration();
+        conf.set(parameter, "2.0");
 
-		mapDriver.withMapper(new ItemProbInCollectionMapper());
-		mapDriver.withInput(inputKey, inputValue);
-		mapDriver.withOutput(outputKey, outputValue);
-		mapDriver.runTest();
-	}
+        mapDriver.withMapper(new ItemProbInCollectionMapper());
+        mapDriver.withInput(inputKey, inputValue);
+        mapDriver.withOutput(outputKey, outputValue);
+        mapDriver.runTest();
+    }
 
 }
